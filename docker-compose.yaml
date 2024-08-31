@@ -1,0 +1,37 @@
+version: '3.9'
+services:
+
+  #PHP Service
+  app:
+    build:
+      context: dockerfiles
+      target: dev
+    container_name: app
+    restart: unless-stopped
+    environment:
+      - PHP_IDE_CONFIG=serverName=svk-test.local
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./dockerfiles/dev/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+
+  #Nginx Service
+  webserver:
+    image: nginx:alpine
+    container_name: webserver
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/var/www
+      - ./dockerfiles/dev/nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - app-network
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
