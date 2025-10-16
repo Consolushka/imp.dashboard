@@ -8,14 +8,16 @@ services:
       target: dev
     container_name: app
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      - PHP_IDE_CONFIG=serverName=svk-test.local
+      - PHP_IDE_CONFIG=serverName=imp.dashboard.local
     working_dir: /var/www
     volumes:
       - ./:/var/www
       - ./dockerfiles/dev/php/local.ini:/usr/local/etc/php/conf.d/local.ini
     networks:
-      - app-network
+      - imp
 
   #Nginx Service
   webserver:
@@ -29,9 +31,9 @@ services:
       - ./:/var/www
       - ./dockerfiles/dev/nginx/conf.d/:/etc/nginx/conf.d/
     networks:
-      - app-network
+      - imp
 
 #Docker Networks
 networks:
-  app-network:
-    driver: bridge
+  imp:
+    external: true
