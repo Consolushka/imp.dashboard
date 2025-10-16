@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'imp_calculator' => [
+        'url' => env('IMP_CALCULATOR_BASE_URL'),
+    ]
+
 ];
