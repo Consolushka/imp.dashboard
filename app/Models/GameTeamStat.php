@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class GameTeamStat extends Model
 {
@@ -32,5 +32,14 @@ class GameTeamStat extends Model
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);
+    }
+
+    public function gameTeamPlayerStats(): BelongsToMany
+    {
+        $hasMany = $this->belongsToMany(GameTeamPlayerStat::class, 'game_team_player_stats', 'game_id')
+            ->where('team_id', $this->team_id);
+
+        $sql = $hasMany->toRawSql();
+        return $hasMany;
     }
 }
