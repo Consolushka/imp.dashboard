@@ -8,6 +8,9 @@ install:
 	docker exec -i app composer install
 	docker exec -i app php artisan key:generate
 
+build-docker: ## Пересборка Docker-контейнеров без использования кэша
+	docker-compose build --no-cache --progress=plain
+
 stop:
 	docker-compose stop
 
