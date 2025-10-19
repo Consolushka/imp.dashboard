@@ -25,9 +25,14 @@ class GamesListRequest extends FormRequest
         return Carbon::createFromFormat('Y-m-d', $this->validated()['date']);
     }
 
-    public function getTournamentId(): ?int
+    public function getPerPage(): int
     {
-        return $this->validated()['tournament'] ?? null;
+        return $this->validated()['per_page'] ?? 15;
+    }
+
+    public function getPage(): int
+    {
+        return $this->validated()['page'] ?? 1;
     }
 
     /**
@@ -39,7 +44,8 @@ class GamesListRequest extends FormRequest
     {
         return [
             'date' => 'date',
-            'tournament' => 'exists:tournaments,id'
+            'per_page' => 'integer|min:1|max:100',
+            'page' => 'integer|min:1'
         ];
     }
 }

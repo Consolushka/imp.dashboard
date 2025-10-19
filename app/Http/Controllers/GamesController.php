@@ -13,17 +13,20 @@ class GamesController extends Controller
      */
     public function index(GamesListRequest $request)
     {
-        $builder = Game::query();
+        $builder = Game::query()
+            ->with(['gameTeamStats', 'gameTeamStats.team'])
+            ->orderBy('scheduled_at', 'desc');
 
-        if ($request->getTournamentId())
-            $builder->where('tournament_id', $request->getTournamentId());
-
-        if ($request->getDate())
+        if ($request->getDate()) {
             $builder->whereDate('scheduled_at', $request->getDate());
+        }
 
-        return [
-            'data' => $builder->get()
-        ];
+        return $builder->paginate(
+            $request->getPerPage(),
+            ['*'],
+            'page',
+            $request->getPage()
+        );
     }
 
     /**
