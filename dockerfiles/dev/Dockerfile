@@ -29,7 +29,7 @@ ENTRYPOINT ["/sbin/tini", "--"]
 
 FROM base as dev
 
-COPY configs/fpm/www.conf                          /usr/local/etc/php-fpm.d/www.conf
+COPY ../configs/fpm/www.conf                          /usr/local/etc/php-fpm.d/www.conf
 
 RUN apk add $PHPIZE_DEPS
 RUN apk add php82-pecl-xdebug
