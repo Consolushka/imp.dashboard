@@ -56,9 +56,6 @@ RUN mkdir -p storage/logs \
     && mkdir -p storage/framework/views \
     && mkdir -p bootstrap/cache
 
-# Создаем .env файл из .env.example если его нет
-RUN if [ ! -f .env ]; then cp .env.example .env; fi
-
 # Генерируем ключ приложения и кешируем конфигурацию
 RUN php artisan key:generate --force \
     && php artisan config:cache \
