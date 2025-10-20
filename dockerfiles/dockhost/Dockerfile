@@ -27,7 +27,7 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 # Копируем конфигурацию Apache (если есть)
-COPY docker/apache/laravel.conf /etc/apache2/sites-available/000-default.conf
+COPY docker/dockhost/apache/laravel.conf /etc/apache2/sites-available/000-default.conf
 
 # Устанавливаем рабочую директорию
 WORKDIR /var/www/html
