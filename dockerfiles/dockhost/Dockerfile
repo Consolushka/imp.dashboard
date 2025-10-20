@@ -1,42 +1,75 @@
-FROM php:8.4-fpm-alpine as base
+# Используем официальный PHP образ с Apache
+FROM php:8.4-apache
 
-WORKDIR /tmp
+# Устанавливаем системные зависимости
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libpq-dev \
+    zip \
+    unzip \
+    && docker-php-ext-install pdo_pgsql pgsql mbstring exif pcntl bcmath gd \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+# Устанавливаем Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN sed -i s#dl-cdn.alpinelinux.org#mirror.yandex.ru/mirrors#g /etc/apk/repositories &&\
-    chmod 755  /usr/local/bin/install-php-extensions  &&\
-    apk add --no-cache bash \
-                       tini \
-                       tzdata \
-                       libsasl \
-                       libpq-dev \
-                       busybox-suid \
-                       linux-headers \
-                       postgresql-client \
-    && cp /usr/share/zoneinfo/Europe/Moscow /etc/localtime \
-    && install-php-extensions redis pdo_pgsql rdkafka\
-    && rm -rf /tmp/* /usr/local/lib/php/doc/* /var/cache/apk/* \
-    && sed -i "s/82/101/g" /etc/passwd \
-    && sed -i "s/82/101/g" /etc/group \
-    && mkdir -p /data /var/log/php-fpm /var/log/php \
-    && chown -R 101:101 /data /var/log/php-fpm /var/log/php /home/www-data \
-    && chmod 777 /var/log/php-fpm
+# Включаем Apache mod_rewrite
+RUN a2enmod rewrite
 
-ENTRYPOINT ["/sbin/tini", "--"]
+# Настраиваем Apache
+ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
+# Копируем конфигурацию Apache (если есть)
+COPY docker/apache/laravel.conf /etc/apache2/sites-available/000-default.conf
 
-FROM base as dev
+# Устанавливаем рабочую директорию
+WORKDIR /var/www/html
 
-COPY dockerfiles/configs/fpm/www.conf                          /usr/local/etc/php-fpm.d/www.conf
+# Копируем composer файлы первыми для кеширования слоев
+COPY composer.json composer.lock ./
 
-RUN apk add $PHPIZE_DEPS
-RUN apk add php82-pecl-xdebug
-RUN pecl install xdebug
-RUN docker-php-ext-enable xdebug
+# Устанавливаем зависимости
+RUN composer install --no-scripts --no-autoloader --optimize-autoloader --no-dev
 
-WORKDIR /data
-USER www-data
+# Копируем остальные файлы приложения
+COPY . .
 
-CMD ["php-fpm"]
+# Завершаем установку Composer
+RUN composer dump-autoload --optimize
+
+# Устанавливаем правильные права доступа
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache
+
+# Создаем необходимые директории
+RUN mkdir -p storage/logs \
+    && mkdir -p storage/framework/cache \
+    && mkdir -p storage/framework/sessions \
+    && mkdir -p storage/framework/views \
+    && mkdir -p bootstrap/cache
+
+# Создаем .env файл из .env.example если его нет
+RUN if [ ! -f .env ]; then cp .env.example .env; fi
+
+# Генерируем ключ приложения и кешируем конфигурацию
+RUN php artisan key:generate --force \
+    && php artisan config:cache \
+    && php artisan route:cache
+
+# Открываем порт 80
+EXPOSE 80
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost/ || exit 1
+
+# Запускаем Apache
+CMD ["apache2-foreground"]
