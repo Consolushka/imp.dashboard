@@ -11,6 +11,7 @@ class TournamentGamesController extends Controller
     public function index(TournamentsGamesListRequest $request, int $tournamentId)
     {
         return Game::query()
+            ->with(['gameTeamStats', 'gameTeamStats.team'])
             ->where('tournament_id', $tournamentId)
             ->orderBy('scheduled_at', 'desc')
             ->paginate(
