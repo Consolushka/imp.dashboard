@@ -43,13 +43,17 @@ RUN flutter build web
 # use nginx to deploy
 FROM nginx:1.25.2-alpine
 
+# Передаем ARG аргументы во второй stage
+ARG IMP_API_URL
+ARG IMP_CALCULATOR_URL
+
 # copy the info of the builded web app to nginx
 COPY --from=build-env /app/build/web /usr/share/nginx/html
 
-# Копируем entrypoint.sh в финальный образ
-COPY docker/dockhost/entrypoint.sh /
-RUN chmod +x /entrypoint.sh
+# Создаем .env файл прямо во время сборки
+RUN echo "IMP_API_URL=${IMP_API_URL}" > /usr/share/nginx/html/.env && \
+    echo "IMP_CALCULATOR_URL=${IMP_CALCULATOR_URL}" >> /usr/share/nginx/html/.env
 
 # Expose and run nginx
 EXPOSE 80
-CMD ["/entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
