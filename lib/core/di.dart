@@ -1,3 +1,4 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:imp/infra/calculator/client.dart';
 import 'package:imp/infra/statistics/client.dart';
@@ -16,13 +17,13 @@ class DependencyInjection {
 
   void registerDependencies() {
     if (!getIt.isRegistered<StatisticsClient>()) {
-      StatisticsClient apiClientInstance = StatisticsClient(apiUrl);
+      StatisticsClient apiClientInstance = StatisticsClient(dotenv.get("IMP_API_URL"));
 
       getIt.registerSingleton<StatisticsClient>(apiClientInstance);
     }
 
     if (!getIt.isRegistered<CalculatorClient>()) {
-      CalculatorClient apiClientInstance = CalculatorClient(calculatorUrl);
+      CalculatorClient apiClientInstance = CalculatorClient(dotenv.get("IMP_CALCULATOR_API"));
 
       getIt.registerSingleton<CalculatorClient>(apiClientInstance);
     }
