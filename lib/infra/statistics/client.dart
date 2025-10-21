@@ -1,0 +1,80 @@
+import 'dart:convert';
+
+import 'package:http/http.dart';
+import 'package:imp/infra/statistics/paginated_response.dart';
+import 'package:imp/models/game_model.dart';
+import 'package:imp/models/league_model.dart';
+import 'package:imp/models/tournament_model.dart';
+
+class StatisticsClient {
+  final String _baseUrl;
+
+  StatisticsClient(this._baseUrl);
+
+  Future<List<League>> leagues() async {
+    var uri = Uri.parse("$_baseUrl/leagues");
+
+    var response = await get(uri, headers: {'Content-Type': 'application/json'});
+
+    var responseBody = _handleBodyBytes(response);
+
+    return (responseBody['data'] as List).map((item) => League.fromJson(item)).toList();
+  }
+
+  Future<List<Tournament>> tournaments() async {
+    var uri = Uri.parse("$_baseUrl/tournaments");
+
+    var response = await get(uri, headers: {'Content-Type': 'application/json'});
+
+    var responseBody = _handleBodyBytes(response);
+    return (responseBody['data'] as List).map((item) => Tournament.fromJson(item)).toList();
+  }
+
+  Future<List<Tournament>> tournamentsByLeague(int leagueId) async {
+    var uri = Uri.parse("$_baseUrl/leagues/$leagueId/tournaments");
+
+    var response = await get(uri, headers: {'Content-Type': 'application/json'});
+
+    var responseBody = _handleBodyBytes(response);
+    return (responseBody['data'] as List).map((item) => Tournament.fromJson(item)).toList();
+  }
+
+  Future<PaginatedResponse<Game>> gamesByTournamentPaginated(int tournamentId, int page) async {
+    final response = await get(
+      Uri.parse('$_baseUrl/tournaments/$tournamentId/games?page=$page'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    final responseBody = _handleBodyBytes(response);
+    return PaginatedResponse.fromJson(responseBody, Game.fromJson);
+  }
+
+  Future<PaginatedResponse<Game>> gamesPaginated(int page) async {
+    final response = await get(
+      Uri.parse('$_baseUrl/games?page=$page'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    final responseBody = _handleBodyBytes(response);
+    return PaginatedResponse.fromJson(responseBody, Game.fromJson);
+  }
+
+  Future<Game> game(int id) async {
+    var uri = Uri.parse("$_baseUrl/games/$id");
+
+    var response = await get(uri, headers: {'Content-Type': 'application/json'});
+
+    var responseBody = _handleBodyBytes(response);
+    return Game.fromJson(responseBody['data']);
+  }
+
+  // Обрабатывает ответ от сервера и парсит ошибку если не 200ый статус ответа
+  Map<String, dynamic> _handleBodyBytes(Response response) {
+    var bodyString = utf8.decode(response.bodyBytes);
+    if (response.statusCode != 200) {
+      throw Exception(bodyString);
+    }
+
+    return jsonDecode(bodyString);
+  }
+}
