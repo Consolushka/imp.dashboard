@@ -47,9 +47,9 @@ FROM nginx:1.25.2-alpine
 COPY --from=build-env /app/build/web /usr/share/nginx/html
 
 # Копируем entrypoint.sh в финальный образ
-COPY docker/dockhost/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY docker/dockhost/entrypoint.sh /
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Expose and run nginx
 EXPOSE 80
-CMD ["/usr/local/bin/entrypoint.sh"]
+CMD ["/entrypoint.sh"]
