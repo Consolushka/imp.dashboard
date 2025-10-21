@@ -15,7 +15,6 @@ ARG IMP_API_URL
 ARG IMP_CALCULATOR_URL
 ENV IMP_API_URL=$IMP_API_URL
 ENV IMP_CALCULATOR_URL=$IMP_CALCULATOR_URL
-# Добавь здесь другие переменные окружения, которые тебе нужны
 
 #clone flutter
 RUN git clone https://github.com/flutter/flutter.git $FLUTTER_SDK
@@ -36,9 +35,6 @@ COPY . $APP
 # stup new folder as the working directory
 WORKDIR $APP
 
-COPY docker/dockhost/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
 # Run build: 1 - clean, 2 - pub get, 3 - build web
 RUN flutter clean
 RUN flutter pub get
@@ -49,6 +45,10 @@ FROM nginx:1.25.2-alpine
 
 # copy the info of the builded web app to nginx
 COPY --from=build-env /app/build/web /usr/share/nginx/html
+
+# Копируем entrypoint.sh в финальный образ
+COPY docker/dockhost/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Expose and run nginx
 EXPOSE 80
