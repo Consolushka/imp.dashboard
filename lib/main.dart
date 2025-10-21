@@ -3,8 +3,9 @@ import 'package:imp/core/di.dart';
 import 'screens/home_screen.dart';
 
 const apiUrl = "https://hfhq-a10d-zqqo.gw-1a.dockhost.net/api";
-const calculatorUrl = "https://wxac-xz7t-0je1.gw-1a.dockhost.net/";
+const calculatorUrl = "https://wxac-xz7t-0je1.gw-1a.dockhost.net";
 
+// todo: icon + title
 void main() {
 
   DependencyInjection().registerDependencies();
