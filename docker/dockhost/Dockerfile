@@ -51,8 +51,8 @@ ARG IMP_CALCULATOR_URL
 COPY --from=build-env /app/build/web /usr/share/nginx/html
 
 # Создаем .env файл прямо во время сборки
-RUN echo "IMP_API_URL=${IMP_API_URL}" > /usr/share/nginx/html/.env && \
-    echo "IMP_CALCULATOR_URL=${IMP_CALCULATOR_URL}" >> /usr/share/nginx/html/.env
+RUN echo "IMP_API_URL=${IMP_API_URL}" > /usr/share/nginx/html/assets/.env && \
+    echo "IMP_CALCULATOR_URL=${IMP_CALCULATOR_URL}" >> /usr/share/nginx/html/assets/.env
 
 # Expose and run nginx
 EXPOSE 80
