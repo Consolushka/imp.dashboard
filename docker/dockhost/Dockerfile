@@ -10,12 +10,6 @@ ARG FLUTTER_SDK=/usr/local/flutter
 ARG FLUTTER_VERSION=3.29.3
 ARG APP=/app/
 
-# Аргументы для переменных окружения, которые будут переданы при сборке
-ARG IMP_API_URL
-ARG IMP_CALCULATOR_URL
-ENV IMP_API_URL=$IMP_API_URL
-ENV IMP_CALCULATOR_URL=$IMP_CALCULATOR_URL
-
 #clone flutter
 RUN git clone https://github.com/flutter/flutter.git $FLUTTER_SDK
 # change dir to current flutter folder and make a checkout to the specific version
@@ -43,16 +37,8 @@ RUN flutter build web
 # use nginx to deploy
 FROM nginx:1.25.2-alpine
 
-# Передаем ARG аргументы во второй stage
-ARG IMP_API_URL
-ARG IMP_CALCULATOR_URL
-
 # copy the info of the builded web app to nginx
 COPY --from=build-env /app/build/web /usr/share/nginx/html
-
-# Создаем .env файл прямо во время сборки
-RUN echo "IMP_API_URL=${IMP_API_URL}" > /usr/share/nginx/html/assets/.env && \
-    echo "IMP_CALCULATOR_URL=${IMP_CALCULATOR_URL}" >> /usr/share/nginx/html/assets/.env
 
 # Expose and run nginx
 EXPOSE 80

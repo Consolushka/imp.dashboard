@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:imp/core/di.dart';
 import 'screens/home_screen.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() async {
-  try{
-    await dotenv.load(fileName: ".env");
-  }
-  catch(e){
-    print(e);
-  }
+const apiUrl = "http://localhost/api";
+const calculatorUrl = "http://localhost:8001";
+
+void main() {
 
   DependencyInjection().registerDependencies();
 
