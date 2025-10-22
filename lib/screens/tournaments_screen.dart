@@ -145,7 +145,7 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.account_circle, size: 80, color: Colors.grey),
+          const Icon(Icons.account_tree_outlined, size: 80, color: Colors.grey),
           const SizedBox(height: 16),
           Text(
             widget.league != null ? 'Турниры не найдены' : 'Нет доступных турниров',

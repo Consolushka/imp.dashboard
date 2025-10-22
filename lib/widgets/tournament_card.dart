@@ -36,7 +36,7 @@ class TournamentCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
-                      Icons.account_circle,
+                      Icons.account_tree_outlined,
                       size: 24,
                       color: Colors.black,
                     ),

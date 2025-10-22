@@ -58,7 +58,7 @@ class AppDrawer extends StatelessWidget {
                   ),
                   _buildDrawerItem(
                     context,
-                    icon: Icons.account_circle,
+                    icon: Icons.account_tree_outlined,
                     title: 'Все турниры',
                     onTap: () {
                       Navigator.of(context).pop();
