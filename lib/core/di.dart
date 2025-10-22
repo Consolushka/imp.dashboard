@@ -1,5 +1,4 @@
 import 'package:get_it/get_it.dart';
-import 'package:imp/infra/calculator/client.dart';
 import 'package:imp/infra/statistics/client.dart';
 import 'package:imp/main.dart';
 
@@ -19,12 +18,6 @@ class DependencyInjection {
       StatisticsClient apiClientInstance = StatisticsClient(apiUrl);
 
       getIt.registerSingleton<StatisticsClient>(apiClientInstance);
-    }
-
-    if (!getIt.isRegistered<CalculatorClient>()) {
-      CalculatorClient apiClientInstance = CalculatorClient(calculatorUrl);
-
-      getIt.registerSingleton<CalculatorClient>(apiClientInstance);
     }
   }
 }

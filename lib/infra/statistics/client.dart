@@ -6,6 +6,8 @@ import 'package:imp/models/game_model.dart';
 import 'package:imp/models/league_model.dart';
 import 'package:imp/models/tournament_model.dart';
 
+import '../../models/player_stat_imp_model.dart';
+
 class StatisticsClient {
   final String _baseUrl;
 
@@ -66,6 +68,37 @@ class StatisticsClient {
 
     var responseBody = _handleBodyBytes(response);
     return Game.fromJson(responseBody['data']);
+  }
+
+  Future<Map<int, List<PlayerStatImp>>> imp(List<int> ids, List<String> pers) async {
+    Map<int, List<PlayerStatImp>> res = <int, List<PlayerStatImp>>{};
+
+    String idsParam = "";
+    for (var i = 0; i < ids.length; i++) {
+      idsParam += "ids[]=${ids[i]}";
+      if (i < ids.length - 1) {
+        idsParam += "&";
+      }
+    }
+
+    String persParam = "";
+    for (var i = 0; i < pers.length; i++) {
+      persParam += "pers[]=${pers[i]}";
+      if (i < pers.length - 1) {
+        persParam += "&";
+      }
+    }
+
+    var uri = Uri.parse("$_baseUrl/imp?$idsParam&$persParam");
+
+    var response = await get(uri, headers: {'Content-Type': 'application/json'});
+
+    var responseBody = _handleBodyBytes(response);
+    for (var el in (responseBody['data'] as List)) {
+      var test = (el['imp_pers'] as List).map((impPer) => PlayerStatImp.fromJson(impPer)).toList();
+      res[el['player_stat_id']] = test;
+    }
+    return res;
   }
 
   // Обрабатывает ответ от сервера и парсит ошибку если не 200ый статус ответа

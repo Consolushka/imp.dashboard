@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:imp/infra/calculator/client.dart';
 import 'package:imp/models/player_stat_imp_model.dart';
 import 'package:imp/widgets/error_dialog.dart';
 import '../core/di.dart';
@@ -21,7 +20,6 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   final impPer = "fullGame";
 
   StatisticsClient apiClient = DependencyInjection().getIt<StatisticsClient>();
-  CalculatorClient calculatorClient = DependencyInjection().getIt<CalculatorClient>();
 
   late Game _game;
   Map<int, List<PlayerStatImp>> _playerImps = {}; // IMP значения по ID игроков
@@ -51,7 +49,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   void _loadPlayerImps() async {
     List<int> ids =
         [..._game.teamStats![0].playerStats!, ..._game.teamStats![1].playerStats!].map((stat) => stat.id).toList();
-    var res = await calculatorClient.imp(ids, [impPer]);
+    var res = await apiClient.imp(ids, [impPer]);
     setState(() {
       _playerImps = res;
     });
