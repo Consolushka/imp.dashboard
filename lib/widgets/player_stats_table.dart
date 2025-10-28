@@ -306,7 +306,7 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
 
           // Время игры
           SizedBox(
-            width: 60+15+8+8,
+            width: 60 + 15 + 8 + 8,
             child: Text(
               _formatPlayTime(stat.playedSeconds),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -318,7 +318,7 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
 
           // +/-
           SizedBox(
-            width: 50+15+8+8,
+            width: 50 + 15 + 8 + 8,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               decoration: BoxDecoration(
@@ -347,7 +347,7 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
 
     return [
       SizedBox(
-        width: 100+15+8+8,
+        width: 100 + 15 + 8 + 8,
         child:
             imp != null
                 ? Container(
