@@ -1,9 +1,11 @@
+import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:imp/models/player_stat_imp_model.dart';
 import 'package:imp/widgets/error_dialog.dart';
 import '../core/di.dart';
 import '../infra/statistics/client.dart';
 import '../models/game_model.dart';
+import '../models/pers.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/player_stats_table.dart';
 
@@ -17,7 +19,9 @@ class GameDetailScreen extends StatefulWidget {
 }
 
 class _GameDetailScreenState extends State<GameDetailScreen> {
-  final impPer = "fullGame";
+  static final List<ImpPer> _availablePers = [benchImpPer, startImpPer, fullGameImpPer];
+
+  List<ImpPer> _selectedPers = [fullGameImpPer];
 
   StatisticsClient apiClient = DependencyInjection().getIt<StatisticsClient>();
 
@@ -49,7 +53,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   void _loadPlayerImps() async {
     List<int> ids =
         [..._game.teamStats![0].playerStats!, ..._game.teamStats![1].playerStats!].map((stat) => stat.id).toList();
-    var res = await apiClient.imp(ids, [impPer]);
+    var res = await apiClient.imp(ids, _selectedPers.map((per) => per.code).toList());
     setState(() {
       _playerImps = res;
     });
@@ -99,8 +103,6 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     final loserTeam = team1.isWinner ? team2 : team1;
     final winnerStats = team1.isWinner ? team1.playerStats! : team2.playerStats!;
     final loserStats = team1.isWinner ? team2.playerStats! : team1.playerStats!;
-    winnerStats.sort((a, b) => b.playedSeconds.compareTo(a.playedSeconds));
-    loserStats.sort((a, b) => b.playedSeconds.compareTo(a.playedSeconds));
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -118,6 +120,94 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
             sliver: SliverToBoxAdapter(child: _buildGameHeader()),
           ),
 
+
+          SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding(context), vertical: 8),
+            sliver: SliverToBoxAdapter(
+              child: Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.filter_list,
+                            size: 20,
+                            color: Colors.grey[700],
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Периоды для расчета IMP',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[800],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      CustomDropdown<ImpPer>.multiSelect(
+                        items: _availablePers,
+                        decoration: CustomDropdownDecoration(
+                          closedFillColor: Colors.grey[50],
+                          closedBorder: Border.all(
+                            color: Colors.grey[300]!,
+                            width: 1.5,
+                          ),
+                          closedBorderRadius: BorderRadius.circular(8),
+                          expandedFillColor: Colors.white,
+                          expandedBorder: Border.all(
+                            color: Colors.black,
+                            width: 1.5,
+                          ),
+                          expandedBorderRadius: BorderRadius.circular(8),
+                          hintStyle: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                          headerStyle: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          listItemStyle: const TextStyle(
+                            color: Colors.black87,
+                            fontSize: 14,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.analytics_outlined,
+                            size: 18,
+                            color: Colors.grey[600],
+                          ),
+                          expandedSuffixIcon: Icon(
+                            Icons.keyboard_arrow_up,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        hintText: 'Выберите периоды для расчета',
+                        initialItems: _selectedPers,
+                        onListChanged: (value) async {
+                          if (value.isNotEmpty) {
+                            setState(() {
+                              _selectedPers = value;
+                            });
+                            _loadPlayerImps();
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
           // Таблица команды-победителя (всегда первая)
           SliverPadding(
             padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding(context)),
@@ -128,6 +218,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                 isWinner: true,
                 playerStats: winnerStats,
                 playerImps: _playerImps,
+                pers: _selectedPers,
               ),
             ),
           ),
@@ -144,6 +235,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                 isWinner: false,
                 playerStats: loserStats,
                 playerImps: _playerImps,
+                pers: _selectedPers
               ),
             ),
           ),
