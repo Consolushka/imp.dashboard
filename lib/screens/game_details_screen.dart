@@ -1,6 +1,5 @@
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:flutter/material.dart';
-import 'package:imp/library/sorting/sorting.dart';
 import 'package:imp/models/player_stat_imp_model.dart';
 import 'package:imp/widgets/error_dialog.dart';
 import '../core/di.dart';
@@ -104,8 +103,6 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     final loserTeam = team1.isWinner ? team2 : team1;
     final winnerStats = team1.isWinner ? team1.playerStats! : team2.playerStats!;
     final loserStats = team1.isWinner ? team2.playerStats! : team1.playerStats!;
-    winnerStats.sort((a, b) => b.playedSeconds.compareTo(a.playedSeconds));
-    loserStats.sort((a, b) => b.playedSeconds.compareTo(a.playedSeconds));
 
     return RefreshIndicator(
       onRefresh: () async {

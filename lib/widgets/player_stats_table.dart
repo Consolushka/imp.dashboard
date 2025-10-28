@@ -28,20 +28,77 @@ class PlayerStatsTable extends StatefulWidget {
 }
 
 class _PlayerStatsTableState extends State<PlayerStatsTable> {
-  final Sorting _minutesSorting = Sorting(isAscending: false);
-  final Sorting _plusMinusSorting = Sorting(isAscending: false);
+  late final Sorting _minutesSorting;
+  late final Sorting _plusMinusSorting;
+  final List<Sorting> _persSorting = [];
+  List<Sorting> sortingChain = [];
 
-  List<Sorting> _persSorting = [];
-  List<Sorting> sortingsChain = [];
+  bool _isSorted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _minutesSorting = Sorting(
+      isAscending: true,
+      callback: (isAscending) {
+        int multiplier = isAscending ? 1 : -1;
+
+        widget.playerStats.sort((a, b) => a.playedSeconds.compareTo(b.playedSeconds) * multiplier);
+      },
+    );
+    _plusMinusSorting = Sorting(
+      callback: (isAscending) {
+        int multiplier = isAscending ? 1 : -1;
+
+        widget.playerStats.sort((a, b) => a.plusMinus.compareTo(b.plusMinus) * multiplier);
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    sortingsChain = [_minutesSorting, _plusMinusSorting];
+    sortingChain = [_minutesSorting, _plusMinusSorting];
     for (var per in widget.pers) {
-      _persSorting.add(Sorting());
+      _persSorting.add(Sorting(callback: (isAscending) {
+        int multiplier = isAscending ? 1 : -1;
+
+        widget.playerStats.sort((a, b) {
+          final aImps = widget.playerImps[a.id];
+          final bImps = widget.playerImps[b.id];
+
+          final aImp =
+              aImps
+                  ?.firstWhere(
+                    (imp) => imp.per == per.code,
+                orElse: () => PlayerStatImp(per: per.code, imp: 0),
+              )
+                  .imp ??
+                  0;
+          final bImp =
+              bImps
+                  ?.firstWhere(
+                    (imp) => imp.per == per.code,
+                orElse: () => PlayerStatImp(per: per.code, imp: 0),
+              )
+                  .imp ??
+                  0;
+
+          return aImp.compareTo(bImp) * multiplier;
+        });
+      }));
     }
 
-    sortingsChain.addAll(_persSorting);
+    sortingChain.addAll(_persSorting);
+
+    if (!_isSorted) {
+      _isSorted = true;
+      sortingChain.forEach((sorting) {
+        if (sorting.isAscending != null) {
+          sort(sorting);
+          return;
+        }
+      });
+    }
 
     return Card(
       child: Padding(
@@ -142,12 +199,6 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
           IconButton(
             onPressed: () {
               sort(_minutesSorting);
-
-              int mult = _minutesSorting.isAscending! ? 1 : -1;
-
-              setState(() {
-                widget.playerStats.sort((a, b) => a.playedSeconds.compareTo(b.playedSeconds) * mult);
-              });
             },
             icon: Row(
               children: [
@@ -174,12 +225,6 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
           IconButton(
             onPressed: () {
               sort(_plusMinusSorting);
-
-              int mult = _plusMinusSorting.isAscending! ? 1 : -1;
-
-              setState(() {
-                widget.playerStats.sort((a, b) => a.plusMinus.compareTo(b.plusMinus) * mult);
-              });
             },
             icon: Row(
               children: [
@@ -218,12 +263,6 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
                     IconButton(
                       onPressed: () {
                         sort(_persSorting[i]);
-
-                        int mult = _persSorting[i].isAscending! ? 1 : -1;
-
-                        setState(() {
-                          widget.playerStats.sort((a, b) => a.plusMinus.compareTo(b.plusMinus) * mult);
-                        });
                       },
                       icon: Row(
                         children: [
@@ -264,13 +303,15 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
   }
 
   void sort(Sorting sorting) {
-    for (var sortingInstance in sortingsChain) {
+    for (var sortingInstance in sortingChain) {
       if (sortingInstance != sorting) {
         sortingInstance.disable();
       } else {
         sorting.toggle();
       }
     }
+
+    setState(() {});
   }
 
   Widget _buildPlayerRow(BuildContext context, GameTeamPlayerStat stat) {
