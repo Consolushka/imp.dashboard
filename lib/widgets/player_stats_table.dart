@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../library/sorting/sorting.dart';
 import '../models/game_team_player_stat_model.dart';
 import '../models/pers.dart';
 import '../models/player_stat_imp_model.dart';
 
-class PlayerStatsTable extends StatelessWidget {
+class PlayerStatsTable extends StatefulWidget {
   final String teamName;
   final int teamScore;
   final bool isWinner;
@@ -22,7 +24,25 @@ class PlayerStatsTable extends StatelessWidget {
   });
 
   @override
+  State<PlayerStatsTable> createState() => _PlayerStatsTableState();
+}
+
+class _PlayerStatsTableState extends State<PlayerStatsTable> {
+  final Sorting _minutesSorting = Sorting(isAscending: false);
+  final Sorting _plusMinusSorting = Sorting(isAscending: false);
+
+  List<Sorting> _persSorting = [];
+  List<Sorting> sortingsChain = [];
+
+  @override
   Widget build(BuildContext context) {
+    sortingsChain = [_minutesSorting, _plusMinusSorting];
+    for (var per in widget.pers) {
+      _persSorting.add(Sorting());
+    }
+
+    sortingsChain.addAll(_persSorting);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -38,7 +58,7 @@ class PlayerStatsTable extends StatelessWidget {
             const SizedBox(height: 8),
 
             // Строки игроков
-            ...playerStats.map((stat) => _buildPlayerRow(context, stat)),
+            ...widget.playerStats.map((stat) => _buildPlayerRow(context, stat)),
           ],
         ),
       ),
@@ -53,10 +73,10 @@ class PlayerStatsTable extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            border: Border.all(color: isWinner ? Colors.black : Colors.grey, width: isWinner ? 2 : 1),
+            border: Border.all(color: widget.isWinner ? Colors.black : Colors.grey, width: widget.isWinner ? 2 : 1),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Icon(Icons.sports_basketball, size: 20, color: isWinner ? Colors.black : Colors.grey),
+          child: Icon(Icons.sports_basketball, size: 20, color: widget.isWinner ? Colors.black : Colors.grey),
         ),
         const SizedBox(width: 12),
 
@@ -66,13 +86,13 @@ class PlayerStatsTable extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                teamName,
+                widget.teamName,
                 style: Theme.of(
                   context,
-                ).textTheme.headlineSmall?.copyWith(fontWeight: isWinner ? FontWeight.bold : FontWeight.w500),
+                ).textTheme.headlineSmall?.copyWith(fontWeight: widget.isWinner ? FontWeight.bold : FontWeight.w500),
               ),
               Text(
-                'Счет: $teamScore',
+                'Счет: ${widget.teamScore}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               ),
             ],
@@ -80,7 +100,7 @@ class PlayerStatsTable extends StatelessWidget {
         ),
 
         // Статус команды
-        if (isWinner) ...[
+        if (widget.isWinner) ...[
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(4)),
@@ -119,28 +139,63 @@ class PlayerStatsTable extends StatelessWidget {
           ),
 
           // Время
-          SizedBox(
-            width: 60,
-            child: Text(
-              'Время',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-              textAlign: TextAlign.center,
+          IconButton(
+            onPressed: () {
+              sort(_minutesSorting);
+
+              int mult = _minutesSorting.isAscending! ? 1 : -1;
+
+              setState(() {
+                widget.playerStats.sort((a, b) => a.playedSeconds.compareTo(b.playedSeconds) * mult);
+              });
+            },
+            icon: Row(
+              children: [
+                SizedBox(child: Icon(size: 15, _getSortingIcon(_minutesSorting))),
+
+                // Время
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    'Время',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
             ),
           ),
 
           const SizedBox(width: 8),
 
           // +/-
-          SizedBox(
-            width: 50,
-            child: Text(
-              '+/–',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-              textAlign: TextAlign.center,
+          IconButton(
+            onPressed: () {
+              sort(_plusMinusSorting);
+
+              int mult = _plusMinusSorting.isAscending! ? 1 : -1;
+
+              setState(() {
+                widget.playerStats.sort((a, b) => a.plusMinus.compareTo(b.plusMinus) * mult);
+              });
+            },
+            icon: Row(
+              children: [
+                SizedBox(child: Icon(size: 15, _getSortingIcon(_plusMinusSorting))),
+
+                SizedBox(
+                  width: 50,
+                  child: Text(
+                    '+/–',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -156,23 +211,39 @@ class PlayerStatsTable extends StatelessWidget {
                   context,
                 ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
               ),
-              SizedBox(height: 16,),
+              SizedBox(height: 16),
               Row(
                 children: [
-                  for (var i = 0; i < pers.length; i++)
-                    ...[
-                      SizedBox(
-                        width: 100,
-                        child: Text(
-                          pers[i].toString(),
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                          textAlign: TextAlign.center,
-                        ),
+                  for (var i = 0; i < widget.pers.length; i++) ...[
+                    IconButton(
+                      onPressed: () {
+                        sort(_persSorting[i]);
+
+                        int mult = _persSorting[i].isAscending! ? 1 : -1;
+
+                        setState(() {
+                          widget.playerStats.sort((a, b) => a.plusMinus.compareTo(b.plusMinus) * mult);
+                        });
+                      },
+                      icon: Row(
+                        children: [
+                          SizedBox(child: Icon(size: 15, _getSortingIcon(_persSorting[i]))),
+
+                          SizedBox(
+                            width: 100,
+                            child: Text(
+                              widget.pers[i].toString(),
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(width: 8,),
-                    ]
+                    ),
+                    SizedBox(width: 8),
+                  ],
                 ],
               ),
             ],
@@ -180,6 +251,26 @@ class PlayerStatsTable extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  IconData _getSortingIcon(Sorting sorting) {
+    if (sorting.isAscending == null) {
+      return FaIcon(FontAwesomeIcons.sort).icon!;
+    }
+
+    return sorting.isAscending!
+        ? FaIcon(FontAwesomeIcons.arrowUpShortWide).icon!
+        : FaIcon(FontAwesomeIcons.arrowUpWideShort).icon!;
+  }
+
+  void sort(Sorting sorting) {
+    for (var sortingInstance in sortingsChain) {
+      if (sortingInstance != sorting) {
+        sortingInstance.disable();
+      } else {
+        sorting.toggle();
+      }
+    }
   }
 
   Widget _buildPlayerRow(BuildContext context, GameTeamPlayerStat stat) {
@@ -215,7 +306,7 @@ class PlayerStatsTable extends StatelessWidget {
 
           // Время игры
           SizedBox(
-            width: 60,
+            width: 60+15+8+8,
             child: Text(
               _formatPlayTime(stat.playedSeconds),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -227,7 +318,7 @@ class PlayerStatsTable extends StatelessWidget {
 
           // +/-
           SizedBox(
-            width: 50,
+            width: 50+15+8+8,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               decoration: BoxDecoration(
@@ -245,7 +336,7 @@ class PlayerStatsTable extends StatelessWidget {
           ),
 
           const SizedBox(width: 8),
-          for (var i = 0; i < pers.length; i++) ..._getPlayerImpPerSizedBox(context, stat.id, pers[i]),
+          for (var i = 0; i < widget.pers.length; i++) ..._getPlayerImpPerSizedBox(context, stat.id, widget.pers[i]),
         ],
       ),
     );
@@ -256,7 +347,7 @@ class PlayerStatsTable extends StatelessWidget {
 
     return [
       SizedBox(
-        width: 100,
+        width: 100+15+8+8,
         child:
             imp != null
                 ? Container(
@@ -288,7 +379,7 @@ class PlayerStatsTable extends StatelessWidget {
 
   // Получаем IMP для "bench" периода
   PlayerStatImp? _getBenchImp(int playerStatId, ImpPer per) {
-    final imps = playerImps[playerStatId];
+    final imps = widget.playerImps[playerStatId];
     if (imps == null) return null;
 
     try {
