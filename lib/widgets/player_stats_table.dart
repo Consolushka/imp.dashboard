@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../library/sorting/sorting.dart';
@@ -110,12 +111,25 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
             _buildTeamHeader(context),
             const SizedBox(height: 16),
 
-            // Заголовки столбцов
-            _buildTableHeader(context),
-            const SizedBox(height: 8),
+            // Горизонтально прокручиваемая таблица
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: MediaQuery.of(context).size.width - 64, // учитываем padding Card
+                ),
+                child: Column(
+                  children: [
+                    // Заголовки столбцов
+                    _buildTableHeader(context),
+                    const SizedBox(height: 8),
 
-            // Строки игроков
-            ...widget.playerStats.map((stat) => _buildPlayerRow(context, stat)),
+                    // Строки игроков
+                    ...widget.playerStats.map((stat) => _buildPlayerRow(context, stat)),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -177,117 +191,123 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(4)),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          // Аватарка
-          const SizedBox(width: 40),
-          const SizedBox(width: 12),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // Аватарка
+            const SizedBox(width: 40),
+            const SizedBox(width: 12),
 
-          // Игрок
-          Expanded(
-            flex: 3,
-            child: Text(
-              'Игрок',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-            ),
-          ),
-
-          // Время
-          IconButton(
-            onPressed: () {
-              sort(_minutesSorting);
-            },
-            icon: Row(
-              children: [
-                SizedBox(child: Icon(size: 15, _getSortingIcon(_minutesSorting))),
-
-                // Время
-                SizedBox(
-                  width: 60,
-                  child: Text(
-                    'Время',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // +/-
-          IconButton(
-            onPressed: () {
-              sort(_plusMinusSorting);
-            },
-            icon: Row(
-              children: [
-                SizedBox(child: Icon(size: 15, _getSortingIcon(_plusMinusSorting))),
-
-                SizedBox(
-                  width: 50,
-                  child: Text(
-                    '+/–',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                "IMP",
+            // Игрок
+            SizedBox(
+              width: 120, // Фиксированная ширина для колонки игрока
+              child: Text(
+                'Игрок',
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
               ),
-              SizedBox(height: 16),
-              Row(
-                children: [
-                  for (var i = 0; i < widget.pers.length; i++) ...[
-                    IconButton(
-                      onPressed: () {
-                        sort(_persSorting[i]);
-                      },
-                      icon: Row(
-                        children: [
-                          SizedBox(child: Icon(size: 15, _getSortingIcon(_persSorting[i]))),
+            ),
 
-                          SizedBox(
-                            width: 100,
-                            child: Text(
-                              widget.pers[i].toString(),
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
-                      ),
+            // Время
+            IconButton(
+              onPressed: () {
+                sort(_minutesSorting);
+              },
+              icon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(child: Icon(size: 15, _getSortingIcon(_minutesSorting))),
+
+                  // Время
+                  SizedBox(
+                    width: 60,
+                    child: Text(
+                      'Время',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                      textAlign: TextAlign.center,
                     ),
-                    SizedBox(width: 8),
-                  ],
+                  ),
                 ],
               ),
-            ],
-          ),
-        ],
+            ),
+
+            const SizedBox(width: 8),
+
+            // +/-
+            IconButton(
+              onPressed: () {
+                sort(_plusMinusSorting);
+              },
+              icon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(child: Icon(size: 15, _getSortingIcon(_plusMinusSorting))),
+
+                  SizedBox(
+                    width: 50,
+                    child: Text(
+                      '+/–',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  "IMP",
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                ),
+                SizedBox(height: 16),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var i = 0; i < widget.pers.length; i++) ...[
+                      IconButton(
+                        onPressed: () {
+                          sort(_persSorting[i]);
+                        },
+                        icon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(child: Icon(size: 15, _getSortingIcon(_persSorting[i]))),
+
+                            SizedBox(
+                              width: 100,
+                              child: Text(
+                                widget.pers[i].toString(),
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (i < widget.pers.length - 1) SizedBox(width: 8),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -335,12 +355,12 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
           const SizedBox(width: 12),
 
           // Имя игрока
-          Expanded(
-            flex: 3,
+          SizedBox(
+            width: 120, // Та же фиксированная ширина, что и в заголовке
             child: Text(
               stat.player?.fullName ?? 'Игрок ${stat.playerId}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -377,7 +397,9 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
           ),
 
           const SizedBox(width: 8),
-          for (var i = 0; i < widget.pers.length; i++) ..._getPlayerImpPerSizedBox(context, stat.id, widget.pers[i]),
+
+          // IMP колонки
+          ...widget.pers.expand((per) => _getPlayerImpPerSizedBox(context, stat.id, per)),
         ],
       ),
     );
@@ -385,36 +407,37 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
 
   List<Widget> _getPlayerImpPerSizedBox(BuildContext context, int playerStatId, ImpPer per) {
     final imp = _getBenchImp(playerStatId, per);
+    final isLast = widget.pers.last == per;
 
     return [
       SizedBox(
         width: 100 + 15 + 8 + 8,
         child:
-            imp != null
-                ? Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  decoration: BoxDecoration(color: _getImpColor(imp.imp), borderRadius: BorderRadius.circular(6)),
-                  child: Text(
-                    imp.imp > 0 ? '+${imp.imp.toStringAsFixed(1)}' : imp.imp.toStringAsFixed(1),
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                )
-                : Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.circular(6)),
-                  child: Text(
-                    '—',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
+        imp != null
+            ? Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          decoration: BoxDecoration(color: _getImpColor(imp.imp), borderRadius: BorderRadius.circular(6)),
+          child: Text(
+            imp.imp > 0 ? '+${imp.imp.toStringAsFixed(1)}' : imp.imp.toStringAsFixed(1),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+        )
+            : Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.circular(6)),
+          child: Text(
+            '—',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+        ),
       ),
-      const SizedBox(width: 8),
+      if (!isLast) const SizedBox(width: 8),
     ];
   }
 
