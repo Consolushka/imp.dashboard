@@ -101,6 +101,9 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
       });
     }
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 800; // Определяем мобильное устройство
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -111,28 +114,38 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
             _buildTeamHeader(context),
             const SizedBox(height: 16),
 
-            // Горизонтально прокручиваемая таблица
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minWidth: MediaQuery.of(context).size.width - 64, // учитываем padding Card
-                ),
-                child: Column(
-                  children: [
-                    // Заголовки столбцов
-                    _buildTableHeader(context),
-                    const SizedBox(height: 8),
-
-                    // Строки игроков
-                    ...widget.playerStats.map((stat) => _buildPlayerRow(context, stat)),
-                  ],
-                ),
-              ),
-            ),
+            // Адаптивная таблица
+            isMobile
+                ? _buildScrollableTable(context)
+                : _buildResponsiveTable(context),
           ],
         ),
       ),
+    );
+  }
+
+  // Горизонтально прокручиваемая таблица для мобильных
+  Widget _buildScrollableTable(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Column(
+        children: [
+          _buildTableHeader(context, isMobile: true),
+          const SizedBox(height: 8),
+          ...widget.playerStats.map((stat) => _buildPlayerRow(context, stat, isMobile: true)),
+        ],
+      ),
+    );
+  }
+
+  // Отзывчивая таблица для больших экранов
+  Widget _buildResponsiveTable(BuildContext context) {
+    return Column(
+      children: [
+        _buildTableHeader(context, isMobile: false),
+        const SizedBox(height: 8),
+        ...widget.playerStats.map((stat) => _buildPlayerRow(context, stat, isMobile: false)),
+      ],
     );
   }
 
@@ -187,127 +200,134 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
     );
   }
 
-  Widget _buildTableHeader(BuildContext context) {
+  Widget _buildTableHeader(BuildContext context, {required bool isMobile}) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(4)),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            // Аватарка
-            const SizedBox(width: 40),
-            const SizedBox(width: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // Аватарка
+          const SizedBox(width: 40),
+          const SizedBox(width: 12),
 
-            // Игрок
-            SizedBox(
-              width: 120, // Фиксированная ширина для колонки игрока
-              child: Text(
-                'Игрок',
+          // Игрок
+          isMobile
+              ? SizedBox(
+            width: 120, // Фиксированная ширина для мобильных
+            child: Text(
+              'Игрок',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+            ),
+          )
+              : Expanded(
+            flex: 3,
+            child: Text(
+              'Игрок',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+            ),
+          ),
+
+          // Время
+          IconButton(
+            onPressed: () {
+              sort(_minutesSorting);
+            },
+            icon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(child: Icon(size: 15, _getSortingIcon(_minutesSorting))),
+
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    'Время',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // +/-
+          IconButton(
+            onPressed: () {
+              sort(_plusMinusSorting);
+            },
+            icon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(child: Icon(size: 15, _getSortingIcon(_plusMinusSorting))),
+
+                SizedBox(
+                  width: 50,
+                  child: Text(
+                    '+/–',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                "IMP",
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
               ),
-            ),
-
-            // Время
-            IconButton(
-              onPressed: () {
-                sort(_minutesSorting);
-              },
-              icon: Row(
+              SizedBox(height: 16),
+              Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(child: Icon(size: 15, _getSortingIcon(_minutesSorting))),
+                  for (var i = 0; i < widget.pers.length; i++) ...[
+                    IconButton(
+                      onPressed: () {
+                        sort(_persSorting[i]);
+                      },
+                      icon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(child: Icon(size: 15, _getSortingIcon(_persSorting[i]))),
 
-                  // Время
-                  SizedBox(
-                    width: 60,
-                    child: Text(
-                      'Время',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(width: 8),
-
-            // +/-
-            IconButton(
-              onPressed: () {
-                sort(_plusMinusSorting);
-              },
-              icon: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(child: Icon(size: 15, _getSortingIcon(_plusMinusSorting))),
-
-                  SizedBox(
-                    width: 50,
-                    child: Text(
-                      '+/–',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(width: 8),
-
-            Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  "IMP",
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                ),
-                SizedBox(height: 16),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var i = 0; i < widget.pers.length; i++) ...[
-                      IconButton(
-                        onPressed: () {
-                          sort(_persSorting[i]);
-                        },
-                        icon: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(child: Icon(size: 15, _getSortingIcon(_persSorting[i]))),
-
-                            SizedBox(
-                              width: 100,
-                              child: Text(
-                                widget.pers[i].toString(),
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                                textAlign: TextAlign.center,
-                              ),
+                          SizedBox(
+                            width: 100,
+                            child: Text(
+                              widget.pers[i].toString(),
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                              textAlign: TextAlign.center,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      if (i < widget.pers.length - 1) SizedBox(width: 8),
-                    ],
+                    ),
+                    if (i < widget.pers.length - 1) SizedBox(width: 8),
                   ],
-                ),
-              ],
-            ),
-          ],
-        ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -334,7 +354,7 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
     setState(() {});
   }
 
-  Widget _buildPlayerRow(BuildContext context, GameTeamPlayerStat stat) {
+  Widget _buildPlayerRow(BuildContext context, GameTeamPlayerStat stat, {required bool isMobile}) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
       decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5))),
@@ -355,12 +375,22 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
           const SizedBox(width: 12),
 
           // Имя игрока
-          SizedBox(
-            width: 120, // Та же фиксированная ширина, что и в заголовке
+          isMobile
+              ? SizedBox(
+            width: 120, // Фиксированная ширина для мобильных
             child: Text(
               stat.player?.fullName ?? 'Игрок ${stat.playerId}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
               maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          )
+              : Expanded(
+            flex: 3,
+            child: Text(
+              stat.player?.fullName ?? 'Игрок ${stat.playerId}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
