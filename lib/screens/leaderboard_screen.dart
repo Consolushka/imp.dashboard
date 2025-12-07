@@ -294,6 +294,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
 
   Widget _buildFilters() {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -345,13 +347,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       vertical: 8,
                     ),
                   ),
-                  isExpanded: true, // Чтобы текст не вылезал
+                  isExpanded: true,
                   items: [
                     const DropdownMenuItem<int?>(
                       value: null,
                       child: Text('Все команды'),
                     ),
-                    ..._teams.map((team) {
+                    ..._getSortedTeams().map((team) {
                       return DropdownMenuItem<int?>(
                         value: team.id,
                         child: Text(
@@ -365,8 +367,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     setState(() {
                       _selectedTeamId = value;
                     });
-                    // Можно добавить _loadLeaderboard() здесь, если хотите моментальное обновление
-                    // или оставить обновление только по кнопке
                   },
                 ),
               ],
@@ -374,20 +374,140 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
             const SizedBox(height: 16),
 
-            // Первая строка: Период IMP и Порядок сортировки
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Период IMP:',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
+            // Период IMP и Порядок сортировки
+            if (isMobile) ...[
+              // Мобильная версия - один столбец
+              _buildFilterField(
+                'Период IMP:',
+                DropdownButtonFormField<String>(
+                  value: _selectedPer,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  items: [
+                    fullGameImpPer,
+                    benchImpPer,
+                    startImpPer,
+                  ].map((per) {
+                    return DropdownMenuItem(
+                      value: per.code,
+                      child: Text(per.name),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedPer = value;
+                      });
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildFilterField(
+                'Порядок:',
+                DropdownButtonFormField<String>(
+                  value: _selectedOrder,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'desc',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.arrow_downward, size: 16),
+                          const SizedBox(width: 8),
+                          const Text('По убыванию'),
+                        ],
                       ),
-                      const SizedBox(height: 8),
+                    ),
+                    DropdownMenuItem(
+                      value: 'asc',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.arrow_upward, size: 16),
+                          const SizedBox(width: 8),
+                          const Text('По возрастанию'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedOrder = value;
+                      });
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildFilterField(
+                'Мин. игр:',
+                TextFormField(
+                  controller: _minGamesController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    hintText: 'от 1 до 100',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildFilterField(
+                'Кол-во игроков:',
+                DropdownButtonFormField<int>(
+                  value: _selectedLimit,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  items: [10, 20, 30, 50, 100].map((limit) {
+                    return DropdownMenuItem(
+                      value: limit,
+                      child: Text('Топ $limit'),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedLimit = value;
+                      });
+                    }
+                  },
+                ),
+              ),
+            ] else ...[
+              // Десктопная версия - два столбца
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildFilterField(
+                      'Период IMP:',
                       DropdownButtonFormField<String>(
                         value: _selectedPer,
                         decoration: InputDecoration(
@@ -417,23 +537,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                           }
                         },
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-
-                // Порядок сортировки
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Порядок:',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildFilterField(
+                      'Порядок:',
                       DropdownButtonFormField<String>(
                         value: _selectedOrder,
                         decoration: InputDecoration(
@@ -475,28 +584,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                           }
                         },
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-
-            const SizedBox(width: 16),
-
-            // Вторая строка: Минимум игр и Лимит
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Мин. игр:',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildFilterField(
+                      'Мин. игр:',
                       TextFormField(
                         controller: _minGamesController,
                         decoration: InputDecoration(
@@ -511,23 +608,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         ),
                         keyboardType: TextInputType.number,
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-
-                // Лимит игроков
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Кол-во игроков:',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildFilterField(
+                      'Кол-во игроков:',
                       DropdownButtonFormField<int>(
                         value: _selectedLimit,
                         decoration: InputDecoration(
@@ -539,9 +625,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             vertical: 8,
                           ),
                         ),
-                        items: [
-                          10, 20, 30, 50, 100
-                        ].map((limit) {
+                        items: [10, 20, 30, 50, 100].map((limit) {
                           return DropdownMenuItem(
                             value: limit,
                             child: Text('Топ $limit'),
@@ -555,11 +639,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                           }
                         },
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
 
             const SizedBox(height: 16),
 
@@ -613,6 +697,34 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         ),
       ),
     );
+  }
+
+  // Вспомогательный метод для создания полей фильтров
+  Widget _buildFilterField(String label, Widget field) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        field,
+      ],
+    );
+  }
+
+// Метод для получения отсортированных команд по алфавиту
+  List<Team> _getSortedTeams() {
+    final sortedTeams = List<Team>.from(_teams);
+    sortedTeams.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    return sortedTeams;
+  }
+
+  String _getOrderDisplayText() {
+    return _selectedOrder == 'desc' ? 'лучших' : 'худших';
   }
 
   Widget _buildNoTournamentState() {
@@ -696,11 +808,5 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       default:
         return _selectedPer;
     }
-  }
-
-  String _getOrderDisplayText() {
-    return _selectedOrder == 'desc'
-        ? 'лучших'
-        : 'худших';
   }
 }
