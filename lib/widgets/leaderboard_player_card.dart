@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import '../models/ranked_player_model.dart';
 
@@ -19,137 +20,122 @@ class LeaderboardCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         side: isTopThree
             ? BorderSide(
-                color: _getPositionColor(),
-                width: 2,
-              )
+          color: _getPositionColor(),
+          width: 2,
+        )
             : BorderSide.none,
       ),
-      child: Container(
-        decoration: isTopThree
-            ? BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [
-                    _getPositionColor().withOpacity(0.05),
-                    Colors.white,
-                  ],
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // Позиция с медалькой для топ-3
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: isTopThree ? _getPositionColor() : Colors.grey[100],
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isTopThree ? _getPositionColor() : Colors.grey[300]!,
+                  width: 2,
                 ),
-              )
-            : null,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Позиция с медалькой для топ-3
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: isTopThree ? _getPositionColor() : Colors.grey[100],
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: isTopThree ? _getPositionColor() : Colors.grey[300]!,
-                    width: 2,
+              ),
+              child: Center(
+                child: isTopThree
+                    ? Icon(
+                  _getPositionIcon(),
+                  color: Colors.white,
+                  size: 24,
+                )
+                    : Text(
+                  '${rankedPlayer.position}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[600],
                   ),
                 ),
-                child: Center(
-                  child: isTopThree
-                      ? Icon(
-                          _getPositionIcon(),
-                          color: Colors.white,
-                          size: 24,
-                        )
-                      : Text(
-                          '${rankedPlayer.position}',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                ),
               ),
-              
-              const SizedBox(width: 16),
-              
-              // Аватар игрока
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(20),
-                  color: Colors.grey[50],
-                ),
-                child: const Icon(
-                  Icons.person,
-                  size: 20,
-                  color: Colors.grey,
-                ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // Аватар игрока
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(20),
+                color: Colors.grey[50],
               ),
-              
-              const SizedBox(width: 16),
-              
-              // Информация об игроке
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      rankedPlayer.player.fullName,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: isTopThree ? FontWeight.bold : FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+              child: const Icon(
+                Icons.person,
+                size: 20,
+                color: Colors.grey,
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // Информация об игроке
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    rankedPlayer.player.fullName,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: isTopThree ? FontWeight.bold : FontWeight.w500,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${rankedPlayer.gamesCount} ${_getGamesText(rankedPlayer.gamesCount)}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              // IMP значение
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: _getImpBackgroundColor(),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: _getImpBorderColor(),
-                    width: 1,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'IMP',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                        fontSize: 10,
-                      ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${rankedPlayer.gamesCount} ${_getGamesText(rankedPlayer.gamesCount)}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      rankedPlayer.avgImp >= 0
-                          ? '+${rankedPlayer.avgImp.toStringAsFixed(1)}'
-                          : '${rankedPlayer.avgImp.toStringAsFixed(1)}',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: _getImpTextColor(),
-                      ),
-                    ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+
+            // IMP значение
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: _getImpBackgroundColor(),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: _getImpBorderColor(),
+                  width: 1,
                 ),
               ),
-            ],
-          ),
+              child: Column(
+                children: [
+                  Text(
+                    'IMP',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    rankedPlayer.avgImp >= 0
+                        ? '+${rankedPlayer.avgImp.toStringAsFixed(1)}'
+                        : '${rankedPlayer.avgImp.toStringAsFixed(1)}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: _getImpTextColor(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

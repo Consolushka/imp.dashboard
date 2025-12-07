@@ -1,9 +1,11 @@
+
 import 'package:flutter/material.dart';
 import '../core/di.dart';
 import '../infra/statistics/client.dart';
-import '../infra/statistics/leaderboard_filters_model.dart';
+import '../models/team_model.dart';
 import '../models/tournament_model.dart';
 import '../models/ranked_player_model.dart';
+import '../infra/statistics/leaderboard_filters_model.dart';
 import '../models/pers.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/error_dialog.dart';
@@ -23,32 +25,51 @@ class LeaderboardScreen extends StatefulWidget {
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
   StatisticsClient apiClient = DependencyInjection().getIt<StatisticsClient>();
-  
+
   List<RankedPlayer> _players = [];
+  List<Team> _teams = []; // Добавляем список команд
   bool _isLoading = true;
-  
+  bool _isUpdating = false; // Для показа загрузки при обновлении
+
+  // Контроллер для поля минимальных игр
+  late TextEditingController _minGamesController;
+
   // Параметры фильтрации
   String _selectedPer = fullGameImpPer.code;
-  final String _selectedOrder = 'asc';
-  final int _selectedLimit = 10;
+  String _selectedOrder = 'asc';
+  int _selectedLimit = 10;
   int _selectedMinGames = 1;
+  int? _selectedTeamId;
 
   @override
   void initState() {
     super.initState();
+    _minGamesController = TextEditingController(text: _selectedMinGames.toString());
+    _loadTeams();
     _loadLeaderboard();
   }
 
-  void _loadLeaderboard() async {
+  @override
+  void dispose() {
+    _minGamesController.dispose();
+    super.dispose();
+  }
+
+  void _loadLeaderboard({bool isUpdate = false}) async {
     if (widget.tournament == null) {
       setState(() {
         _isLoading = false;
+        _isUpdating = false;
       });
       return;
     }
 
     setState(() {
-      _isLoading = true;
+      if (isUpdate) {
+        _isUpdating = true;
+      } else {
+        _isLoading = true;
+      }
     });
 
     try {
@@ -58,6 +79,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         limit: _selectedLimit,
         order: _selectedOrder,
         minGames: _selectedMinGames,
+        teamId: _selectedTeamId, // Передаем ID команды
       );
 
       final leaderboard = await apiClient.getLeaderboard(filters);
@@ -65,10 +87,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       setState(() {
         _players = leaderboard;
         _isLoading = false;
+        _isUpdating = false;
       });
     } catch (e) {
       setState(() {
         _isLoading = false;
+        _isUpdating = false;
       });
 
       if (mounted) {
@@ -76,10 +100,36 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           context,
           title: 'Ошибка загрузки лидерборда',
           message: 'Не удалось загрузить лидерборд турнира.\n\nТехническая информация:\n$e',
-          onRetry: _loadLeaderboard,
+          onRetry: () => _loadLeaderboard(),
           retryButtonText: 'Попробовать снова',
         );
       }
+    }
+  }
+
+  void _updateFiltersAndReload() {
+    // Обновляем минимальные игры из поля ввода
+    final minGames = int.tryParse(_minGamesController.text) ?? 1;
+    _selectedMinGames = minGames.clamp(1, 100);
+
+    // Обновляем поле если значение было некорректным
+    if (_minGamesController.text != _selectedMinGames.toString()) {
+      _minGamesController.text = _selectedMinGames.toString();
+    }
+
+    // Перезагружаем лидерборд с обновленными фильтрами
+    _loadLeaderboard(isUpdate: true);
+  }
+
+  void _loadTeams() async {
+    if (widget.tournament == null) return;
+    try {
+      final teams = await apiClient.getTeamByTournament(widget.tournament!.id);
+      setState(() {
+        _teams = teams;
+      });
+    } catch (e) {
+      print('Ошибка загрузки команд: $e');
     }
   }
 
@@ -95,7 +145,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadLeaderboard,
+            onPressed: () => _loadLeaderboard(),
           ),
         ],
       ),
@@ -125,10 +175,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       );
     }
 
-    if (_players.isEmpty) {
-      return _buildEmptyState();
-    }
-
     return RefreshIndicator(
       onRefresh: () async => _loadLeaderboard(),
       color: Colors.black,
@@ -155,48 +201,98 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Топ игроков турнира',
+                    _selectedOrder == 'desc'
+                        ? 'Лучшие игроки турнира'
+                        : 'Игроки турнира (по возрастанию)',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    'Рейтинг по среднему IMP (${_getPerDisplayName()})',
-                    style: Theme.of(context).textTheme.bodySmall,
+                  Row(
+                    children: [
+                      Icon(
+                        _selectedOrder == 'desc'
+                            ? Icons.trending_up
+                            : Icons.trending_down,
+                        size: 16,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          'Рейтинг по среднему IMP (${_getPerDisplayName()}) • Показано ${_players.length} из ${_selectedLimit}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
 
+
+          // todo: min games - >=. fix
           const SliverPadding(padding: EdgeInsets.only(top: 16)),
 
-          // Список игроков
-          SliverPadding(
-            padding: EdgeInsets.symmetric(
-              horizontal: _getHorizontalPadding(context),
-            ),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final player = _players[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: LeaderboardCard(
-                      rankedPlayer: player,
-                      isTopThree: index < 3,
+          // Индикатор обновления
+          if (_isUpdating) ...[
+            SliverPadding(
+              padding: EdgeInsets.symmetric(
+                horizontal: _getHorizontalPadding(context),
+              ),
+              sliver: const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 16),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.black,
+                      strokeWidth: 2,
                     ),
-                  );
-                },
-                childCount: _players.length,
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
+
+          // Список игроков или пустое состояние
+          if (_players.isEmpty && !_isUpdating) ...[
+            SliverPadding(
+              padding: EdgeInsets.symmetric(
+                horizontal: _getHorizontalPadding(context),
+              ),
+              sliver: SliverToBoxAdapter(
+                child: _buildEmptyState(),
+              ),
+            ),
+          ] else if (!_isUpdating) ...[
+            SliverPadding(
+              padding: EdgeInsets.symmetric(
+                horizontal: _getHorizontalPadding(context),
+              ),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                    final player = _players[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: LeaderboardCard(
+                        rankedPlayer: player,
+                        isTopThree: index < 3,
+                      ),
+                    );
+                  },
+                  childCount: _players.length,
+                ),
+              ),
+            ),
+          ],
 
           const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
         ],
       ),
     );
   }
+
 
   Widget _buildFilters() {
     return Card(
@@ -227,8 +323,59 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
-            // Период IMP
+
+            // Выбор команды
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Команда:',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<int?>(
+                  value: _selectedTeamId,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  isExpanded: true, // Чтобы текст не вылезал
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('Все команды'),
+                    ),
+                    ..._teams.map((team) {
+                      return DropdownMenuItem<int?>(
+                        value: team.id,
+                        child: Text(
+                          team.name,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedTeamId = value;
+                    });
+                    // Можно добавить _loadLeaderboard() здесь, если хотите моментальное обновление
+                    // или оставить обновление только по кнопке
+                  },
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Первая строка: Период IMP и Порядок сортировки
             Row(
               children: [
                 Expanded(
@@ -268,7 +415,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             setState(() {
                               _selectedPer = value;
                             });
-                            _loadLeaderboard();
                           }
                         },
                       ),
@@ -276,8 +422,71 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                
-                // Минимум игр
+
+                // Порядок сортировки
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Порядок:',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: _selectedOrder,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: 'desc',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.arrow_downward, size: 16),
+                                const SizedBox(width: 8),
+                                const Text('По убыванию'),
+                              ],
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'asc',
+                            child: Row(
+                              children: [
+                                const Icon(Icons.arrow_upward, size: 16),
+                                const SizedBox(width: 8),
+                                const Text('По возрастанию'),
+                              ],
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _selectedOrder = value;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(width: 16),
+
+            // Вторая строка: Минимум игр и Лимит
+            Row(
+              children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,7 +499,38 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
-                        initialValue: _selectedMinGames.toString(),
+                        controller: _minGamesController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          hintText: 'от 1 до 100',
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+
+                // Лимит игроков
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Кол-во игроков:',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<int>(
+                        value: _selectedLimit,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -300,19 +540,75 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             vertical: 8,
                           ),
                         ),
-                        keyboardType: TextInputType.number,
-                        onFieldSubmitted: (value) {
-                          final minGames = int.tryParse(value) ?? _selectedMinGames;
-                          setState(() {
-                            _selectedMinGames = minGames;
-                          });
-                          _loadLeaderboard();
+                        items: [
+                          10, 20, 30, 50, 100
+                        ].map((limit) {
+                          return DropdownMenuItem(
+                            value: limit,
+                            child: Text('Топ $limit'),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _selectedLimit = value;
+                            });
+                          }
                         },
                       ),
                     ],
                   ),
                 ),
               ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Кнопка обновления
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isUpdating ? null : _updateFiltersAndReload,
+                icon: _isUpdating
+                    ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+                    : const Icon(Icons.refresh),
+                label: Text(_isUpdating ? 'Обновление...' : 'Обновить лидерборд'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+
+            // Информация о текущих настройках
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: Text(
+                'Показать ${_getOrderDisplayText()} ${_selectedLimit} игроков${_selectedTeamId != null ? " выбранной команды" : ""} с минимум ${_selectedMinGames} играми по IMP (${_getPerDisplayName()})',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
           ],
         ),
@@ -401,5 +697,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       default:
         return _selectedPer;
     }
+  }
+
+  String _getOrderDisplayText() {
+    return _selectedOrder == 'desc'
+        ? 'лучших'
+        : 'худших';
   }
 }

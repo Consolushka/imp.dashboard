@@ -4,6 +4,7 @@ import 'package:http/http.dart';
 import 'package:imp/infra/statistics/paginated_response.dart';
 import 'package:imp/models/game_model.dart';
 import 'package:imp/models/league_model.dart';
+import 'package:imp/models/team_model.dart';
 import 'package:imp/models/tournament_model.dart';
 
 import '../../models/player_stat_imp_model.dart';
@@ -123,6 +124,15 @@ class StatisticsClient {
     return data
         .map((item) => RankedPlayer.fromJson(item as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<List<Team>> getTeamByTournament(int tournamentId) async {
+    var uri = Uri.parse("$_baseUrl/tournaments/$tournamentId/teams");
+
+    var response = await get(uri, headers: {'Content-Type': 'application/json'});
+
+    var responseBody = _handleBodyBytes(response);
+    return (responseBody['data'] as List).map((item) => Team.fromJson(item)).toList();
   }
 
 
