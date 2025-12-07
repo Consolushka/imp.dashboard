@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../screens/games_screen.dart';
 import '../screens/tournaments_screen.dart';
+import '../screens/games_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/tournament_model.dart';
+import '../screens/leaderboard_screen.dart';
 
 class TournamentCard extends StatelessWidget {
   final Tournament tournament;
@@ -42,7 +43,7 @@ class TournamentCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  
+
                   // Информация о турнире
                   Expanded(
                     child: Column(
@@ -57,7 +58,7 @@ class TournamentCard extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        
+
                         if (showLeague && tournament.league != null) ...[
                           const SizedBox(height: 4),
                           Container(
@@ -77,9 +78,9 @@ class TournamentCard extends StatelessWidget {
                             ),
                           ),
                         ],
-                        
+
                         const SizedBox(height: 8),
-                        
+
                         // Даты турнира
                         Row(
                           children: [
@@ -95,9 +96,9 @@ class TournamentCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        
+
                         const SizedBox(height: 4),
-                        
+
                         // Продолжительность регламента
                         Row(
                           children: [
@@ -116,19 +117,53 @@ class TournamentCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  
-                  // Стрелка перехода
-                  const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: Colors.grey,
+
+                  // Меню действий
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: Colors.grey),
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'leaderboard':
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => LeaderboardScreen(tournament: tournament),
+                            ),
+                          );
+                          break;
+                        case 'games':
+                          if (onTap != null) onTap!();
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'games',
+                        child: Row(
+                          children: [
+                            Icon(Icons.sports_basketball_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text('Игры'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'leaderboard',
+                        child: Row(
+                          children: [
+                            Icon(Icons.leaderboard_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text('Лидерборд'),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
-              // Статус турнира
+
+              // Статус турнира и быстрые действия
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -150,11 +185,24 @@ class TournamentCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
-                  // Информация о продолжительности
-                  Text(
-                    _getDurationText(),
-                    style: Theme.of(context).textTheme.bodySmall,
+
+                  // Кнопка лидерборда
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => LeaderboardScreen(tournament: tournament),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.leaderboard_outlined, size: 16),
+                    label: const Text('Лидерборд'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.black,
+                      side: const BorderSide(color: Colors.black, width: 1),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      minimumSize: Size.zero,
+                    ),
                   ),
                 ],
               ),
@@ -165,22 +213,23 @@ class TournamentCard extends StatelessWidget {
     );
   }
 
+  // ... остальные методы остаются без изменений
   String _formatDateRange() {
     final startDate = '${tournament.startAt.day.toString().padLeft(2, '0')}.${tournament.startAt.month.toString().padLeft(2, '0')}.${tournament.startAt.year}';
     final endDate = '${tournament.endAt.day.toString().padLeft(2, '0')}.${tournament.endAt.month.toString().padLeft(2, '0')}.${tournament.endAt.year}';
-    
+
     if (tournament.startAt.year == tournament.endAt.year &&
         tournament.startAt.month == tournament.endAt.month &&
         tournament.startAt.day == tournament.endAt.day) {
       return startDate;
     }
-    
+
     return '$startDate - $endDate';
   }
 
   String _getTournamentStatus() {
     final now = DateTime.now();
-    
+
     if (now.isBefore(tournament.startAt)) {
       return 'ПРЕДСТОИТ';
     } else if (now.isAfter(tournament.endAt)) {
@@ -192,27 +241,13 @@ class TournamentCard extends StatelessWidget {
 
   Color _getStatusColor() {
     final now = DateTime.now();
-    
+
     if (now.isBefore(tournament.startAt)) {
       return Colors.grey; // Предстоит
     } else if (now.isAfter(tournament.endAt)) {
       return Colors.black; // Завершен
     } else {
       return Colors.black87; // Идет
-    }
-  }
-
-  String _getDurationText() {
-    final duration = tournament.endAt.difference(tournament.startAt);
-    final days = duration.inDays;
-    
-    if (days < 1) {
-      return '1 день';
-    } else if (days < 30) {
-      return '$days дн.';
-    } else {
-      final months = (days / 30).round();
-      return '$months мес.';
     }
   }
 }

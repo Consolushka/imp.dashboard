@@ -1,11 +1,15 @@
 class Sorting {
+  late String _id;
   bool? _isAscending;
   Function(bool isAscending)? _sortingCallback;
 
-  Sorting({bool? isAscending, Function(bool isAscending)? callback}) {
+  Sorting({required String id, bool? isAscending, Function(bool isAscending)? callback}) {
+    _id = id;
     _isAscending = isAscending;
     _sortingCallback = callback;
   }
+
+  String get id => _id;
 
   void toggle() {
     if (_isAscending == null) {

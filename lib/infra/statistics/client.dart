@@ -4,9 +4,11 @@ import 'package:http/http.dart';
 import 'package:imp/infra/statistics/paginated_response.dart';
 import 'package:imp/models/game_model.dart';
 import 'package:imp/models/league_model.dart';
+import 'package:imp/models/team_model.dart';
 import 'package:imp/models/tournament_model.dart';
 
-import '../../models/player_stat_imp_model.dart';
+import '../../models/ranked_player_model.dart';
+import 'leaderboard_filters_model.dart';
 
 class StatisticsClient {
   final String _baseUrl;
@@ -52,10 +54,7 @@ class StatisticsClient {
   }
 
   Future<PaginatedResponse<Game>> gamesPaginated(int page) async {
-    final response = await get(
-      Uri.parse('$_baseUrl/games?page=$page'),
-      headers: {'Content-Type': 'application/json'},
-    );
+    final response = await get(Uri.parse('$_baseUrl/games?page=$page'), headers: {'Content-Type': 'application/json'});
 
     final responseBody = _handleBodyBytes(response);
     return PaginatedResponse.fromJson(responseBody, Game.fromJson);
@@ -70,9 +69,7 @@ class StatisticsClient {
     return Game.fromJson(responseBody['data']);
   }
 
-  Future<Map<int, List<PlayerStatImp>>> imp(List<int> ids, List<String> pers) async {
-    Map<int, List<PlayerStatImp>> res = <int, List<PlayerStatImp>>{};
-
+  Future<Map<int, Map<String, double>>> imp(List<int> ids, List<String> pers) async {
     String idsParam = "";
     for (var i = 0; i < ids.length; i++) {
       idsParam += "ids[]=${ids[i]}";
@@ -94,12 +91,49 @@ class StatisticsClient {
     var response = await get(uri, headers: {'Content-Type': 'application/json'});
 
     var responseBody = _handleBodyBytes(response);
-    for (var el in (responseBody['data'] as List)) {
-      var test = (el['imp_pers'] as List).map((impPer) => PlayerStatImp.fromJson(impPer)).toList();
-      res[el['player_stat_id']] = test;
-    }
-    return res;
+    var res1 = <int, Map<String, double>>{};
+    var a = responseBody['data'] as Map;
+    a.forEach((key, val) {
+      var perMap = <String, double>{};
+      var test = val as Map;
+      for (var perVal in test.keys) {
+        perMap[perVal] = test[perVal]['imp'].toDouble();
+      }
+      res1[int.parse(key)] = perMap;
+    });
+
+    return res1;
   }
+
+  Future<List<RankedPlayer>> getLeaderboard(LeaderboardFilters filters) async {
+    final uri = Uri.parse('$_baseUrl/leaderboard').replace(
+      queryParameters: filters.toQueryParams(),
+    );
+
+    final response = await get(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    final responseBody = _handleBodyBytes(response);
+
+    // Предполагаем, что API возвращает массив в поле 'data' или просто массив
+    final List<dynamic> data = (responseBody['data'] as List<dynamic>? ?? responseBody['leaderboard'] as List<dynamic>? ?? []);
+
+    return data
+        .map((item) => RankedPlayer.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<List<Team>> getTeamByTournament(int tournamentId) async {
+    var uri = Uri.parse("$_baseUrl/tournaments/$tournamentId/teams");
+
+    var response = await get(uri, headers: {'Content-Type': 'application/json'});
+
+    var responseBody = _handleBodyBytes(response);
+    return (responseBody['data'] as List).map((item) => Team.fromJson(item)).toList();
+  }
+
 
   // Обрабатывает ответ от сервера и парсит ошибку если не 200ый статус ответа
   Map<String, dynamic> _handleBodyBytes(Response response) {
