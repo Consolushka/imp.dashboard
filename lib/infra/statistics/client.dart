@@ -52,10 +52,7 @@ class StatisticsClient {
   }
 
   Future<PaginatedResponse<Game>> gamesPaginated(int page) async {
-    final response = await get(
-      Uri.parse('$_baseUrl/games?page=$page'),
-      headers: {'Content-Type': 'application/json'},
-    );
+    final response = await get(Uri.parse('$_baseUrl/games?page=$page'), headers: {'Content-Type': 'application/json'});
 
     final responseBody = _handleBodyBytes(response);
     return PaginatedResponse.fromJson(responseBody, Game.fromJson);
@@ -70,9 +67,7 @@ class StatisticsClient {
     return Game.fromJson(responseBody['data']);
   }
 
-  Future<Map<int, List<PlayerStatImp>>> imp(List<int> ids, List<String> pers) async {
-    Map<int, List<PlayerStatImp>> res = <int, List<PlayerStatImp>>{};
-
+  Future<Map<int, Map<String, double>>> imp(List<int> ids, List<String> pers) async {
     String idsParam = "";
     for (var i = 0; i < ids.length; i++) {
       idsParam += "ids[]=${ids[i]}";
@@ -94,11 +89,18 @@ class StatisticsClient {
     var response = await get(uri, headers: {'Content-Type': 'application/json'});
 
     var responseBody = _handleBodyBytes(response);
-    for (var el in (responseBody['data'] as List)) {
-      var test = (el['imp_pers'] as List).map((impPer) => PlayerStatImp.fromJson(impPer)).toList();
-      res[el['player_stat_id']] = test;
-    }
-    return res;
+    var res1 = <int, Map<String, double>>{};
+    var a = responseBody['data'] as Map;
+    a.forEach((key, val) {
+      var perMap = <String, double>{};
+      var test = val as Map;
+      for (var perVal in test.keys) {
+        perMap[perVal] = test[perVal]['imp'].toDouble();
+      }
+      res1[int.parse(key)] = perMap;
+    });
+
+    return res1;
   }
 
   // Обрабатывает ответ от сервера и парсит ошибку если не 200ый статус ответа

@@ -26,7 +26,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   StatisticsClient apiClient = DependencyInjection().getIt<StatisticsClient>();
 
   late Game _game;
-  Map<int, List<PlayerStatImp>> _playerImps = {}; // IMP значения по ID игроков
+  Map<int, Map<String, double>> _playerImps = {}; // IMP значения по ID игроков
   bool _isLoading = true;
 
   @override

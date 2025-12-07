@@ -1,17 +1,15 @@
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../library/sorting/sorting.dart';
 import '../models/game_team_player_stat_model.dart';
 import '../models/pers.dart';
-import '../models/player_stat_imp_model.dart';
 
 class PlayerStatsTable extends StatefulWidget {
   final String teamName;
   final int teamScore;
   final bool isWinner;
   final List<GameTeamPlayerStat> playerStats;
-  final Map<int, List<PlayerStatImp>> playerImps;
+  final Map<int, Map<String, double>> playerImps;
   final List<ImpPer> pers;
 
   const PlayerStatsTable({
@@ -40,6 +38,7 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
   void initState() {
     super.initState();
     _minutesSorting = Sorting(
+      id: "Minutes",
       isAscending: true,
       callback: (isAscending) {
         int multiplier = isAscending ? 1 : -1;
@@ -48,47 +47,50 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
       },
     );
     _plusMinusSorting = Sorting(
+      id: "PlusMinus",
       callback: (isAscending) {
         int multiplier = isAscending ? 1 : -1;
 
         widget.playerStats.sort((a, b) => a.plusMinus.compareTo(b.plusMinus) * multiplier);
       },
     );
+
   }
 
   @override
   Widget build(BuildContext context) {
-    sortingChain = [_minutesSorting, _plusMinusSorting];
+    _persSorting.clear();
     for (var per in widget.pers) {
-      _persSorting.add(Sorting(callback: (isAscending) {
-        int multiplier = isAscending ? 1 : -1;
 
-        widget.playerStats.sort((a, b) {
-          final aImps = widget.playerImps[a.id];
-          final bImps = widget.playerImps[b.id];
+      bool? isAscending;
 
-          final aImp =
-              aImps
-                  ?.firstWhere(
-                    (imp) => imp.per == per.code,
-                orElse: () => PlayerStatImp(per: per.code, imp: 0),
-              )
-                  .imp ??
-                  0;
-          final bImp =
-              bImps
-                  ?.firstWhere(
-                    (imp) => imp.per == per.code,
-                orElse: () => PlayerStatImp(per: per.code, imp: 0),
-              )
-                  .imp ??
-                  0;
+      for (var sortingInstance in sortingChain) {
+        if (sortingInstance.id == per.name) {
+          isAscending = sortingInstance.isAscending;
+        }
+      }
 
-          return aImp.compareTo(bImp) * multiplier;
-        });
-      }));
+      var perSorting = Sorting(
+        id: per.name,
+        isAscending: isAscending,
+        callback: (isAscending) {
+          int multiplier = isAscending ? 1 : -1;
+
+          widget.playerStats.sort((a, b) {
+            final aImps = widget.playerImps[a.id];
+            final bImps = widget.playerImps[b.id];
+
+            final aImp = aImps?[per.code] ?? 0.0;
+            final bImp = bImps?[per.code] ?? 0.0;
+
+            return aImp.compareTo(bImp) * multiplier;
+          });
+        },
+      );
+      _persSorting.add(perSorting);
     }
 
+    sortingChain = [_minutesSorting, _plusMinusSorting];
     sortingChain.addAll(_persSorting);
 
     if (!_isSorted) {
@@ -115,9 +117,7 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
             const SizedBox(height: 16),
 
             // Адаптивная таблица
-            isMobile
-                ? _buildScrollableTable(context)
-                : _buildResponsiveTable(context),
+            isMobile ? _buildScrollableTable(context) : _buildResponsiveTable(context),
           ],
         ),
       ),
@@ -214,23 +214,23 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
           // Игрок
           isMobile
               ? SizedBox(
-            width: 120, // Фиксированная ширина для мобильных
-            child: Text(
-              'Игрок',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-            ),
-          )
+                width: 120, // Фиксированная ширина для мобильных
+                child: Text(
+                  'Игрок',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                ),
+              )
               : Expanded(
-            flex: 3,
-            child: Text(
-              'Игрок',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-            ),
-          ),
+                flex: 3,
+                child: Text(
+                  'Игрок',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                ),
+              ),
 
           // Время
           IconButton(
@@ -301,7 +301,8 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
                   for (var i = 0; i < widget.pers.length; i++) ...[
                     IconButton(
                       onPressed: () {
-                        sort(_persSorting[i]);
+                        var persSorting = _persSorting[i];
+                        sort(persSorting);
                       },
                       icon: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -333,21 +334,33 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
   }
 
   IconData _getSortingIcon(Sorting sorting) {
-    if (sorting.isAscending == null) {
+    Sorting? instance;
+
+    for (var sortingInstance in sortingChain) {
+      if (sortingInstance.id == sorting.id) {
+        instance = sorting;
+      }
+    }
+
+    if (instance == null) {
+      throw Exception("Cannot find sorting instance");
+    }
+
+    if (instance.isAscending == null) {
       return FaIcon(FontAwesomeIcons.sort).icon!;
     }
 
-    return sorting.isAscending!
+    return instance.isAscending!
         ? FaIcon(FontAwesomeIcons.arrowUpShortWide).icon!
         : FaIcon(FontAwesomeIcons.arrowUpWideShort).icon!;
   }
 
   void sort(Sorting sorting) {
     for (var sortingInstance in sortingChain) {
-      if (sortingInstance != sorting) {
+      if (sortingInstance.id != sorting.id) {
         sortingInstance.disable();
       } else {
-        sorting.toggle();
+        sortingInstance.toggle();
       }
     }
 
@@ -377,23 +390,23 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
           // Имя игрока
           isMobile
               ? SizedBox(
-            width: 120, // Фиксированная ширина для мобильных
-            child: Text(
-              stat.player?.fullName ?? 'Игрок ${stat.playerId}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          )
+                width: 120, // Фиксированная ширина для мобильных
+                child: Text(
+                  stat.player?.fullName ?? 'Игрок ${stat.playerId}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              )
               : Expanded(
-            flex: 3,
-            child: Text(
-              stat.player?.fullName ?? 'Игрок ${stat.playerId}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
+                flex: 3,
+                child: Text(
+                  stat.player?.fullName ?? 'Игрок ${stat.playerId}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
 
           // Время игры
           SizedBox(
@@ -436,51 +449,47 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
   }
 
   List<Widget> _getPlayerImpPerSizedBox(BuildContext context, int playerStatId, ImpPer per) {
-    final imp = _getBenchImp(playerStatId, per);
+    final imp = _getImpForPlayerByPer(playerStatId, per);
     final isLast = widget.pers.last == per;
 
     return [
       SizedBox(
         width: 100 + 15 + 8 + 8,
         child:
-        imp != null
-            ? Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          decoration: BoxDecoration(color: _getImpColor(imp.imp), borderRadius: BorderRadius.circular(6)),
-          child: Text(
-            imp.imp > 0 ? '+${imp.imp.toStringAsFixed(1)}' : imp.imp.toStringAsFixed(1),
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-        )
-            : Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.circular(6)),
-          child: Text(
-            '—',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-        ),
+            imp != null
+                ? Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  decoration: BoxDecoration(color: _getImpColor(imp), borderRadius: BorderRadius.circular(6)),
+                  child: Text(
+                    imp > 0 ? '+${imp.toStringAsFixed(1)}' : imp.toStringAsFixed(1),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+                : Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.circular(6)),
+                  child: Text(
+                    '—',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
       ),
       if (!isLast) const SizedBox(width: 8),
     ];
   }
 
-  // Получаем IMP для "bench" периода
-  PlayerStatImp? _getBenchImp(int playerStatId, ImpPer per) {
+  // Получаем IMP для указанного периода
+  double? _getImpForPlayerByPer(int playerStatId, ImpPer per) {
     final imps = widget.playerImps[playerStatId];
     if (imps == null) return null;
 
-    try {
-      return imps.firstWhere((imp) => imp.per == per.code);
-    } catch (e) {
-      return null;
-    }
+    return imps[per.code];
   }
 
   String _formatPlayTime(int seconds) {
