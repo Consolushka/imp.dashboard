@@ -83,19 +83,6 @@ class AppDrawer extends StatelessWidget {
                       );
                     },
                   ),
-                  _buildDrawerItem(
-                    context,
-                    icon: Icons.leaderboard_outlined,
-                    title: 'Лидерборд',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const LeaderboardScreen(),
-                        ),
-                      );
-                    },
-                  ),
                   const Divider(height: 1),
                   _buildDrawerItem(
                     context,
