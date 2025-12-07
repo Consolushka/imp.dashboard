@@ -7,7 +7,6 @@ import 'package:imp/models/league_model.dart';
 import 'package:imp/models/team_model.dart';
 import 'package:imp/models/tournament_model.dart';
 
-import '../../models/player_stat_imp_model.dart';
 import '../../models/ranked_player_model.dart';
 import 'leaderboard_filters_model.dart';
 

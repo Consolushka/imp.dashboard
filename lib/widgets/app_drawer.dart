@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../screens/leaderboard_screen.dart';
 import '../screens/tournaments_screen.dart';
 import '../screens/games_screen.dart';
 
