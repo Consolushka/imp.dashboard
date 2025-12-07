@@ -231,7 +231,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           ),
 
 
-          // todo: min games - >=. fix
           const SliverPadding(padding: EdgeInsets.only(top: 16)),
 
           // Индикатор обновления
