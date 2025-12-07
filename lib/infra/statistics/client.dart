@@ -7,6 +7,8 @@ import 'package:imp/models/league_model.dart';
 import 'package:imp/models/tournament_model.dart';
 
 import '../../models/player_stat_imp_model.dart';
+import '../../models/ranked_player_model.dart';
+import 'leaderboard_filters_model.dart';
 
 class StatisticsClient {
   final String _baseUrl;
@@ -102,6 +104,27 @@ class StatisticsClient {
 
     return res1;
   }
+
+  Future<List<RankedPlayer>> getLeaderboard(LeaderboardFilters filters) async {
+    final uri = Uri.parse('$_baseUrl/leaderboard').replace(
+      queryParameters: filters.toQueryParams(),
+    );
+
+    final response = await get(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    final responseBody = _handleBodyBytes(response);
+
+    // Предполагаем, что API возвращает массив в поле 'data' или просто массив
+    final List<dynamic> data = (responseBody['data'] as List<dynamic>? ?? responseBody['leaderboard'] as List<dynamic>? ?? []);
+
+    return data
+        .map((item) => RankedPlayer.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
 
   // Обрабатывает ответ от сервера и парсит ошибку если не 200ый статус ответа
   Map<String, dynamic> _handleBodyBytes(Response response) {

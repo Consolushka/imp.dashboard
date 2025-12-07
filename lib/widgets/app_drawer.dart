@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../screens/games_screen.dart';
+import '../screens/leaderboard_screen.dart';
 import '../screens/tournaments_screen.dart';
+import '../screens/games_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -78,6 +79,19 @@ class AppDrawer extends StatelessWidget {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const GamesScreen(isRecentGames: true),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    context,
+                    icon: Icons.leaderboard_outlined,
+                    title: 'Лидерборд',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const LeaderboardScreen(),
                         ),
                       );
                     },
