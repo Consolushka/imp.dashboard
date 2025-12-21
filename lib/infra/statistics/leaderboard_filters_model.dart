@@ -5,6 +5,10 @@ class LeaderboardFilters {
   final String? order;
   final int? minGames;
   final int? teamId;
+  final int? minMinutes;
+  final int? maxMinutes;
+
+  final int maxPossibleMinutes;
 
   const LeaderboardFilters({
     required this.tournamentId,
@@ -13,6 +17,9 @@ class LeaderboardFilters {
     this.order,
     this.minGames,
     this.teamId,
+    this.minMinutes,
+    this.maxMinutes,
+    required this.maxPossibleMinutes,
   });
 
   Map<String, dynamic> toQueryParams() {
@@ -25,6 +32,8 @@ class LeaderboardFilters {
     if (order != null) params['order'] = order;
     if (minGames != null) params['min_games'] = minGames.toString();
     if (teamId != null) params['team_id'] = teamId.toString();
+    if (minMinutes != null && minMinutes != 0) params['min_minutes'] = minMinutes.toString(); // Добавляем
+    if (maxMinutes != null && maxMinutes != maxPossibleMinutes) params['max_minutes'] = maxMinutes.toString(); // Добавляем
 
     return params;
   }
@@ -36,6 +45,9 @@ class LeaderboardFilters {
     String? order,
     int? minGames,
     int? teamId,
+    int? minMinutes,
+    int? maxMinutes,
+    required int maxPossibleMinutes,
   }) {
     return LeaderboardFilters(
       tournamentId: tournamentId ?? this.tournamentId,
@@ -44,6 +56,9 @@ class LeaderboardFilters {
       order: order ?? this.order,
       minGames: minGames ?? this.minGames,
       teamId: teamId ?? this.teamId,
+      minMinutes: minMinutes != 0 ? this.minMinutes : null,
+      maxMinutes: maxMinutes != maxPossibleMinutes ? this.maxMinutes : null,
+      maxPossibleMinutes: maxPossibleMinutes
     );
   }
 
