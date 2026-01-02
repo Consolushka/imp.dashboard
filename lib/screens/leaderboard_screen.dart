@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import '../core/di.dart';
 import '../infra/statistics/client.dart';
@@ -14,10 +13,7 @@ import '../widgets/leaderboard_player_card.dart';
 class LeaderboardScreen extends StatefulWidget {
   final Tournament? tournament;
 
-  const LeaderboardScreen({
-    super.key,
-    this.tournament,
-  });
+  const LeaderboardScreen({super.key, this.tournament});
 
   @override
   State<LeaderboardScreen> createState() => _LeaderboardScreenState();
@@ -40,11 +36,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   int _selectedLimit = 10;
   int _selectedMinGames = 1;
   int? _selectedTeamId;
+  late RangeValues _selectedMinutes;
+
+  int regulationDuration = 40;
 
   @override
   void initState() {
     super.initState();
     _minGamesController = TextEditingController(text: _selectedMinGames.toString());
+    if (widget.tournament != null) {
+      regulationDuration = widget.tournament!.regulationDuration;
+    }
+    _selectedMinutes = RangeValues(0, regulationDuration.ceilToDouble());
     _loadTeams();
     _loadLeaderboard();
   }
@@ -79,7 +82,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         limit: _selectedLimit,
         order: _selectedOrder,
         minGames: _selectedMinGames,
-        teamId: _selectedTeamId, // Передаем ID команды
+        teamId: _selectedTeamId,
+        minMinutes: _selectedMinutes.start.round(),
+        maxMinutes: _selectedMinutes.end.round(),
+        maxPossibleMinutes: regulationDuration,
       );
 
       final leaderboard = await apiClient.getLeaderboard(filters);
@@ -138,16 +144,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_getTitle()),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => _loadLeaderboard(),
-          ),
-        ],
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.of(context).pop()),
+        actions: [IconButton(icon: const Icon(Icons.refresh), onPressed: () => _loadLeaderboard())],
       ),
       drawer: const AppDrawer(),
       body: _buildBody(),
@@ -167,12 +165,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     }
 
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: Colors.black,
-          strokeWidth: 2,
-        ),
-      );
+      return const Center(child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2));
     }
 
     return RefreshIndicator(
@@ -182,37 +175,26 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         slivers: [
           // Фильтры
           SliverPadding(
-            padding: EdgeInsets.symmetric(
-              horizontal: _getHorizontalPadding(context),
-              vertical: 16,
-            ),
-            sliver: SliverToBoxAdapter(
-              child: _buildFilters(),
-            ),
+            padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding(context), vertical: 16),
+            sliver: SliverToBoxAdapter(child: _buildFilters()),
           ),
 
           // Заголовок
           SliverPadding(
-            padding: EdgeInsets.symmetric(
-              horizontal: _getHorizontalPadding(context),
-            ),
+            padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding(context)),
             sliver: SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _selectedOrder == 'desc'
-                        ? 'Лучшие игроки турнира'
-                        : 'Игроки турнира (по возрастанию)',
+                    _selectedOrder == 'desc' ? 'Лучшие игроки турнира' : 'Игроки турнира (по возрастанию)',
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       Icon(
-                        _selectedOrder == 'desc'
-                            ? Icons.trending_up
-                            : Icons.trending_down,
+                        _selectedOrder == 'desc' ? Icons.trending_up : Icons.trending_down,
                         size: 16,
                         color: Colors.grey[600],
                       ),
@@ -230,24 +212,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
           ),
 
-
           const SliverPadding(padding: EdgeInsets.only(top: 16)),
 
           // Индикатор обновления
           if (_isUpdating) ...[
             SliverPadding(
-              padding: EdgeInsets.symmetric(
-                horizontal: _getHorizontalPadding(context),
-              ),
+              padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding(context)),
               sliver: const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.only(bottom: 16),
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.black,
-                      strokeWidth: 2,
-                    ),
-                  ),
+                  child: Center(child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2)),
                 ),
               ),
             ),
@@ -256,32 +230,20 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           // Список игроков или пустое состояние
           if (_players.isEmpty && !_isUpdating) ...[
             SliverPadding(
-              padding: EdgeInsets.symmetric(
-                horizontal: _getHorizontalPadding(context),
-              ),
-              sliver: SliverToBoxAdapter(
-                child: _buildEmptyState(),
-              ),
+              padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding(context)),
+              sliver: SliverToBoxAdapter(child: _buildEmptyState()),
             ),
           ] else if (!_isUpdating) ...[
             SliverPadding(
-              padding: EdgeInsets.symmetric(
-                horizontal: _getHorizontalPadding(context),
-              ),
+              padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding(context)),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                    final player = _players[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: LeaderboardCard(
-                        rankedPlayer: player,
-                        isTopThree: index < 3,
-                      ),
-                    );
-                  },
-                  childCount: _players.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final player = _players[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: LeaderboardCard(rankedPlayer: player, isTopThree: index < 3),
+                  );
+                }, childCount: _players.length),
               ),
             ),
           ],
@@ -292,15 +254,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
-
   Widget _buildFilters() {
     final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -308,18 +267,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.tune,
-                  size: 20,
-                  color: Colors.grey[700],
-                ),
+                Icon(Icons.tune, size: 20, color: Colors.grey[700]),
                 const SizedBox(width: 8),
                 Text(
                   'Фильтры лидерборда',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[800]),
                 ),
               ],
             ),
@@ -329,37 +283,21 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Команда:',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                Text('Команда:', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<int?>(
                   value: _selectedTeamId,
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   isExpanded: true,
                   items: [
-                    const DropdownMenuItem<int?>(
-                      value: null,
-                      child: Text('Все команды'),
-                    ),
+                    const DropdownMenuItem<int?>(value: null, child: Text('Все команды')),
                     ..._getSortedTeams().map((team) {
                       return DropdownMenuItem<int?>(
                         value: team.id,
-                        child: Text(
-                          team.name,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Text(team.name, overflow: TextOverflow.ellipsis),
                       );
                     }),
                   ],
@@ -382,24 +320,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 DropdownButtonFormField<String>(
                   value: _selectedPer,
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
-                  items: [
-                    fullGameImpPer,
-                    benchImpPer,
-                    startImpPer,
-                  ].map((per) {
-                    return DropdownMenuItem(
-                      value: per.code,
-                      child: Text(per.name),
-                    );
-                  }).toList(),
+                  items:
+                      [fullGameImpPer, benchImpPer, startImpPer].map((per) {
+                        return DropdownMenuItem(value: per.code, child: Text(per.name));
+                      }).toList(),
                   onChanged: (value) {
                     if (value != null) {
                       setState(() {
@@ -415,13 +342,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 DropdownButtonFormField<String>(
                   value: _selectedOrder,
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   items: [
                     DropdownMenuItem(
@@ -460,16 +382,46 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 TextFormField(
                   controller: _minGamesController,
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     hintText: 'от 1 до 100',
                   ),
                   keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildFilterField(
+                'Минут в матче: ${_selectedMinutes.start.round()} - ${_selectedMinutes.end.round()}',
+                Column(
+                  children: [
+                    RangeSlider(
+                      values: _selectedMinutes,
+                      min: 0,
+                      max: regulationDuration.ceilToDouble(),
+                      divisions: regulationDuration,
+                      activeColor: Colors.black,
+                      inactiveColor: Colors.grey[300],
+                      labels: RangeLabels(
+                        _selectedMinutes.start.round().toString(),
+                        _selectedMinutes.end.round().toString(),
+                      ),
+                      onChanged: (RangeValues values) {
+                        setState(() {
+                          _selectedMinutes = values;
+                        });
+                      },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('0 мин', style: Theme.of(context).textTheme.bodySmall),
+                          Text('$regulationDuration мин', style: Theme.of(context).textTheme.bodySmall),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
@@ -478,20 +430,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 DropdownButtonFormField<int>(
                   value: _selectedLimit,
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
-                  items: [10, 20, 30, 50, 100].map((limit) {
-                    return DropdownMenuItem(
-                      value: limit,
-                      child: Text('Топ $limit'),
-                    );
-                  }).toList(),
+                  items:
+                      [10, 20, 30, 50, 100].map((limit) {
+                        return DropdownMenuItem(value: limit, child: Text('Топ $limit'));
+                      }).toList(),
                   onChanged: (value) {
                     if (value != null) {
                       setState(() {
@@ -511,24 +456,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       DropdownButtonFormField<String>(
                         value: _selectedPer,
                         decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
-                        items: [
-                          fullGameImpPer,
-                          benchImpPer,
-                          startImpPer,
-                        ].map((per) {
-                          return DropdownMenuItem(
-                            value: per.code,
-                            child: Text(per.name),
-                          );
-                        }).toList(),
+                        items:
+                            [fullGameImpPer, benchImpPer, startImpPer].map((per) {
+                              return DropdownMenuItem(value: per.code, child: Text(per.name));
+                            }).toList(),
                         onChanged: (value) {
                           if (value != null) {
                             setState(() {
@@ -546,13 +480,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       DropdownButtonFormField<String>(
                         value: _selectedOrder,
                         decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
                         items: [
                           DropdownMenuItem(
@@ -597,13 +526,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       TextFormField(
                         controller: _minGamesController,
                         decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           hintText: 'от 1 до 100',
                         ),
                         keyboardType: TextInputType.number,
@@ -617,20 +541,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       DropdownButtonFormField<int>(
                         value: _selectedLimit,
                         decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
-                        items: [10, 20, 30, 50, 100].map((limit) {
-                          return DropdownMenuItem(
-                            value: limit,
-                            child: Text('Топ $limit'),
-                          );
-                        }).toList(),
+                        items:
+                            [10, 20, 30, 50, 100].map((limit) {
+                              return DropdownMenuItem(value: limit, child: Text('Топ $limit'));
+                            }).toList(),
                         onChanged: (value) {
                           if (value != null) {
                             setState(() {
@@ -643,6 +560,41 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              _buildFilterField(
+                'Минут в матче: ${_selectedMinutes.start.round()} - ${_selectedMinutes.end.round()}',
+                Column(
+                  children: [
+                    RangeSlider(
+                      values: _selectedMinutes,
+                      min: 0,
+                      max: regulationDuration.ceilToDouble(),
+                      divisions: regulationDuration,
+                      activeColor: Colors.black,
+                      inactiveColor: Colors.grey[300],
+                      labels: RangeLabels(
+                        _selectedMinutes.start.round().toString(),
+                        _selectedMinutes.end.round().toString(),
+                      ),
+                      onChanged: (RangeValues values) {
+                        setState(() {
+                          _selectedMinutes = values;
+                        });
+                      },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('0 мин', style: Theme.of(context).textTheme.bodySmall),
+                          Text('$regulationDuration мин', style: Theme.of(context).textTheme.bodySmall),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
 
             const SizedBox(height: 16),
@@ -652,23 +604,19 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: _isUpdating ? null : _updateFiltersAndReload,
-                icon: _isUpdating
-                    ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-                    : const Icon(Icons.refresh),
+                icon:
+                    _isUpdating
+                        ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                        : const Icon(Icons.refresh),
                 label: Text(_isUpdating ? 'Обновление...' : 'Обновить лидерборд'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
@@ -685,11 +633,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 border: Border.all(color: Colors.grey[200]!),
               ),
               child: Text(
-                'Показать ${_getOrderDisplayText()} ${_selectedLimit} игроков${_selectedTeamId != null ? " выбранной команды" : ""} с минимум ${_selectedMinGames} играми по IMP (${_getPerDisplayName()})',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[700],
-                  fontWeight: FontWeight.w500,
-                ),
+                'Показать ${_getOrderDisplayText()} ${_selectedLimit} игроков${_selectedTeamId != null ? " выбранной команды" : ""} с минимум ${_selectedMinGames} играми (от ${_selectedMinutes.start.round()} до ${_selectedMinutes.end.round()} мин) по IMP (${_getPerDisplayName()})',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey[700], fontWeight: FontWeight.w500),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -704,19 +651,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
-        ),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
         const SizedBox(height: 8),
         field,
       ],
     );
   }
 
-// Метод для получения отсортированных команд по алфавиту
+  // Метод для получения отсортированных команд по алфавиту
   List<Team> _getSortedTeams() {
     final sortedTeams = List<Team>.from(_teams);
     sortedTeams.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
@@ -732,24 +674,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.leaderboard_outlined,
-            size: 80,
-            color: Colors.grey,
-          ),
+          const Icon(Icons.leaderboard_outlined, size: 80, color: Colors.grey),
           const SizedBox(height: 16),
-          Text(
-            'Выберите турнир',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.grey,
-            ),
-          ),
+          Text('Выберите турнир', style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.grey)),
           const SizedBox(height: 8),
           Text(
             'Для просмотра лидерборда необходимо выбрать турнир',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey,
-            ),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
             textAlign: TextAlign.center,
           ),
         ],
@@ -762,24 +693,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.leaderboard_outlined,
-            size: 80,
-            color: Colors.grey,
-          ),
+          const Icon(Icons.leaderboard_outlined, size: 80, color: Colors.grey),
           const SizedBox(height: 16),
-          Text(
-            'Лидерборд пуст',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.grey,
-            ),
-          ),
+          Text('Лидерборд пуст', style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.grey)),
           const SizedBox(height: 8),
           Text(
             'В турнире пока нет игроков с достаточным количеством игр',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey,
-            ),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
             textAlign: TextAlign.center,
           ),
         ],
