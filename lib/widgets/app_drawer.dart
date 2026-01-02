@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:imp/screens/about_screen.dart';
 import '../screens/tournaments_screen.dart';
 import '../screens/games_screen.dart';
 
@@ -89,7 +90,11 @@ class AppDrawer extends StatelessWidget {
                     title: 'О приложении',
                     onTap: () {
                       Navigator.of(context).pop();
-                      _showAboutDialog(context);
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AboutImpScreen(),
+                        ),
+                      );
                     },
                   ),
                 ],
