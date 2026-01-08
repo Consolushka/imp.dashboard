@@ -328,6 +328,72 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
               ),
             ],
           ),
+
+          SizedBox(
+            width: 60,
+            child: Text(
+              'PTS',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          SizedBox(
+            width: 60,
+            child: Text(
+              'REB',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          SizedBox(
+            width: 60,
+            child: Text(
+              'AST',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          SizedBox(
+            width: 60,
+            child: Text(
+              'BLK',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          SizedBox(
+            width: 60,
+            child: Text(
+              'STL',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          SizedBox(
+            width: 60,
+            child: Text(
+              'TOV',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+              textAlign: TextAlign.center,
+            ),
+          ),
         ],
       ),
     );
@@ -443,6 +509,66 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
 
           // IMP колонки
           ...widget.pers.expand((per) => _getPlayerImpPerSizedBox(context, stat.id, per)),
+
+          // Очки
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.points.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Подборы
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.rebounds.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Передачи
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.assists.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Блоки
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.blocks.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Перехваты
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.steals.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Потери
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.turnovers.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
         ],
       ),
     );
