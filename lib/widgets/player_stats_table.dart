@@ -126,15 +126,14 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
 
   // Горизонтально прокручиваемая таблица для мобильных
   Widget _buildScrollableTable(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Column(
-        children: [
-          _buildTableHeader(context, isMobile: true),
-          const SizedBox(height: 8),
-          ...widget.playerStats.map((stat) => _buildPlayerRow(context, stat, isMobile: true)),
-        ],
-      ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFixedPlayerColumn(context), // Фиксированная колонка игрока
+        Expanded(
+          child: _buildScrollableStatsColumns(context), // Прокручиваемые колонки статистики
+        ),
+      ],
     );
   }
 
@@ -142,9 +141,9 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
   Widget _buildResponsiveTable(BuildContext context) {
     return Column(
       children: [
-        _buildTableHeader(context, isMobile: false),
+        _buildResponsiveTableHeader(context), // Используем заголовок для отзывчивой таблицы
         const SizedBox(height: 8),
-        ...widget.playerStats.map((stat) => _buildPlayerRow(context, stat, isMobile: false)),
+        ...widget.playerStats.map((stat) => _buildResponsivePlayerRow(context, stat)), // Используем строки для отзывчивой таблицы
       ],
     );
   }
@@ -200,7 +199,354 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
     );
   }
 
-  Widget _buildTableHeader(BuildContext context, {required bool isMobile}) {
+  // Новый метод: Фиксированная колонка для аватара и имени игрока на мобильных
+  Widget _buildFixedPlayerColumn(BuildContext context) {
+    return Column(
+      children: [
+        // Фиксированный заголовок для игрока
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(4)),
+          child: const Row(
+            children: [
+              SizedBox(width: 40), // Заглушка для аватара
+              SizedBox(width: 12), // Промежуток
+              SizedBox(
+                width: 120, // Фиксированная ширина для имени игрока
+                child: Text(
+                  'Игрок',
+                  style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 60),
+        // Фиксированные строки игроков
+        ...widget.playerStats.map((stat) => _buildFixedPlayerRow(context, stat)),
+      ],
+    );
+  }
+
+  // Новый метод: Отдельная фиксированная строка для аватара и имени игрока на мобильных
+  Widget _buildFixedPlayerRow(BuildContext context, GameTeamPlayerStat stat) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5))),
+      child: Row(
+        children: [
+          // Аватарка игрока
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(20),
+              color: Colors.grey[50],
+            ),
+            child: const Icon(Icons.person, size: 20, color: Colors.grey),
+          ),
+
+          const SizedBox(width: 12),
+
+          // Имя игрока (фиксированная ширина для мобильных)
+          SizedBox(
+            width: 120,
+            child: Text(
+              stat.player?.fullName ?? 'Игрок ${stat.playerId}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Новый метод: Прокручиваемые колонки для всей статистики, кроме имени/аватара игрока, на мобильных
+  Widget _buildScrollableStatsColumns(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Column(
+        children: [
+          // Прокручиваемый заголовок для статистики
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(4)),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Время
+                IconButton(
+                  onPressed: () {
+                    sort(_minutesSorting);
+                  },
+                  icon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(child: Icon(size: 15, _getSortingIcon(_minutesSorting))),
+                      SizedBox(
+                        width: 60,
+                        child: Text(
+                          'Время',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // +/-
+                IconButton(
+                  onPressed: () {
+                    sort(_plusMinusSorting);
+                  },
+                  icon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(child: Icon(size: 15, _getSortingIcon(_plusMinusSorting))),
+                      SizedBox(
+                        width: 50,
+                        child: Text(
+                          '+/–',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // IMP
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      "IMP",
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (var i = 0; i < widget.pers.length; i++) ...[
+                          IconButton(
+                            onPressed: () {
+                              var persSorting = _persSorting[i];
+                              sort(persSorting);
+                            },
+                            icon: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(child: Icon(size: 15, _getSortingIcon(_persSorting[i]))),
+                                SizedBox(
+                                  width: 100,
+                                  child: Text(
+                                    widget.pers[i].toString(),
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (i < widget.pers.length - 1) const SizedBox(width: 8),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+
+                // PTS, FG%, REB, AST, BLK, STL, TOV
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    'PTS',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    'FG%',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    'REB',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    'AST',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    'BLK',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    'STL',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    'TOV',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Прокручиваемые строки статистики игроков
+          ...widget.playerStats.map((stat) => _buildScrollableStatsRow(context, stat)),
+        ],
+      ),
+    );
+  }
+
+  // Новый метод: Отдельная прокручиваемая строка для всей статистики игрока, кроме имени/аватара, на мобильных
+  Widget _buildScrollableStatsRow(BuildContext context, GameTeamPlayerStat stat) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5))),
+      child: Row(
+        children: [
+          // Время игры
+          SizedBox(
+            width: 60 + 15 + 8 + 8, // Убедитесь, что эта ширина соответствует ширине заголовка
+            child: Text(
+              _formatPlayTime(stat.playedSeconds),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // +/-
+          SizedBox(
+            width: 50 + 15 + 8 + 8, // Убедитесь, что эта ширина соответствует ширине заголовка
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              decoration: BoxDecoration(
+                color: _getPlusMinusColor(stat.plusMinus),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                stat.plusMinus > 0 ? '+${stat.plusMinus}' : '${stat.plusMinus}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // IMP колонки
+          ...widget.pers.expand((per) => _getPlayerImpPerSizedBox(context, stat.id, per)),
+
+          // Очки
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.points.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // FG%
+          SizedBox(
+            width: 60,
+            child: Text(
+              '${stat.fieldGoalsPercentage}%',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Подборы
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.rebounds.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Передачи
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.assists.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Блоки
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.blocks.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Перехваты
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.steals.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Потери
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.turnovers.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Переименованный и модифицированный метод: Этот метод теперь отвечает только за заголовок отзывчивой (немобильной) таблицы
+  Widget _buildResponsiveTableHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(4)),
@@ -211,26 +557,16 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
           const SizedBox(width: 40),
           const SizedBox(width: 12),
 
-          // Игрок
-          isMobile
-              ? SizedBox(
-                width: 120, // Фиксированная ширина для мобильных
-                child: Text(
-                  'Игрок',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                ),
-              )
-              : Expanded(
-                flex: 3,
-                child: Text(
-                  'Игрок',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                ),
-              ),
+          // Игрок (Expanded для отзывчивой таблицы)
+          Expanded(
+            flex: 3,
+            child: Text(
+              'Игрок',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+            ),
+          ),
 
           // Время
           IconButton(
@@ -294,7 +630,7 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
                   context,
                 ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -322,11 +658,230 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
                         ],
                       ),
                     ),
-                    if (i < widget.pers.length - 1) SizedBox(width: 8),
+                    if (i < widget.pers.length - 1) const SizedBox(width: 8),
                   ],
                 ],
               ),
             ],
+          ),
+
+          SizedBox(
+            width: 60,
+            child: Text(
+              'PTS',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          SizedBox(
+            width: 60,
+            child: Text(
+              'FG%',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          SizedBox(
+            width: 60,
+            child: Text(
+              'REB',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          SizedBox(
+            width: 60,
+            child: Text(
+              'AST',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          SizedBox(
+            width: 60,
+            child: Text(
+              'BLK',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          SizedBox(
+            width: 60,
+            child: Text(
+              'STL',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          SizedBox(
+            width: 60,
+            child: Text(
+              'TOV',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Переименованный и модифицированный метод: Этот метод теперь отвечает только за строки отзывчивой (немобильной) таблицы
+  Widget _buildResponsivePlayerRow(BuildContext context, GameTeamPlayerStat stat) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5))),
+      child: Row(
+        children: [
+          // Аватарка игрока
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(20),
+              color: Colors.grey[50],
+            ),
+            child: const Icon(Icons.person, size: 20, color: Colors.grey),
+          ),
+
+          const SizedBox(width: 12),
+
+          // Имя игрока (Expanded для отзывчивой таблицы)
+          Expanded(
+            flex: 3,
+            child: Text(
+              stat.player?.fullName ?? 'Игрок ${stat.playerId}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+
+          // Время игры
+          SizedBox(
+            width: 60 + 15 + 8 + 8, // Убедитесь, что эта ширина соответствует ширине заголовка
+            child: Text(
+              _formatPlayTime(stat.playedSeconds),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // +/-
+          SizedBox(
+            width: 50 + 15 + 8 + 8, // Убедитесь, что эта ширина соответствует ширине заголовка
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              decoration: BoxDecoration(
+                color: _getPlusMinusColor(stat.plusMinus),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                stat.plusMinus > 0 ? '+${stat.plusMinus}' : '${stat.plusMinus}',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // IMP колонки
+          ...widget.pers.expand((per) => _getPlayerImpPerSizedBox(context, stat.id, per)),
+
+          // Очки
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.points.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // FG%
+          SizedBox(
+            width: 60,
+            child: Text(
+              '${stat.fieldGoalsPercentage}%',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Подборы
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.rebounds.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Передачи
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.assists.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Блоки
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.blocks.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Перехваты
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.steals.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Потери
+          SizedBox(
+            width: 60,
+            child: Text(
+              stat.turnovers.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
@@ -365,87 +920,6 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
     }
 
     setState(() {});
-  }
-
-  Widget _buildPlayerRow(BuildContext context, GameTeamPlayerStat stat, {required bool isMobile}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5))),
-      child: Row(
-        children: [
-          // Аватарка игрока
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(20),
-              color: Colors.grey[50],
-            ),
-            child: const Icon(Icons.person, size: 20, color: Colors.grey),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Имя игрока
-          isMobile
-              ? SizedBox(
-                width: 120, // Фиксированная ширина для мобильных
-                child: Text(
-                  stat.player?.fullName ?? 'Игрок ${stat.playerId}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              )
-              : Expanded(
-                flex: 3,
-                child: Text(
-                  stat.player?.fullName ?? 'Игрок ${stat.playerId}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-
-          // Время игры
-          SizedBox(
-            width: 60 + 15 + 8 + 8,
-            child: Text(
-              _formatPlayTime(stat.playedSeconds),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // +/-
-          SizedBox(
-            width: 50 + 15 + 8 + 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              decoration: BoxDecoration(
-                color: _getPlusMinusColor(stat.plusMinus),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                stat.plusMinus > 0 ? '+${stat.plusMinus}' : '${stat.plusMinus}',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // IMP колонки
-          ...widget.pers.expand((per) => _getPlayerImpPerSizedBox(context, stat.id, per)),
-        ],
-      ),
-    );
   }
 
   List<Widget> _getPlayerImpPerSizedBox(BuildContext context, int playerStatId, ImpPer per) {

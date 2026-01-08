@@ -9,6 +9,13 @@ class GameTeamPlayerStat {
   final int playedSeconds;
   final int plusMinus;
   final Player? player;
+  final int points;
+  final int assists;
+  final int rebounds;
+  final int steals;
+  final int blocks;
+  final double fieldGoalsPercentage;
+  final int turnovers;
 
   const GameTeamPlayerStat({
     required this.id,
@@ -18,6 +25,13 @@ class GameTeamPlayerStat {
     required this.playedSeconds,
     required this.plusMinus,
     this.player,
+    required this.points,
+    required this.assists,
+    required this.rebounds,
+    required this.steals,
+    required this.blocks,
+    required this.fieldGoalsPercentage,
+    required this.turnovers,
   });
 
   factory GameTeamPlayerStat.fromJson(Map<String, dynamic> json) {
@@ -31,6 +45,13 @@ class GameTeamPlayerStat {
       player: json['player'] != null
           ? Player.fromJson(json['player'] as Map<String, dynamic>)
           : null,
+      points: json['points'] as int,
+      assists: json['assists'] as int,
+      rebounds: json['rebounds'] as int,
+      steals: json['steals'] as int,
+      blocks: json['blocks'] as int,
+      fieldGoalsPercentage: json['field_goals_percentage'] as double,
+      turnovers: json['turnovers'] as int,
     );
   }
 
@@ -43,6 +64,13 @@ class GameTeamPlayerStat {
       'played_seconds': playedSeconds,
       'plus_minus': plusMinus,
       if (player != null) 'player': player!.toJson(),
+      'points': points,
+      'assists': assists,
+      'rebounds': rebounds,
+      'steals': steals,
+      'blocks': blocks,
+      'field_goals_percentage': fieldGoalsPercentage,
+      'turnovers': turnovers,
     };
   }
 
