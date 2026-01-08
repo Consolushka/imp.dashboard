@@ -50,7 +50,7 @@ class GameTeamPlayerStat {
       rebounds: json['rebounds'] as int,
       steals: json['steals'] as int,
       blocks: json['blocks'] as int,
-      fieldGoalsPercentage: json['field_goals_percentage'] as double,
+      fieldGoalsPercentage: double.parse(json['field_goals_percentage'].toString()),
       turnovers: json['turnovers'] as int,
     );
   }
