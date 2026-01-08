@@ -362,11 +362,19 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
                   ],
                 ),
 
-                // PTS, REB, AST, BLK, STL, TOV
+                // PTS, FG%, REB, AST, BLK, STL, TOV
                 SizedBox(
                   width: 60,
                   child: Text(
                     'PTS',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    'FG%',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
                     textAlign: TextAlign.center,
                   ),
@@ -468,6 +476,16 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
             width: 60,
             child: Text(
               stat.points.toString(),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // FG%
+          SizedBox(
+            width: 60,
+            child: Text(
+              '${stat.fieldGoalsPercentage}%',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
               textAlign: TextAlign.center,
             ),
@@ -661,6 +679,17 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
           SizedBox(
             width: 60,
             child: Text(
+              'FG%',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          SizedBox(
+            width: 60,
+            child: Text(
               'REB',
               style: Theme.of(
                 context,
@@ -795,6 +824,16 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
             ),
           ),
 
+          // FG%
+          SizedBox(
+            width: 60,
+            child: Text(
+              '${stat.fieldGoalsPercentage}%',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
           // Подборы
           SizedBox(
             width: 60,
@@ -881,147 +920,6 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
     }
 
     setState(() {});
-  }
-
-  Widget _buildPlayerRow(BuildContext context, GameTeamPlayerStat stat, {required bool isMobile}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5))),
-      child: Row(
-        children: [
-          // Аватарка игрока
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(20),
-              color: Colors.grey[50],
-            ),
-            child: const Icon(Icons.person, size: 20, color: Colors.grey),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Имя игрока
-          isMobile
-              ? SizedBox(
-                width: 120, // Фиксированная ширина для мобильных
-                child: Text(
-                  stat.player?.fullName ?? 'Игрок ${stat.playerId}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              )
-              : Expanded(
-                flex: 3,
-                child: Text(
-                  stat.player?.fullName ?? 'Игрок ${stat.playerId}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-
-          // Время игры
-          SizedBox(
-            width: 60 + 15 + 8 + 8,
-            child: Text(
-              _formatPlayTime(stat.playedSeconds),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // +/-
-          SizedBox(
-            width: 50 + 15 + 8 + 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              decoration: BoxDecoration(
-                color: _getPlusMinusColor(stat.plusMinus),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                stat.plusMinus > 0 ? '+${stat.plusMinus}' : '${stat.plusMinus}',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // IMP колонки
-          ...widget.pers.expand((per) => _getPlayerImpPerSizedBox(context, stat.id, per)),
-
-          // Очки
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.points.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Подборы
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.rebounds.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Передачи
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.assists.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Блоки
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.blocks.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Перехваты
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.steals.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Потери
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.turnovers.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   List<Widget> _getPlayerImpPerSizedBox(BuildContext context, int playerStatId, ImpPer per) {
