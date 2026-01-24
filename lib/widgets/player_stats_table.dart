@@ -205,7 +205,7 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
       children: [
         // Фиксированный заголовок для игрока
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
           decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(4)),
           child: const Row(
             children: [
