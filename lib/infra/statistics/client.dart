@@ -6,6 +6,7 @@ import 'package:imp/models/game_model.dart';
 import 'package:imp/models/league_model.dart';
 import 'package:imp/models/team_model.dart';
 import 'package:imp/models/tournament_model.dart';
+import 'package:imp/models/player_recent_imp_model.dart';
 
 import '../../models/ranked_player_model.dart';
 import 'leaderboard_filters_model.dart';
@@ -132,6 +133,58 @@ class StatisticsClient {
 
     var responseBody = _handleBodyBytes(response);
     return (responseBody['data'] as List).map((item) => Team.fromJson(item)).toList();
+  }
+
+  Future<PlayerRecentImp> getRecentImpForPlayer({
+    required int playerId,
+    required int tournamentId,
+    required String per,
+    int? teamId,
+    int offset = 0,
+    int limit = 15,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/players/imp/recent');
+
+    final body = {
+      'player_ids': [playerId],
+      'tournament_id': tournamentId,
+      'per': per,
+      'offset': offset,
+      'limit': limit,
+      if (teamId != null) 'team_id': teamId,
+    };
+
+    final response = await post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+
+    final responseBody = _handleBodyBytes(response);
+    final data = responseBody['data'] as List<dynamic>? ?? [];
+    if (data.isEmpty) {
+      return PlayerRecentImp(
+        playerId: playerId,
+        games: const [],
+        meta: PlayerRecentImpMeta(total: 0, offset: offset, limit: limit),
+      );
+    }
+
+    final item = data
+        .cast<Map<String, dynamic>>()
+        .firstWhere(
+          (entry) => entry['player_id'] == playerId,
+          orElse: () => <String, dynamic>{},
+        );
+
+    if (item.isEmpty) {
+      return PlayerRecentImp(
+        playerId: playerId,
+        games: const [],
+        meta: PlayerRecentImpMeta(total: 0, offset: offset, limit: limit),
+      );
+    }
+    return PlayerRecentImp.fromJson(item);
   }
 
 
