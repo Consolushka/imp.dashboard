@@ -241,7 +241,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   final player = _players[index];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: LeaderboardCard(rankedPlayer: player, isTopThree: index < 3),
+                    child: LeaderboardCard(
+                      key: ValueKey('player-${player.player.id}-${_selectedPer}-${_selectedTeamId ?? 'all'}'),
+                      rankedPlayer: player,
+                      isTopThree: index < 3,
+                      tournamentId: widget.tournament!.id,
+                      per: _selectedPer,
+                      teamId: _selectedTeamId,
+                    ),
                   );
                 }, childCount: _players.length),
               ),
