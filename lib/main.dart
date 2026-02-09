@@ -51,7 +51,7 @@ class ImpApp extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: Colors.white,
         elevation: 0,
         shape: RoundedRectangleBorder(
