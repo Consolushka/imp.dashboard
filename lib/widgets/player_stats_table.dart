@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:table_sticky_headers/table_sticky_headers.dart';
 import '../library/sorting/sorting.dart';
 import '../models/game_team_player_stat_model.dart';
 import '../models/pers.dart';
@@ -34,6 +35,11 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
 
   bool _isSorted = false;
 
+  // Table dimensions
+  static const double _cellHeight = 60.0;
+  static const double _columnTitleHeight = 70.0;
+  static const double _rowTitleWidth = 160.0;
+
   @override
   void initState() {
     super.initState();
@@ -42,7 +48,6 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
       isAscending: true,
       callback: (isAscending) {
         int multiplier = isAscending ? 1 : -1;
-
         widget.playerStats.sort((a, b) => a.playedSeconds.compareTo(b.playedSeconds) * multiplier);
       },
     );
@@ -50,20 +55,16 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
       id: "PlusMinus",
       callback: (isAscending) {
         int multiplier = isAscending ? 1 : -1;
-
         widget.playerStats.sort((a, b) => a.plusMinus.compareTo(b.plusMinus) * multiplier);
       },
     );
-
   }
 
   @override
   Widget build(BuildContext context) {
     _persSorting.clear();
     for (var per in widget.pers) {
-
       bool? isAscending;
-
       for (var sortingInstance in sortingChain) {
         if (sortingInstance.id == per.name) {
           isAscending = sortingInstance.isAscending;
@@ -75,14 +76,11 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
         isAscending: isAscending,
         callback: (isAscending) {
           int multiplier = isAscending ? 1 : -1;
-
           widget.playerStats.sort((a, b) {
             final aImps = widget.playerImps[a.id];
             final bImps = widget.playerImps[b.id];
-
             final aImp = aImps?[per.code] ?? 0.0;
             final bImp = bImps?[per.code] ?? 0.0;
-
             return aImp.compareTo(bImp) * multiplier;
           });
         },
@@ -95,163 +93,109 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
 
     if (!_isSorted) {
       _isSorted = true;
-      sortingChain.forEach((sorting) {
+      for (var sorting in sortingChain) {
         if (sorting.isAscending != null) {
           sort(sorting);
-          return;
+          break;
         }
-      });
+      }
     }
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 800; // Определяем мобильное устройство
+    final tableHeight = _columnTitleHeight + (widget.playerStats.length * _cellHeight);
 
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Заголовок команды
             _buildTeamHeader(context),
             const SizedBox(height: 16),
-
-            // Адаптивная таблица
-            isMobile ? _buildScrollableTable(context) : _buildResponsiveTable(context),
+            SizedBox(
+              height: tableHeight,
+              child: _buildStickyTable(context),
+            ),
           ],
         ),
       ),
     );
   }
 
-  // Горизонтально прокручиваемая таблица для мобильных
-  Widget _buildScrollableTable(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildFixedPlayerColumn(context), // Фиксированная колонка игрока
-        Expanded(
-          child: _buildScrollableStatsColumns(context), // Прокручиваемые колонки статистики
-        ),
-      ],
+  Widget _buildStickyTable(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+        final columns = _getTableColumns();
+
+        // Вычисляем минимальную ширину всей таблицы
+        double minTotalWidth = _rowTitleWidth;
+        for (var col in columns) {
+          minTotalWidth += col.width;
+        }
+
+        // Вычисляем коэффициент масштабирования, если места больше чем нужно
+        double scaleFactor = 1.0;
+        if (availableWidth > minTotalWidth) {
+          scaleFactor = availableWidth / minTotalWidth;
+        }
+
+        final scaledRowTitleWidth = _rowTitleWidth * scaleFactor;
+        final scaledColumnWidths = columns.map((c) => c.width * scaleFactor).toList();
+
+        return StickyHeadersTable(
+          columnsLength: columns.length,
+          rowsLength: widget.playerStats.length,
+          columnsTitleBuilder: (i) => _buildColumnHeader(context, columns[i], scaledColumnWidths[i]),
+          rowsTitleBuilder: (i) => _buildRowHeader(context, widget.playerStats[i]),
+          contentCellBuilder: (j, i) => _buildContentCell(context, widget.playerStats[i], columns[j], scaledColumnWidths[j]),
+          legendCell: _buildLegendCell(context),
+          cellDimensions: CellDimensions.variableColumnWidth(
+            columnWidths: scaledColumnWidths,
+            contentCellHeight: _cellHeight,
+            stickyLegendWidth: scaledRowTitleWidth,
+            stickyLegendHeight: _columnTitleHeight,
+          ),
+        );
+      },
     );
   }
 
-  // Отзывчивая таблица для больших экранов
-  Widget _buildResponsiveTable(BuildContext context) {
-    return Column(
-      children: [
-        _buildResponsiveTableHeader(context), // Используем заголовок для отзывчивой таблицы
-        const SizedBox(height: 8),
-        ...widget.playerStats.map((stat) => _buildResponsivePlayerRow(context, stat)), // Используем строки для отзывчивой таблицы
-      ],
-    );
-  }
-
-  Widget _buildTeamHeader(BuildContext context) {
-    return Row(
-      children: [
-        // Логотип команды
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            border: Border.all(color: widget.isWinner ? Colors.black : Colors.grey, width: widget.isWinner ? 2 : 1),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Icon(Icons.sports_basketball, size: 20, color: widget.isWinner ? Colors.black : Colors.grey),
-        ),
-        const SizedBox(width: 12),
-
-        // Название и счет команды
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.teamName,
-                style: Theme.of(
-                  context,
-                ).textTheme.headlineSmall?.copyWith(fontWeight: widget.isWinner ? FontWeight.bold : FontWeight.w500),
-              ),
-              Text(
-                'Счет: ${widget.teamScore}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-              ),
-            ],
-          ),
-        ),
-
-        // Статус команды
-        if (widget.isWinner) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(4)),
-            child: Text(
-              'ПОБЕДА',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 10),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  // Новый метод: Фиксированная колонка для аватара и имени игрока на мобильных
-  Widget _buildFixedPlayerColumn(BuildContext context) {
-    return Column(
-      children: [
-        // Фиксированный заголовок для игрока
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-          decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(4)),
-          child: const Row(
-            children: [
-              SizedBox(width: 40), // Заглушка для аватара
-              SizedBox(width: 12), // Промежуток
-              SizedBox(
-                width: 120, // Фиксированная ширина для имени игрока
-                child: Text(
-                  'Игрок',
-                  style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 60),
-        // Фиксированные строки игроков
-        ...widget.playerStats.map((stat) => _buildFixedPlayerRow(context, stat)),
-      ],
-    );
-  }
-
-  // Новый метод: Отдельная фиксированная строка для аватара и имени игрока на мобильных
-  Widget _buildFixedPlayerRow(BuildContext context, GameTeamPlayerStat stat) {
+  Widget _buildLegendCell(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5))),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(4)),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        'Игрок',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey[700]),
+      ),
+    );
+  }
+
+  Widget _buildRowHeader(BuildContext context, GameTeamPlayerStat stat) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey[300]!, width: 0.5)),
+        color: Colors.white,
+      ),
       child: Row(
         children: [
-          // Аватарка игрока
           Container(
-            width: 40,
-            height: 40,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(16),
               color: Colors.grey[50],
             ),
-            child: const Icon(Icons.person, size: 20, color: Colors.grey),
+            child: const Icon(Icons.person, size: 16, color: Colors.grey),
           ),
-
-          const SizedBox(width: 12),
-
-          // Имя игрока (фиксированная ширина для мобильных)
-          SizedBox(
-            width: 120,
+          const SizedBox(width: 8),
+          Expanded(
             child: Text(
               stat.player?.fullName ?? 'Игрок ${stat.playerId}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
@@ -264,650 +208,178 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
     );
   }
 
-  // Новый метод: Прокручиваемые колонки для всей статистики, кроме имени/аватара игрока, на мобильных
-  Widget _buildScrollableStatsColumns(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Column(
-        children: [
-          // Прокручиваемый заголовок для статистики
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-            decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(4)),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                // Время
-                IconButton(
-                  onPressed: () {
-                    sort(_minutesSorting);
-                  },
-                  icon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(child: Icon(size: 15, _getSortingIcon(_minutesSorting))),
-                      SizedBox(
-                        width: 60,
-                        child: Text(
-                          'Время',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // +/-
-                IconButton(
-                  onPressed: () {
-                    sort(_plusMinusSorting);
-                  },
-                  icon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(child: Icon(size: 15, _getSortingIcon(_plusMinusSorting))),
-                      SizedBox(
-                        width: 50,
-                        child: Text(
-                          '+/–',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // IMP
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      "IMP",
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (var i = 0; i < widget.pers.length; i++) ...[
-                          IconButton(
-                            onPressed: () {
-                              var persSorting = _persSorting[i];
-                              sort(persSorting);
-                            },
-                            icon: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SizedBox(child: Icon(size: 15, _getSortingIcon(_persSorting[i]))),
-                                SizedBox(
-                                  width: 100,
-                                  child: Text(
-                                    widget.pers[i].toString(),
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (i < widget.pers.length - 1) const SizedBox(width: 8),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-
-                // PTS, FG%, REB, AST, BLK, STL, TOV
-                SizedBox(
-                  width: 60,
-                  child: Text(
-                    'PTS',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(
-                  width: 60,
-                  child: Text(
-                    'FG%',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(
-                  width: 60,
-                  child: Text(
-                    'REB',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(
-                  width: 60,
-                  child: Text(
-                    'AST',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(
-                  width: 60,
-                  child: Text(
-                    'BLK',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(
-                  width: 60,
-                  child: Text(
-                    'STL',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(
-                  width: 60,
-                  child: Text(
-                    'TOV',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Прокручиваемые строки статистики игроков
-          ...widget.playerStats.map((stat) => _buildScrollableStatsRow(context, stat)),
-        ],
-      ),
-    );
-  }
-
-  // Новый метод: Отдельная прокручиваемая строка для всей статистики игрока, кроме имени/аватара, на мобильных
-  Widget _buildScrollableStatsRow(BuildContext context, GameTeamPlayerStat stat) {
+  Widget _buildColumnHeader(BuildContext context, _TableColumn col, double width) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5))),
-      child: Row(
-        children: [
-          // Время игры
-          SizedBox(
-            width: 60 + 15 + 8 + 8, // Убедитесь, что эта ширина соответствует ширине заголовка
-            child: Text(
-              _formatPlayTime(stat.playedSeconds),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // +/-
-          SizedBox(
-            width: 50 + 15 + 8 + 8, // Убедитесь, что эта ширина соответствует ширине заголовка
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              decoration: BoxDecoration(
-                color: _getPlusMinusColor(stat.plusMinus),
-                borderRadius: BorderRadius.circular(4),
+      width: width,
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        border: Border(bottom: BorderSide(color: Colors.grey[300]!, width: 1)),
+      ),
+      child: col.sorting != null
+          ? InkWell(
+              onTap: () => sort(col.sorting!),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FaIcon(_getSortingIcon(col.sorting!), size: 12, color: Colors.grey[700]),
+                  const SizedBox(height: 4),
+                  Text(
+                    col.title,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey[700]),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
+            )
+          : Center(
               child: Text(
-                stat.plusMinus > 0 ? '+${stat.plusMinus}' : '${stat.plusMinus}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                col.title,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.grey[700]),
                 textAlign: TextAlign.center,
               ),
             ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // IMP колонки
-          ...widget.pers.expand((per) => _getPlayerImpPerSizedBox(context, stat.id, per)),
-
-          // Очки
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.points.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // FG%
-          SizedBox(
-            width: 60,
-            child: Text(
-              '${stat.fieldGoalsPercentage}%',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Подборы
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.rebounds.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Передачи
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.assists.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Блоки
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.blocks.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Перехваты
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.steals.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Потери
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.turnovers.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
-  // Переименованный и модифицированный метод: Этот метод теперь отвечает только за заголовок отзывчивой (немобильной) таблицы
-  Widget _buildResponsiveTableHeader(BuildContext context) {
+  Widget _buildContentCell(BuildContext context, GameTeamPlayerStat stat, _TableColumn col, double width) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(4)),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          // Аватарка
-          const SizedBox(width: 40),
-          const SizedBox(width: 12),
+      width: width,
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey[300]!, width: 0.5)),
+        color: Colors.white,
+      ),
+      alignment: Alignment.center,
+      child: _buildCellValue(context, stat, col),
+    );
+  }
 
-          // Игрок (Expanded для отзывчивой таблицы)
-          Expanded(
-            flex: 3,
-            child: Text(
-              'Игрок',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-            ),
+  Widget _buildCellValue(BuildContext context, GameTeamPlayerStat stat, _TableColumn col) {
+    switch (col.type) {
+      case _ColumnType.time:
+        return Text(
+          _formatPlayTime(stat.playedSeconds),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+        );
+      case _ColumnType.plusMinus:
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: _getPlusMinusColor(stat.plusMinus),
+            borderRadius: BorderRadius.circular(4),
           ),
-
-          // Время
-          IconButton(
-            onPressed: () {
-              sort(_minutesSorting);
-            },
-            icon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(child: Icon(size: 15, _getSortingIcon(_minutesSorting))),
-
-                SizedBox(
-                  width: 60,
-                  child: Text(
-                    'Время',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
+          child: Text(
+            stat.plusMinus > 0 ? '+${stat.plusMinus}' : '${stat.plusMinus}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
           ),
-
-          const SizedBox(width: 8),
-
-          // +/-
-          IconButton(
-            onPressed: () {
-              sort(_plusMinusSorting);
-            },
-            icon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(child: Icon(size: 15, _getSortingIcon(_plusMinusSorting))),
-
-                SizedBox(
-                  width: 50,
-                  child: Text(
-                    '+/–',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
+        );
+      case _ColumnType.imp:
+        final imp = _getImpForPlayerByPer(stat.id, col.extra as ImpPer);
+        if (imp == null) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.circular(6)),
+            child: const Text('—', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+          );
+        }
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          decoration: BoxDecoration(color: _getImpColor(imp), borderRadius: BorderRadius.circular(6)),
+          child: Text(
+            imp > 0 ? '+${imp.toStringAsFixed(1)}' : imp.toStringAsFixed(1),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
           ),
+        );
+      case _ColumnType.pts:
+        return Text(stat.points.toString(), style: const TextStyle(fontWeight: FontWeight.w500));
+      case _ColumnType.fg:
+        return Text('${(stat.fieldGoalsPercentage * 100).round()}%', style: const TextStyle(fontWeight: FontWeight.w500));
+      case _ColumnType.reb:
+        return Text(stat.rebounds.toString());
+      case _ColumnType.ast:
+        return Text(stat.assists.toString());
+      case _ColumnType.blk:
+        return Text(stat.blocks.toString());
+      case _ColumnType.stl:
+        return Text(stat.steals.toString());
+      case _ColumnType.tov:
+        return Text(stat.turnovers.toString());
+    }
+  }
 
-          const SizedBox(width: 8),
+  List<_TableColumn> _getTableColumns() {
+    final List<_TableColumn> cols = [
+      _TableColumn(title: 'Время', type: _ColumnType.time, sorting: _minutesSorting, width: 80),
+      _TableColumn(title: '+/–', type: _ColumnType.plusMinus, sorting: _plusMinusSorting, width: 60),
+    ];
 
-          Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.center,
+    for (var i = 0; i < widget.pers.length; i++) {
+      cols.add(_TableColumn(
+        title: widget.pers[i].toString(),
+        type: _ColumnType.imp,
+        sorting: _persSorting[i],
+        extra: widget.pers[i],
+        width: 90,
+      ));
+    }
+
+    cols.addAll([
+      _TableColumn(title: 'PTS', type: _ColumnType.pts, width: 50),
+      _TableColumn(title: 'FG%', type: _ColumnType.fg, width: 60),
+      _TableColumn(title: 'REB', type: _ColumnType.reb, width: 50),
+      _TableColumn(title: 'AST', type: _ColumnType.ast, width: 50),
+      _TableColumn(title: 'BLK', type: _ColumnType.blk, width: 50),
+      _TableColumn(title: 'STL', type: _ColumnType.stl, width: 50),
+      _TableColumn(title: 'TOV', type: _ColumnType.tov, width: 50),
+    ]);
+
+    return cols;
+  }
+
+  Widget _buildTeamHeader(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            border: Border.all(color: widget.isWinner ? Colors.black : Colors.grey, width: widget.isWinner ? 2 : 1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Icon(Icons.sports_basketball, size: 20, color: widget.isWinner ? Colors.black : Colors.grey),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "IMP",
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
+                widget.teamName,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: widget.isWinner ? FontWeight.bold : FontWeight.w500),
               ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (var i = 0; i < widget.pers.length; i++) ...[
-                    IconButton(
-                      onPressed: () {
-                        var persSorting = _persSorting[i];
-                        sort(persSorting);
-                      },
-                      icon: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(child: Icon(size: 15, _getSortingIcon(_persSorting[i]))),
-
-                          SizedBox(
-                            width: 100,
-                            child: Text(
-                              widget.pers[i].toString(),
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (i < widget.pers.length - 1) const SizedBox(width: 8),
-                  ],
-                ],
+              Text(
+                'Счет: ${widget.teamScore}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               ),
             ],
           ),
-
-          SizedBox(
-            width: 60,
-            child: Text(
-              'PTS',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          SizedBox(
-            width: 60,
-            child: Text(
-              'FG%',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          SizedBox(
-            width: 60,
-            child: Text(
-              'REB',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          SizedBox(
-            width: 60,
-            child: Text(
-              'AST',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          SizedBox(
-            width: 60,
-            child: Text(
-              'BLK',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          SizedBox(
-            width: 60,
-            child: Text(
-              'STL',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          SizedBox(
-            width: 60,
-            child: Text(
-              'TOV',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[700]),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Переименованный и модифицированный метод: Этот метод теперь отвечает только за строки отзывчивой (немобильной) таблицы
-  Widget _buildResponsivePlayerRow(BuildContext context, GameTeamPlayerStat stat) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5))),
-      child: Row(
-        children: [
-          // Аватарка игрока
+        ),
+        if (widget.isWinner) ...[
           Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(20),
-              color: Colors.grey[50],
-            ),
-            child: const Icon(Icons.person, size: 20, color: Colors.grey),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Имя игрока (Expanded для отзывчивой таблицы)
-          Expanded(
-            flex: 3,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(4)),
             child: Text(
-              stat.player?.fullName ?? 'Игрок ${stat.playerId}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-
-          // Время игры
-          SizedBox(
-            width: 60 + 15 + 8 + 8, // Убедитесь, что эта ширина соответствует ширине заголовка
-            child: Text(
-              _formatPlayTime(stat.playedSeconds),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // +/-
-          SizedBox(
-            width: 50 + 15 + 8 + 8, // Убедитесь, что эта ширина соответствует ширине заголовка
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              decoration: BoxDecoration(
-                color: _getPlusMinusColor(stat.plusMinus),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                stat.plusMinus > 0 ? '+${stat.plusMinus}' : '${stat.plusMinus}',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // IMP колонки
-          ...widget.pers.expand((per) => _getPlayerImpPerSizedBox(context, stat.id, per)),
-
-          // Очки
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.points.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // FG%
-          SizedBox(
-            width: 60,
-            child: Text(
-              '${stat.fieldGoalsPercentage}%',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Подборы
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.rebounds.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Передачи
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.assists.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Блоки
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.blocks.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Перехваты
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.steals.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Потери
-          SizedBox(
-            width: 60,
-            child: Text(
-              stat.turnovers.toString(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
+              'ПОБЕДА',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 10),
             ),
           ),
         ],
-      ),
+      ],
     );
   }
 
   IconData _getSortingIcon(Sorting sorting) {
-    Sorting? instance;
-
-    for (var sortingInstance in sortingChain) {
-      if (sortingInstance.id == sorting.id) {
-        instance = sorting;
-      }
-    }
-
-    if (instance == null) {
-      throw Exception("Cannot find sorting instance");
-    }
-
-    if (instance.isAscending == null) {
-      return FaIcon(FontAwesomeIcons.sort).icon!;
-    }
-
-    return instance.isAscending!
-        ? FaIcon(FontAwesomeIcons.arrowUpShortWide).icon!
-        : FaIcon(FontAwesomeIcons.arrowUpWideShort).icon!;
+    if (sorting.isAscending == null) return FontAwesomeIcons.sort;
+    return sorting.isAscending! ? FontAwesomeIcons.arrowUpShortWide : FontAwesomeIcons.arrowUpWideShort;
   }
 
   void sort(Sorting sorting) {
@@ -918,52 +390,12 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
         sortingInstance.toggle();
       }
     }
-
     setState(() {});
   }
 
-  List<Widget> _getPlayerImpPerSizedBox(BuildContext context, int playerStatId, ImpPer per) {
-    final imp = _getImpForPlayerByPer(playerStatId, per);
-    final isLast = widget.pers.last == per;
-
-    return [
-      SizedBox(
-        width: 100 + 15 + 8 + 8,
-        child:
-            imp != null
-                ? Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  decoration: BoxDecoration(color: _getImpColor(imp), borderRadius: BorderRadius.circular(6)),
-                  child: Text(
-                    imp > 0 ? '+${imp.toStringAsFixed(1)}' : imp.toStringAsFixed(1),
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                )
-                : Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.circular(6)),
-                  child: Text(
-                    '—',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-      ),
-      if (!isLast) const SizedBox(width: 8),
-    ];
-  }
-
-  // Получаем IMP для указанного периода
   double? _getImpForPlayerByPer(int playerStatId, ImpPer per) {
     final imps = widget.playerImps[playerStatId];
-    if (imps == null) return null;
-
-    return imps[per.code];
+    return imps?[per.code];
   }
 
   String _formatPlayTime(int seconds) {
@@ -973,30 +405,30 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
   }
 
   Color _getPlusMinusColor(int plusMinus) {
-    if (plusMinus > 0) {
-      return Colors.green;
-    } else if (plusMinus < 0) {
-      return Colors.red;
-    } else {
-      return Colors.grey;
-    }
+    if (plusMinus > 0) return Colors.green;
+    if (plusMinus < 0) return Colors.red;
+    return Colors.grey;
   }
 
   Color _getImpColor(double imp) {
-    if (imp >= 15) {
-      return Colors.green[800]!;
-    } else if (imp >= 10) {
-      return Colors.green[600]!;
-    } else if (imp >= 5) {
-      return Colors.green[400]!;
-    } else if (imp >= 0) {
-      return Colors.grey[600]!;
-    } else if (imp >= -5) {
-      return Colors.orange[400]!;
-    } else if (imp >= -10) {
-      return Colors.red[400]!;
-    } else {
-      return Colors.red[800]!;
-    }
+    if (imp >= 15) return Colors.green[800]!;
+    if (imp >= 10) return Colors.green[600]!;
+    if (imp >= 5) return Colors.green[400]!;
+    if (imp >= 0) return Colors.grey[600]!;
+    if (imp >= -5) return Colors.orange[400]!;
+    if (imp >= -10) return Colors.red[400]!;
+    return Colors.red[800]!;
   }
+}
+
+enum _ColumnType { time, plusMinus, imp, pts, fg, reb, ast, blk, stl, tov }
+
+class _TableColumn {
+  final String title;
+  final _ColumnType type;
+  final Sorting? sorting;
+  final dynamic extra;
+  final double width;
+
+  _TableColumn({required this.title, required this.type, this.sorting, this.extra, required this.width});
 }
