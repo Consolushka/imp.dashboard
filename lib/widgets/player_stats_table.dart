@@ -485,7 +485,7 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
           SizedBox(
             width: 60,
             child: Text(
-              '${stat.fieldGoalsPercentage}%',
+              '${(stat.fieldGoalsPercentage * 100).round()}%',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
               textAlign: TextAlign.center,
             ),
@@ -828,7 +828,7 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
           SizedBox(
             width: 60,
             child: Text(
-              '${stat.fieldGoalsPercentage}%',
+              '${(stat.fieldGoalsPercentage * 100).round()}%',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
               textAlign: TextAlign.center,
             ),
