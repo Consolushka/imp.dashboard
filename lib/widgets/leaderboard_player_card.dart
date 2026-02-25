@@ -336,47 +336,11 @@ class _LeaderboardCardState extends State<LeaderboardCard> {
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               )
             else
-              Column(
-                children: [
-                  ..._games.map(
-                    (game) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              _formatGameTitle(game),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey[700],
-                                  ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _formatImpValue(game.imp),
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: _getImpValueColor(game.imp),
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  _buildPagination(context),
-                ],
-              ),
+              _buildImpTilesRow(context),
           ],
         ),
       ),
     );
-  }
-
-  String _formatGameTitle(GameImp game) {
-    final date = game.scheduledAt;
-    final dateText = date == null ? 'Дата неизвестна' : _formatDate(date);
-    return dateText;
   }
 
   String _formatDate(DateTime date) {
@@ -400,41 +364,83 @@ class _LeaderboardCardState extends State<LeaderboardCard> {
     return Colors.red[700]!;
   }
 
-  Widget _buildPagination(BuildContext context) {
-    if (_total <= _pageSize) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          'Показано ${_games.length} из $_total',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-        ),
-      );
-    }
-
+  Widget _buildImpTilesRow(BuildContext context) {
     final totalPages = (_total / _pageSize).ceil().clamp(1, 9999);
     final isFirst = _currentPage <= 1;
     final isLast = _currentPage >= totalPages;
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          'Стр. $_currentPage из $totalPages',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+        IconButton(
+          onPressed: isLast || _isLoading ? null : () => _loadRecentImp(page: _currentPage + 1),
+          icon: const Icon(Icons.chevron_left),
+          splashRadius: 18,
         ),
-        Row(
-          children: [
-            TextButton(
-              onPressed: isFirst || _isLoading ? null : () => _loadRecentImp(page: _currentPage - 1),
-              child: const Text('Назад'),
-            ),
-            TextButton(
-              onPressed: isLast || _isLoading ? null : () => _loadRecentImp(page: _currentPage + 1),
-              child: const Text('Вперед'),
-            ),
-          ],
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: _games
+                .map(
+                  (game) => _buildImpTile(
+                    context,
+                    value: game.imp,
+                    dateText: game.scheduledAt == null ? '—' : _formatDate(game.scheduledAt!),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+        IconButton(
+          onPressed: isFirst || _isLoading ? null : () => _loadRecentImp(page: _currentPage - 1),
+          icon: const Icon(Icons.chevron_right),
+          splashRadius: 18,
         ),
       ],
     );
+  }
+
+  Widget _buildImpTile(BuildContext context, {required double? value, required String dateText}) {
+    return Tooltip(
+      message: dateText,
+      triggerMode: TooltipTriggerMode.tap,
+      child: SizedBox(
+        width: 64,
+        child: Container(
+          width: 56,
+          height: 56,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _getImpTileBackground(value),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: _getImpTileBorder(value), width: 1),
+          ),
+          child: Text(
+            _formatImpValue(value),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: _getImpValueColor(value),
+                ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getImpTileBackground(double? imp) {
+    if (imp == null) return Colors.grey[100]!;
+    if (imp >= 10) return Colors.green[50]!;
+    if (imp >= 5) return Colors.lightGreen[50]!;
+    if (imp >= 0) return Colors.grey[50]!;
+    if (imp >= -5) return Colors.orange[50]!;
+    return Colors.red[50]!;
+  }
+
+  Color _getImpTileBorder(double? imp) {
+    if (imp == null) return Colors.grey[200]!;
+    if (imp >= 10) return Colors.green[200]!;
+    if (imp >= 5) return Colors.lightGreen[200]!;
+    if (imp >= 0) return Colors.grey[200]!;
+    if (imp >= -5) return Colors.orange[200]!;
+    return Colors.red[200]!;
   }
 }
