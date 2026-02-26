@@ -249,60 +249,70 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
         color: Colors.white,
       ),
       alignment: Alignment.center,
-      child: _buildCellValue(context, stat, col),
+      child: _buildCellValue(context, stat, col, width),
     );
   }
 
-  Widget _buildCellValue(BuildContext context, GameTeamPlayerStat stat, _TableColumn col) {
+  Widget _buildCellValue(BuildContext context, GameTeamPlayerStat stat, _TableColumn col, double width) {
+    const double fontSize = 12.0;
     switch (col.type) {
       case _ColumnType.time:
         return Text(
           _formatPlayTime(stat.playedSeconds),
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold, fontSize: fontSize),
         );
       case _ColumnType.plusMinus:
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          width: width - 8,
+          padding: const EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(
             color: _getPlusMinusColor(stat.plusMinus),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
             stat.plusMinus > 0 ? '+${stat.plusMinus}' : '${stat.plusMinus}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: fontSize),
+            textAlign: TextAlign.center,
           ),
         );
       case _ColumnType.imp:
         final imp = _getImpForPlayerByPer(stat.id, col.extra as ImpPer);
         if (imp == null) {
           return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            width: width - 8,
+            padding: const EdgeInsets.symmetric(vertical: 4),
             decoration: BoxDecoration(color: Colors.grey, borderRadius: BorderRadius.circular(6)),
-            child: const Text('—', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+            child: const Text(
+              '—',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: fontSize),
+              textAlign: TextAlign.center,
+            ),
           );
         }
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          width: width - 8,
+          padding: const EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(color: _getImpColor(imp), borderRadius: BorderRadius.circular(6)),
           child: Text(
             imp > 0 ? '+${imp.toStringAsFixed(1)}' : imp.toStringAsFixed(1),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: fontSize),
+            textAlign: TextAlign.center,
           ),
         );
       case _ColumnType.pts:
-        return Text(stat.points.toString(), style: const TextStyle(fontWeight: FontWeight.w500));
+        return Text(stat.points.toString(), style: const TextStyle(fontWeight: FontWeight.w500, fontSize: fontSize));
       case _ColumnType.fg:
-        return Text('${(stat.fieldGoalsPercentage * 100).round()}%', style: const TextStyle(fontWeight: FontWeight.w500));
+        return Text('${(stat.fieldGoalsPercentage * 100).round()}%', style: const TextStyle(fontWeight: FontWeight.w500, fontSize: fontSize));
       case _ColumnType.reb:
-        return Text(stat.rebounds.toString());
+        return Text(stat.rebounds.toString(), style: const TextStyle(fontSize: fontSize));
       case _ColumnType.ast:
-        return Text(stat.assists.toString());
+        return Text(stat.assists.toString(), style: const TextStyle(fontSize: fontSize));
       case _ColumnType.blk:
-        return Text(stat.blocks.toString());
+        return Text(stat.blocks.toString(), style: const TextStyle(fontSize: fontSize));
       case _ColumnType.stl:
-        return Text(stat.steals.toString());
+        return Text(stat.steals.toString(), style: const TextStyle(fontSize: fontSize));
       case _ColumnType.tov:
-        return Text(stat.turnovers.toString());
+        return Text(stat.turnovers.toString(), style: const TextStyle(fontSize: fontSize));
     }
   }
 
@@ -405,9 +415,9 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
   }
 
   Color _getPlusMinusColor(int plusMinus) {
-    if (plusMinus > 0) return Colors.green;
-    if (plusMinus < 0) return Colors.red;
-    return Colors.grey;
+    if (plusMinus > 0) return Colors.green[100]!;
+    if (plusMinus < 0) return Colors.red[100]!;
+    return Colors.grey[200]!;
   }
 
   Color _getImpColor(double imp) {
