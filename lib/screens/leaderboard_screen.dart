@@ -36,6 +36,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   int _selectedLimit = 10;
   int _selectedMinGames = 1;
   int? _selectedTeamId;
+  bool _useReliability = false;
   late RangeValues _selectedMinutes;
 
   int regulationDuration = 40;
@@ -85,6 +86,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         teamId: _selectedTeamId,
         minMinutes: _selectedMinutes.start.round(),
         maxMinutes: _selectedMinutes.end.round(),
+        useReliability: _useReliability,
         maxPossibleMinutes: regulationDuration,
       );
 
@@ -227,35 +229,35 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ),
           ],
 
-          // Список игроков или пустое состояние
-          if (_players.isEmpty && !_isUpdating) ...[
-            SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding(context)),
-              sliver: SliverToBoxAdapter(child: _buildEmptyState()),
-            ),
-          ] else if (!_isUpdating) ...[
-            SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding(context)),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final player = _players[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: LeaderboardCard(
-                      key: ValueKey('player-${player.player.id}-${_selectedPer}-${_selectedTeamId ?? 'all'}'),
-                      rankedPlayer: player,
-                      isTopThree: index < 3,
-                      tournamentId: widget.tournament!.id,
-                      per: _selectedPer,
-                      teamId: _selectedTeamId,
-                    ),
-                  );
-                }, childCount: _players.length),
-              ),
-            ),
-          ],
-
-          const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
+                      // Список игроков или пустое состояние
+                    if (_players.isEmpty && !_isUpdating) ...[
+                      SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding(context)),
+                        sliver: SliverToBoxAdapter(child: _buildEmptyState()),
+                      ),
+                    ] else if (!_isUpdating) ...[
+                      SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: _getHorizontalPadding(context)),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate((context, index) {
+                            final player = _players[index];
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: LeaderboardCard(
+                                key: ValueKey('player-${player.player.id}-${_selectedPer}-${_selectedTeamId ?? 'all'}-${_useReliability}'),
+                                rankedPlayer: player,
+                                isTopThree: index < 3,
+                                tournamentId: widget.tournament!.id,
+                                per: _selectedPer,
+                                teamId: _selectedTeamId,
+                                useReliability: _useReliability,
+                              ),
+                            );
+                          }, childCount: _players.length),
+                        ),
+                      ),
+                    ],
+                    const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
         ],
       ),
     );
@@ -606,6 +608,33 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
             const SizedBox(height: 16),
 
+            // Переключатель Reliability
+            _buildFilterField(
+              'Достоверность (Reliability):',
+              Row(
+                children: [
+                  Switch(
+                    value: _useReliability,
+                    onChanged: (value) {
+                      setState(() {
+                        _useReliability = value;
+                      });
+                    },
+                    activeColor: Colors.black,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Использовать взвешенный расчет IMP с учетом сыгранных минут',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
             // Кнопка обновления
             SizedBox(
               width: double.infinity,
@@ -640,7 +669,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 border: Border.all(color: Colors.grey[200]!),
               ),
               child: Text(
-                'Показать ${_getOrderDisplayText()} ${_selectedLimit} игроков${_selectedTeamId != null ? " выбранной команды" : ""} с минимум ${_selectedMinGames} играми (от ${_selectedMinutes.start.round()} до ${_selectedMinutes.end.round()} мин) по IMP (${_getPerDisplayName()})',
+                'Показать ${_getOrderDisplayText()} ${_selectedLimit} игроков${_selectedTeamId != null ? " выбранной команды" : ""} с минимум ${_selectedMinGames} играми (от ${_selectedMinutes.start.round()} до ${_selectedMinutes.end.round()} мин) по IMP (${_getPerDisplayName()}) ${_useReliability ? "с учетом достоверности" : "без учета достоверности"}',
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: Colors.grey[700], fontWeight: FontWeight.w500),

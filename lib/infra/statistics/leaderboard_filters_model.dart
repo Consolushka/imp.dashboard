@@ -7,6 +7,7 @@ class LeaderboardFilters {
   final int? teamId;
   final int? minMinutes;
   final int? maxMinutes;
+  final bool useReliability;
 
   final int maxPossibleMinutes;
 
@@ -19,6 +20,7 @@ class LeaderboardFilters {
     this.teamId,
     this.minMinutes,
     this.maxMinutes,
+    this.useReliability = false,
     required this.maxPossibleMinutes,
   });
 
@@ -26,14 +28,15 @@ class LeaderboardFilters {
     final params = <String, dynamic>{
       'tournament_id': tournamentId.toString(),
       'per': per,
+      'use_reliability': useReliability.toString(),
     };
 
     if (limit != null) params['limit'] = limit.toString();
     if (order != null) params['order'] = order;
     if (minGames != null) params['min_games'] = minGames.toString();
     if (teamId != null) params['team_id'] = teamId.toString();
-    if (minMinutes != null && minMinutes != 0) params['min_minutes'] = minMinutes.toString(); // Добавляем
-    if (maxMinutes != null && maxMinutes != maxPossibleMinutes) params['max_minutes'] = maxMinutes.toString(); // Добавляем
+    if (minMinutes != null && minMinutes != 0) params['min_minutes'] = minMinutes.toString();
+    if (maxMinutes != null && maxMinutes != maxPossibleMinutes) params['max_minutes'] = maxMinutes.toString();
 
     return params;
   }
@@ -47,6 +50,7 @@ class LeaderboardFilters {
     int? teamId,
     int? minMinutes,
     int? maxMinutes,
+    bool? useReliability,
     required int maxPossibleMinutes,
   }) {
     return LeaderboardFilters(
@@ -58,12 +62,13 @@ class LeaderboardFilters {
       teamId: teamId ?? this.teamId,
       minMinutes: minMinutes != 0 ? this.minMinutes : null,
       maxMinutes: maxMinutes != maxPossibleMinutes ? this.maxMinutes : null,
+      useReliability: useReliability ?? this.useReliability,
       maxPossibleMinutes: maxPossibleMinutes
     );
   }
 
   @override
   String toString() {
-    return 'LeaderboardFilters{tournamentId: $tournamentId, per: $per, limit: $limit, order: $order, minGames: $minGames, teamId: $teamId}';
+    return 'LeaderboardFilters{tournamentId: $tournamentId, per: $per, limit: $limit, order: $order, minGames: $minGames, teamId: $teamId, useReliability: $useReliability}';
   }
 }
