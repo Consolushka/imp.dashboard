@@ -177,11 +177,13 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
 
   Widget _buildRowHeader(BuildContext context, GameTeamPlayerStat stat) {
     return Container(
+      height: _cellHeight,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: Colors.grey[300]!, width: 0.5)),
         color: Colors.white,
       ),
+      alignment: Alignment.centerLeft,
       child: Row(
         children: [
           Container(
@@ -211,6 +213,7 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
   Widget _buildColumnHeader(BuildContext context, _TableColumn col, double width) {
     return Container(
       width: width,
+      height: _columnTitleHeight,
       decoration: BoxDecoration(
         color: Colors.grey[100],
         border: Border(bottom: BorderSide(color: Colors.grey[300]!, width: 1)),
@@ -244,6 +247,7 @@ class _PlayerStatsTableState extends State<PlayerStatsTable> {
   Widget _buildContentCell(BuildContext context, GameTeamPlayerStat stat, _TableColumn col, double width) {
     return Container(
       width: width,
+      height: _cellHeight,
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: Colors.grey[300]!, width: 0.5)),
         color: Colors.white,
