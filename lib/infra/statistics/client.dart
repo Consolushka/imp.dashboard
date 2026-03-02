@@ -70,7 +70,7 @@ class StatisticsClient {
     return Game.fromJson(responseBody['data']);
   }
 
-  Future<Map<int, Map<String, double>>> imp(List<int> ids, List<String> pers) async {
+  Future<Map<int, Map<String, double>>> imp(List<int> ids, List<String> pers, {bool useReliability = false}) async {
     String idsParam = "";
     for (var i = 0; i < ids.length; i++) {
       idsParam += "ids[]=${ids[i]}";
@@ -87,7 +87,7 @@ class StatisticsClient {
       }
     }
 
-    var uri = Uri.parse("$_baseUrl/imp?$idsParam&$persParam");
+    var uri = Uri.parse("$_baseUrl/imp?$idsParam&$persParam&use_reliability=$useReliability");
 
     var response = await get(uri, headers: {'Content-Type': 'application/json'});
 
@@ -142,6 +142,7 @@ class StatisticsClient {
     int? teamId,
     int offset = 0,
     int limit = 15,
+    bool useReliability = false,
   }) async {
     final uri = Uri.parse('$_baseUrl/players/imp/recent');
 
@@ -151,6 +152,7 @@ class StatisticsClient {
       'per': per,
       'offset': offset,
       'limit': limit,
+      'use_reliability': useReliability,
       if (teamId != null) 'team_id': teamId,
     };
 
