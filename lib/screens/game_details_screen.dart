@@ -21,6 +21,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   static final List<ImpPer> _availablePers = [benchImpPer, startImpPer, fullGameImpPer];
 
   List<ImpPer> _selectedPers = [fullGameImpPer];
+  bool _useReliability = false;
 
   StatisticsClient apiClient = DependencyInjection().getIt<StatisticsClient>();
 
@@ -52,7 +53,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   void _loadPlayerImps() async {
     List<int> ids =
         [..._game.teamStats![0].playerStats!, ..._game.teamStats![1].playerStats!].map((stat) => stat.id).toList();
-    var res = await apiClient.imp(ids, _selectedPers.map((per) => per.code).toList());
+    var res = await apiClient.imp(ids, _selectedPers.map((per) => per.code).toList(), useReliability: _useReliability);
     setState(() {
       _playerImps = res;
     });
@@ -142,7 +143,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Периоды для расчета IMP',
+                            'Настройки расчета IMP',
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: Colors.grey[800],
@@ -199,6 +200,41 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                             _loadPlayerImps();
                           }
                         },
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Switch(
+                            value: _useReliability,
+                            onChanged: (value) {
+                              setState(() {
+                                _useReliability = value;
+                              });
+                              _loadPlayerImps();
+                            },
+                            activeColor: Colors.black,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Достоверность (Reliability)',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  'Взвешенный расчет с учетом времени на площадке',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
