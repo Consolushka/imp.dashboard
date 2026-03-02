@@ -11,6 +11,7 @@ class LeaderboardCard extends StatefulWidget {
   final int tournamentId;
   final String per;
   final int? teamId;
+  final bool useReliability;
 
   const LeaderboardCard({
     super.key,
@@ -19,6 +20,7 @@ class LeaderboardCard extends StatefulWidget {
     required this.tournamentId,
     required this.per,
     this.teamId,
+    this.useReliability = false,
   });
 
   @override
@@ -54,6 +56,7 @@ class _LeaderboardCardState extends State<LeaderboardCard> {
         teamId: widget.teamId,
         offset: offset,
         limit: _pageSize,
+        useReliability: widget.useReliability,
       );
 
       if (!mounted) return;
