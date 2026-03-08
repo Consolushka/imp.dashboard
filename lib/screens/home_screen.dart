@@ -29,7 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // Временные тестовые данные - замените на реальные API-вызовы
   void _loadLeagues() async {
     try {
-      _leagues = await apiClient.leagues();
+      final leagues = await apiClient.leagues();
+      leagues.sort((a, b) => a.order.compareTo(b.order));
+      _leagues = leagues;
     } on Exception catch (e) {
       if (mounted){
         ErrorDialog.show(context, title: "Ошибка", message: e.toString());
