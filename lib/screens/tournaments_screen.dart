@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:imp/widgets/error_dialog.dart';
 import '../core/di.dart';
 import '../infra/statistics/client.dart';
@@ -6,7 +7,6 @@ import '../models/league_model.dart';
 import '../models/tournament_model.dart';
 import '../widgets/tournament_card.dart';
 import '../widgets/app_drawer.dart';
-import 'games_screen.dart';
 
 class TournamentsScreen extends StatefulWidget {
   final League? league;
@@ -47,7 +47,7 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
   }
 
   void _onTournamentTap(Tournament tournament) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => GamesScreen(tournament: tournament)));
+    context.push('/games', extra: tournament);
   }
 
   @override
@@ -57,7 +57,7 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
         title: Text(_getTitle()),
         leading:
             widget.league != null
-                ? IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.of(context).pop())
+                ? IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())
                 : null,
       ),
       drawer: const AppDrawer(),

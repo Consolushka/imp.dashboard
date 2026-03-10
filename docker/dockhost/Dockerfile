@@ -37,6 +37,9 @@ RUN flutter build web
 # use nginx to deploy
 FROM nginx:1.25.2-alpine
 
+# Копируем конфиг
+COPY docker/dockhost/nginx.conf /etc/nginx/conf.d/default.conf
+
 # copy the info of the builded web app to nginx
 COPY --from=build-env /app/build/web /usr/share/nginx/html
 
