@@ -59,6 +59,14 @@ class ImpApp extends StatelessWidget {
         },
       ),
       GoRoute(
+        path: '/tournament/:tournamentId/games',
+        builder: (context, state) {
+          final id = int.tryParse(state.pathParameters['tournamentId'] ?? '');
+          final tournament = state.extra as Tournament?;
+          return GamesScreen(tournament: tournament, tournamentId: id);
+        },
+      ),
+      GoRoute(
         path: '/leaderboard',
         builder: (context, state) {
           final tournament = state.extra as Tournament?;

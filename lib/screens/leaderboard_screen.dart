@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../core/di.dart';
 import '../infra/statistics/client.dart';
 import '../models/team_model.dart';
@@ -146,7 +147,20 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_getTitle()),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.of(context).pop()),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              if (widget.tournament != null) {
+                context.go('/tournament/${widget.tournament!.id}/games', extra: widget.tournament);
+              } else {
+                context.go('/');
+              }
+            }
+          },
+        ),
         actions: [IconButton(icon: const Icon(Icons.refresh), onPressed: () => _loadLeaderboard())],
       ),
       drawer: const AppDrawer(),
@@ -195,17 +209,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(
-                        _selectedOrder == 'desc' ? Icons.trending_up : Icons.trending_down,
-                        size: 16,
-                        color: Colors.grey[600],
-                      ),
+                      Icon(Icons.people_outline, size: 16, color: Colors.grey[600]),
                       const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          'Рейтинг по среднему IMP (${_getPerDisplayName()}) • Показано ${_players.length} из ${_selectedLimit}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
+                      Text(
+                        'Найдено: ${_players.length} чел.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(Icons.timer_outlined, size: 16, color: Colors.grey[600]),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Регламент: $regulationDuration мин.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -264,11 +279,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   Widget _buildFilters() {
-    final isMobile = MediaQuery.of(context).size.width < 600;
-
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -276,404 +287,97 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.tune, size: 20, color: Colors.grey[700]),
+                const Icon(Icons.filter_list, size: 20),
                 const SizedBox(width: 8),
-                Text(
-                  'Фильтры лидерборда',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: Colors.grey[800]),
-                ),
+                Text('Фильтры и настройки', style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 16),
 
-            // Выбор команды
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Команда:', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<int?>(
-                  value: _selectedTeamId,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                  isExpanded: true,
-                  items: [
-                    const DropdownMenuItem<int?>(value: null, child: Text('Все команды')),
-                    ..._getSortedTeams().map((team) {
-                      return DropdownMenuItem<int?>(
-                        value: team.id,
-                        child: Text(team.name, overflow: TextOverflow.ellipsis),
-                      );
-                    }),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedTeamId = value;
-                    });
-                  },
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Период IMP и Порядок сортировки
-            if (isMobile) ...[
-              // Мобильная версия - один столбец
-              _buildFilterField(
-                'Период IMP:',
-                DropdownButtonFormField<String>(
-                  value: _selectedPer,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                  items:
-                      [fullGameImpPer, benchImpPer, startImpPer].map((per) {
-                        return DropdownMenuItem(value: per.code, child: Text(per.name));
-                      }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _selectedPer = value;
-                      });
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildFilterField(
-                'Порядок:',
-                DropdownButtonFormField<String>(
-                  value: _selectedOrder,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                  items: [
-                    DropdownMenuItem(
-                      value: 'desc',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.arrow_downward, size: 16),
-                          const SizedBox(width: 8),
-                          const Text('По убыванию'),
-                        ],
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: 'asc',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.arrow_upward, size: 16),
-                          const SizedBox(width: 8),
-                          const Text('По возрастанию'),
-                        ],
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _selectedOrder = value;
-                      });
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildFilterField(
-                'Мин. игр:',
-                TextFormField(
-                  controller: _minGamesController,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    hintText: 'от 1 до 100',
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildFilterField(
-                'Минут в матче: ${_selectedMinutes.start.round()} - ${_selectedMinutes.end.round()}',
-                Column(
+            // Верхний ряд: Период и Порядок
+            LayoutBuilder(builder: (context, constraints) {
+              if (constraints.maxWidth > 600) {
+                return Row(
                   children: [
-                    RangeSlider(
-                      values: _selectedMinutes,
-                      min: 0,
-                      max: regulationDuration.ceilToDouble(),
-                      divisions: regulationDuration,
-                      activeColor: Colors.black,
-                      inactiveColor: Colors.grey[300],
-                      labels: RangeLabels(
-                        _selectedMinutes.start.round().toString(),
-                        _selectedMinutes.end.round().toString(),
-                      ),
-                      onChanged: (RangeValues values) {
-                        setState(() {
-                          _selectedMinutes = values;
-                        });
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('0 мин', style: Theme.of(context).textTheme.bodySmall),
-                          Text('$regulationDuration мин', style: Theme.of(context).textTheme.bodySmall),
-                        ],
-                      ),
-                    ),
+                    Expanded(child: _buildPeriodDropdown()),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildOrderDropdown()),
                   ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildFilterField(
-                'Кол-во игроков:',
-                DropdownButtonFormField<int>(
-                  value: _selectedLimit,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                  items:
-                      [10, 20, 30, 50, 100].map((limit) {
-                        return DropdownMenuItem(value: limit, child: Text('Топ $limit'));
-                      }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _selectedLimit = value;
-                      });
-                    }
-                  },
-                ),
-              ),
-            ] else ...[
-              // Десктопная версия - два столбца
-              Row(
+                );
+              }
+              return Column(
                 children: [
-                  Expanded(
-                    child: _buildFilterField(
-                      'Период IMP:',
-                      DropdownButtonFormField<String>(
-                        value: _selectedPer,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        items:
-                            [fullGameImpPer, benchImpPer, startImpPer].map((per) {
-                              return DropdownMenuItem(value: per.code, child: Text(per.name));
-                            }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedPer = value;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildFilterField(
-                      'Порядок:',
-                      DropdownButtonFormField<String>(
-                        value: _selectedOrder,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        items: [
-                          DropdownMenuItem(
-                            value: 'desc',
-                            child: Row(
-                              children: [
-                                const Icon(Icons.arrow_downward, size: 16),
-                                const SizedBox(width: 8),
-                                const Text('По убыванию'),
-                              ],
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'asc',
-                            child: Row(
-                              children: [
-                                const Icon(Icons.arrow_upward, size: 16),
-                                const SizedBox(width: 8),
-                                const Text('По возрастанию'),
-                              ],
-                            ),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedOrder = value;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ),
+                  _buildPeriodDropdown(),
+                  const SizedBox(height: 16),
+                  _buildOrderDropdown(),
                 ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildFilterField(
-                      'Мин. игр:',
-                      TextFormField(
-                        controller: _minGamesController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          hintText: 'от 1 до 100',
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildFilterField(
-                      'Кол-во игроков:',
-                      DropdownButtonFormField<int>(
-                        value: _selectedLimit,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        items:
-                            [10, 20, 30, 50, 100].map((limit) {
-                              return DropdownMenuItem(value: limit, child: Text('Топ $limit'));
-                            }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedLimit = value;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _buildFilterField(
-                'Минут в матче: ${_selectedMinutes.start.round()} - ${_selectedMinutes.end.round()}',
-                Column(
+              );
+            }),
+
+            const SizedBox(height: 16),
+
+            // Средний ряд: Команда и Лимит
+            LayoutBuilder(builder: (context, constraints) {
+              if (constraints.maxWidth > 600) {
+                return Row(
                   children: [
-                    RangeSlider(
-                      values: _selectedMinutes,
-                      min: 0,
-                      max: regulationDuration.ceilToDouble(),
-                      divisions: regulationDuration,
-                      activeColor: Colors.black,
-                      inactiveColor: Colors.grey[300],
-                      labels: RangeLabels(
-                        _selectedMinutes.start.round().toString(),
-                        _selectedMinutes.end.round().toString(),
-                      ),
-                      onChanged: (RangeValues values) {
-                        setState(() {
-                          _selectedMinutes = values;
-                        });
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('0 мин', style: Theme.of(context).textTheme.bodySmall),
-                          Text('$regulationDuration мин', style: Theme.of(context).textTheme.bodySmall),
-                        ],
-                      ),
-                    ),
+                    Expanded(child: _buildTeamDropdown()),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildLimitDropdown()),
                   ],
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 16),
-
-            // Переключатель Reliability
-            _buildFilterField(
-              'Достоверность (Reliability):',
-              Row(
+                );
+              }
+              return Column(
                 children: [
-                  Switch(
-                    value: _useReliability,
-                    onChanged: (value) {
-                      setState(() {
-                        _useReliability = value;
-                      });
-                    },
-                    activeColor: Colors.black,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Использовать взвешенный расчет IMP с учетом сыгранных минут',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
+                  _buildTeamDropdown(),
+                  const SizedBox(height: 16),
+                  _buildLimitDropdown(),
                 ],
-              ),
-            ),
+              );
+            }),
 
             const SizedBox(height: 16),
 
-            // Кнопка обновления
+            // Нижний ряд: Мин. игры и Минуты
+            LayoutBuilder(builder: (context, constraints) {
+              if (constraints.maxWidth > 600) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _buildMinGamesField()),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildMinutesRange()),
+                  ],
+                );
+              }
+              return Column(
+                children: [
+                  _buildMinGamesField(),
+                  const SizedBox(height: 16),
+                  _buildMinutesRange(),
+                ],
+              );
+            }),
+
+            const Divider(height: 32),
+
+            // Опции: Reliability
+            _buildReliabilityToggle(),
+
+            const SizedBox(height: 16),
+
+            // Кнопка применения
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isUpdating ? null : _updateFiltersAndReload,
-                icon:
-                    _isUpdating
-                        ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                        : const Icon(Icons.refresh),
-                label: Text(_isUpdating ? 'Обновление...' : 'Обновить лидерборд'),
-                style: ElevatedButton.styleFrom(
+              child: FilledButton.icon(
+                onPressed: _updateFiltersAndReload,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Применить фильтры'),
+                style: FilledButton.styleFrom(
                   backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-              ),
-            ),
-
-            // Информация о текущих настройках
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[200]!),
-              ),
-              child: Text(
-                'Показать ${_getOrderDisplayText()} ${_selectedLimit} игроков${_selectedTeamId != null ? " выбранной команды" : ""} с минимум ${_selectedMinGames} играми (от ${_selectedMinutes.start.round()} до ${_selectedMinutes.end.round()} мин) по IMP (${_getPerDisplayName()}) ${_useReliability ? "с учетом достоверности" : "без учета достоверности"}',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: Colors.grey[700], fontWeight: FontWeight.w500),
-                textAlign: TextAlign.center,
               ),
             ),
           ],
@@ -682,45 +386,140 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
-  // Вспомогательный метод для создания полей фильтров
-  Widget _buildFilterField(String label, Widget field) {
+  Widget _buildPeriodDropdown() {
+    return DropdownButtonFormField<String>(
+      value: _selectedPer,
+      decoration: const InputDecoration(
+        labelText: 'Период расчета',
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      items: [
+        DropdownMenuItem(value: fullGameImpPer.code, child: Text(fullGameImpPer.name)),
+        DropdownMenuItem(value: startImpPer.code, child: Text(startImpPer.name)),
+        DropdownMenuItem(value: benchImpPer.code, child: Text(benchImpPer.name)),
+      ],
+      onChanged: (value) {
+        if (value != null) {
+          setState(() => _selectedPer = value);
+        }
+      },
+    );
+  }
+
+  Widget _buildOrderDropdown() {
+    return DropdownButtonFormField<String>(
+      value: _selectedOrder,
+      decoration: const InputDecoration(
+        labelText: 'Порядок',
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      items: const [
+        DropdownMenuItem(value: 'asc', child: Text('По возрастанию (худшие)')),
+        DropdownMenuItem(value: 'desc', child: Text('По убыванию (лучшие)')),
+      ],
+      onChanged: (value) {
+        if (value != null) {
+          setState(() => _selectedOrder = value);
+        }
+      },
+    );
+  }
+
+  Widget _buildLimitDropdown() {
+    return DropdownButtonFormField<int>(
+      value: _selectedLimit,
+      decoration: const InputDecoration(
+        labelText: 'Показывать игроков',
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      items: const [
+        DropdownMenuItem(value: 5, child: Text('Топ 5')),
+        DropdownMenuItem(value: 10, child: Text('Топ 10')),
+        DropdownMenuItem(value: 20, child: Text('Топ 20')),
+        DropdownMenuItem(value: 50, child: Text('Топ 50')),
+        DropdownMenuItem(value: 100, child: Text('Топ 100')),
+      ],
+      onChanged: (value) {
+        if (value != null) {
+          setState(() => _selectedLimit = value);
+        }
+      },
+    );
+  }
+
+  Widget _buildTeamDropdown() {
+    return DropdownButtonFormField<int?>(
+      value: _selectedTeamId,
+      decoration: const InputDecoration(
+        labelText: 'Команда',
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      items: [
+        const DropdownMenuItem(value: null, child: Text('Все команды')),
+        ..._teams.map((team) => DropdownMenuItem(value: team.id, child: Text(team.name))),
+      ],
+      onChanged: (value) {
+        setState(() => _selectedTeamId = value);
+      },
+    );
+  }
+
+  Widget _buildMinGamesField() {
+    return TextFormField(
+      controller: _minGamesController,
+      decoration: const InputDecoration(
+        labelText: 'Мин. игр',
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        helperText: 'Минимум 1 игра',
+      ),
+      keyboardType: TextInputType.number,
+    );
+  }
+
+  Widget _buildMinutesRange() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
-        const SizedBox(height: 8),
-        field,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Игровое время (мин)', style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              '${_selectedMinutes.start.round()} - ${_selectedMinutes.end.round()}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        RangeSlider(
+          values: _selectedMinutes,
+          min: 0,
+          max: regulationDuration.ceilToDouble(),
+          divisions: regulationDuration,
+          activeColor: Colors.black,
+          inactiveColor: Colors.grey[300],
+          onChanged: (values) {
+            setState(() => _selectedMinutes = values);
+          },
+        ),
       ],
     );
   }
 
-  // Метод для получения отсортированных команд по алфавиту
-  List<Team> _getSortedTeams() {
-    final sortedTeams = List<Team>.from(_teams);
-    sortedTeams.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
-    return sortedTeams;
-  }
-
-  String _getOrderDisplayText() {
-    return _selectedOrder == 'desc' ? 'лучших' : 'худших';
-  }
-
-  Widget _buildNoTournamentState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.leaderboard_outlined, size: 80, color: Colors.grey),
-          const SizedBox(height: 16),
-          Text('Выберите турнир', style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.grey)),
-          const SizedBox(height: 8),
-          Text(
-            'Для просмотра лидерборда необходимо выбрать турнир',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+  Widget _buildReliabilityToggle() {
+    return SwitchListTile(
+      value: _useReliability,
+      onChanged: (value) {
+        setState(() => _useReliability = value);
+      },
+      title: const Text('Достоверность (Reliability)'),
+      subtitle: const Text('Взвешенный расчет с учетом времени на площадке'),
+      activeColor: Colors.black,
+      contentPadding: EdgeInsets.zero,
     );
   }
 
@@ -729,14 +528,35 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.leaderboard_outlined, size: 80, color: Colors.grey),
+          const Icon(Icons.person_search_outlined, size: 64, color: Colors.grey),
           const SizedBox(height: 16),
-          Text('Лидерборд пуст', style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.grey)),
-          const SizedBox(height: 8),
           Text(
-            'В турнире пока нет игроков с достаточным количеством игр',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+            'Игроки не найдены',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.grey),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Попробуйте изменить параметры фильтрации или выберите другой турнир',
             textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoTournamentState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.emoji_events_outlined, size: 64, color: Colors.grey),
+          const SizedBox(height: 16),
+          const Text('Турнир не выбран'),
+          const SizedBox(height: 16),
+          OutlinedButton(
+            onPressed: () => context.go('/tournaments'),
+            child: const Text('Перейти к списку турниров'),
           ),
         ],
       ),
@@ -745,24 +565,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
   double _getHorizontalPadding(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    if (width > 1200) {
-      return (width - 800) / 2;
-    } else if (width > 800) {
-      return width * 0.1;
-    }
+    if (width > 1200) return (width - 900) / 2;
+    if (width > 800) return width * 0.05;
     return 16;
-  }
-
-  String _getPerDisplayName() {
-    switch (_selectedPer) {
-      case 'fullGame':
-        return 'вся игра';
-      case 'bench':
-        return 'скамейка';
-      case 'start':
-        return 'старт';
-      default:
-        return _selectedPer;
-    }
   }
 }

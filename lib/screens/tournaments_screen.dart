@@ -47,7 +47,7 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
   }
 
   void _onTournamentTap(Tournament tournament) {
-    context.push('/games', extra: tournament);
+    context.push('/tournament/${tournament.id}/games', extra: tournament);
   }
 
   @override
@@ -57,7 +57,16 @@ class _TournamentsScreenState extends State<TournamentsScreen> {
         title: Text(_getTitle()),
         leading:
             widget.league != null
-                ? IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/');
+                      }
+                    },
+                  )
                 : null,
       ),
       drawer: const AppDrawer(),

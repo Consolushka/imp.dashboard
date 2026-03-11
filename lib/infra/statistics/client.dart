@@ -44,6 +44,15 @@ class StatisticsClient {
     return (responseBody['data'] as List).map((item) => Tournament.fromJson(item)).toList();
   }
 
+  Future<Tournament> tournament(int id) async {
+    var uri = Uri.parse("$_baseUrl/tournaments/$id");
+
+    var response = await get(uri, headers: {'Content-Type': 'application/json'});
+
+    var responseBody = _handleBodyBytes(response);
+    return Tournament.fromJson(responseBody['data']);
+  }
+
   Future<PaginatedResponse<Game>> gamesByTournamentPaginated(int tournamentId, int page) async {
     final response = await get(
       Uri.parse('$_baseUrl/tournaments/$tournamentId/games?page=$page'),
