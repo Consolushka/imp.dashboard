@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class AboutImpScreen extends StatelessWidget {
   const AboutImpScreen({super.key});
@@ -9,7 +10,16 @@ class AboutImpScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Как это работает?'),
-        backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
+        ),
         elevation: 0,
         titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
           color: Colors.black,

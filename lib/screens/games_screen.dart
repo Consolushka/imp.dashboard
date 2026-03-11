@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:imp/widgets/error_dialog.dart';
@@ -12,11 +11,13 @@ import '../widgets/app_drawer.dart';
 
 class GamesScreen extends StatefulWidget {
   final Tournament? tournament;
+  final int? tournamentId;
   final bool isRecentGames;
 
   const GamesScreen({
     super.key,
     this.tournament,
+    this.tournamentId,
     this.isRecentGames = false,
   });
 
@@ -27,6 +28,7 @@ class GamesScreen extends StatefulWidget {
 class _GamesScreenState extends State<GamesScreen> {
   StatisticsClient apiClient = DependencyInjection().getIt<StatisticsClient>();
   List<Game> _games = [];
+  Tournament? _tournament;
   bool _isLoading = true;
   bool _isLoadingMore = false;
 
@@ -41,7 +43,8 @@ class _GamesScreenState extends State<GamesScreen> {
   @override
   void initState() {
     super.initState();
-    _loadGames();
+    _tournament = widget.tournament;
+    _loadInitialData();
     _scrollController.addListener(_onScroll);
   }
 
@@ -59,6 +62,20 @@ class _GamesScreenState extends State<GamesScreen> {
     }
   }
 
+  Future<void> _loadInitialData() async {
+    if (_tournament == null && widget.tournamentId != null) {
+      try {
+        final tournament = await apiClient.tournament(widget.tournamentId!);
+        setState(() {
+          _tournament = tournament;
+        });
+      } catch (e) {
+        // We can still try to load games even if tournament details fail
+      }
+    }
+    _loadGames();
+  }
+
   void _loadGames({bool refresh = false}) async {
     if (refresh) {
       setState(() {
@@ -70,9 +87,10 @@ class _GamesScreenState extends State<GamesScreen> {
 
     try {
       PaginatedResponse<Game> response;
+      final int? tId = _tournament?.id ?? widget.tournamentId;
 
-      if (widget.tournament != null) {
-        response = await apiClient.gamesByTournamentPaginated(widget.tournament!.id, _currentPage);
+      if (tId != null) {
+        response = await apiClient.gamesByTournamentPaginated(tId, _currentPage);
       } else if (widget.isRecentGames) {
         response = await apiClient.gamesPaginated(_currentPage);
       } else {
@@ -126,10 +144,16 @@ class _GamesScreenState extends State<GamesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_getTitle()),
-        leading: (widget.tournament != null || widget.isRecentGames)
+        leading: (_tournament != null || widget.tournamentId != null || widget.isRecentGames)
             ? IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
         )
             : null,
         actions: [
@@ -145,8 +169,10 @@ class _GamesScreenState extends State<GamesScreen> {
   }
 
   String _getTitle() {
-    if (widget.tournament != null) {
-      return widget.tournament!.name;
+    if (_tournament != null) {
+      return _tournament!.name;
+    } else if (widget.tournamentId != null) {
+      return 'Игры турнира';
     } else if (widget.isRecentGames) {
       return 'Последние игры';
     }
@@ -212,7 +238,7 @@ class _GamesScreenState extends State<GamesScreen> {
                     child: GameCard(
                       game: game,
                       onTap: () => _onGameTap(game),
-                      showTournament: widget.tournament == null,
+                      showTournament: _tournament == null && widget.tournamentId == null,
                     ),
                   );
                 },
@@ -279,7 +305,7 @@ class _GamesScreenState extends State<GamesScreen> {
   }
 
   String _getSubtitle() {
-    if (widget.tournament != null) {
+    if (_tournament != null || widget.tournamentId != null) {
       return 'Игры турнира';
     } else if (widget.isRecentGames) {
       return 'Последние результаты';
@@ -289,7 +315,7 @@ class _GamesScreenState extends State<GamesScreen> {
 
   String _getDescription() {
     if (_total > 0) {
-      if (widget.tournament != null) {
+      if (_tournament != null || widget.tournamentId != null) {
         return 'Показано ${_games.length} из $_total игр';
       } else if (widget.isRecentGames) {
         return 'Показано ${_games.length} из $_total последних игр';
@@ -297,7 +323,7 @@ class _GamesScreenState extends State<GamesScreen> {
       return 'Показано ${_games.length} из $_total игр';
     }
 
-    if (widget.tournament != null) {
+    if (_tournament != null || widget.tournamentId != null) {
       return 'Загружаются игры турнира...';
     } else if (widget.isRecentGames) {
       return 'Последние завершенные игры всех лиг';
@@ -346,7 +372,7 @@ class _GamesScreenState extends State<GamesScreen> {
   }
 
   String _getEmptyTitle() {
-    if (widget.tournament != null) {
+    if (_tournament != null || widget.tournamentId != null) {
       return 'Игры не найдены';
     } else if (widget.isRecentGames) {
       return 'Нет последних игр';
@@ -355,8 +381,10 @@ class _GamesScreenState extends State<GamesScreen> {
   }
 
   String _getEmptyDescription() {
-    if (widget.tournament != null) {
-      return 'В турнире ${widget.tournament!.name} пока нет игр';
+    if (_tournament != null) {
+      return 'В турнире ${_tournament!.name} пока нет игр';
+    } else if (widget.tournamentId != null) {
+      return 'В данном турнире пока нет игр';
     } else if (widget.isRecentGames) {
       return 'Пока нет завершенных игр для отображения';
     }

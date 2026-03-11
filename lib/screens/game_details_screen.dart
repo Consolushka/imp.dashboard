@@ -1,6 +1,7 @@
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:imp/widgets/error_dialog.dart';
 import '../core/di.dart';
 import '../infra/statistics/client.dart';
@@ -83,7 +84,21 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_getTitle()),
-        // leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.of(context).pop()),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              // Если мы зашли по прямой ссылке, пытаемся вернуться к играм этого турнира
+              if (_game?.tournamentId != null) {
+                context.go('/tournament/${_game!.tournamentId}/games', extra: _game!.tournament);
+              } else {
+                context.go('/');
+              }
+            }
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.share_outlined),
