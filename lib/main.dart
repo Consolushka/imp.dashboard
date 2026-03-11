@@ -1,28 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_web_plugins/url_strategy.dart' show usePathUrlStrategy;
 import 'package:imp/core/di.dart';
-import 'screens/home_screen.dart';
+import 'package:imp/screens/about_screen.dart';
+import 'package:imp/screens/game_details_screen.dart';
+import 'package:imp/screens/games_screen.dart';
+import 'package:imp/screens/home_screen.dart';
+import 'package:imp/screens/leaderboard_screen.dart';
+import 'package:imp/screens/tournaments_screen.dart';
+import 'package:imp/models/league_model.dart';
+import 'package:imp/models/tournament_model.dart';
+import 'package:imp/models/game_model.dart';
 
 const apiUrl = "https://hfhq-a10d-zqqo.gw-1a.dockhost.net/api";
+// const apiUrl = "http://localhost/api";
 
 void main() {
-
+  // Включаем чистые URL (без #)
+  usePathUrlStrategy();
+  
   DependencyInjection().registerDependencies();
-
-  runApp(const ImpApp());
+  runApp(ImpApp());
 }
 
 class ImpApp extends StatelessWidget {
-  const ImpApp({super.key});
+  ImpApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'IMP Basketball Stats',
       theme: _buildTheme(),
-      home: const HomeScreen(),
+      routerConfig: _router,
       debugShowCheckedModeBanner: false,
     );
   }
+
+  final GoRouter _router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/tournaments',
+        builder: (context, state) {
+          final league = state.extra as League?;
+          return TournamentsScreen(league: league);
+        },
+      ),
+      GoRoute(
+        path: '/games',
+        builder: (context, state) {
+          final tournament = state.extra as Tournament?;
+          final isRecentGames = state.uri.queryParameters['recent'] == 'true';
+          return GamesScreen(tournament: tournament, isRecentGames: isRecentGames);
+        },
+      ),
+      GoRoute(
+        path: '/leaderboard',
+        builder: (context, state) {
+          final tournament = state.extra as Tournament?;
+          return LeaderboardScreen(tournament: tournament);
+        },
+      ),
+      GoRoute(
+        path: '/game/:id',
+        builder: (context, state) {
+          final id = int.tryParse(state.pathParameters['id'] ?? '');
+          final game = state.extra as Game?;
+          return GameDetailScreen(game: game, gameId: id);
+        },
+      ),
+      GoRoute(
+        path: '/about',
+        builder: (context, state) => const AboutImpScreen(),
+      ),
+    ],
+  );
 
   ThemeData _buildTheme() {
     return ThemeData(
@@ -35,8 +91,6 @@ class ImpApp extends StatelessWidget {
         onSecondary: Colors.white,
         surface: Colors.white,
         onSurface: Colors.black,
-        // background: Colors.white,
-        // onBackground: Colors.black,
         outline: Colors.grey,
       ),
       scaffoldBackgroundColor: Colors.white,

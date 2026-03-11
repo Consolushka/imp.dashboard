@@ -1,5 +1,6 @@
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:imp/widgets/error_dialog.dart';
 import '../core/di.dart';
 import '../infra/statistics/client.dart';
@@ -9,9 +10,10 @@ import '../widgets/app_drawer.dart';
 import '../widgets/player_stats_table.dart';
 
 class GameDetailScreen extends StatefulWidget {
-  final Game game;
+  final Game? game;
+  final int? gameId;
 
-  const GameDetailScreen({super.key, required this.game});
+  const GameDetailScreen({super.key, this.game, this.gameId});
 
   @override
   State<GameDetailScreen> createState() => _GameDetailScreenState();
@@ -25,7 +27,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
 
   StatisticsClient apiClient = DependencyInjection().getIt<StatisticsClient>();
 
-  late Game _game;
+  Game? _game;
   Map<int, Map<String, double>> _playerImps = {}; // IMP значения по ID игроков
   bool _isLoading = true;
 
@@ -37,7 +39,8 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
 
   void _loadGameStats() async {
     try {
-      _game = await apiClient.game(widget.game.id);
+      final int id = widget.game?.id ?? widget.gameId!;
+      _game = await apiClient.game(id);
       _loadPlayerImps();
     } on Exception catch (e) {
       if (mounted) {
@@ -51,11 +54,27 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   }
 
   void _loadPlayerImps() async {
+    if (_game == null) return;
     List<int> ids =
-        [..._game.teamStats![0].playerStats!, ..._game.teamStats![1].playerStats!].map((stat) => stat.id).toList();
+        [..._game!.teamStats![0].playerStats!, ..._game!.teamStats![1].playerStats!].map((stat) => stat.id).toList();
     var res = await apiClient.imp(ids, _selectedPers.map((per) => per.code).toList(), useReliability: _useReliability);
     setState(() {
       _playerImps = res;
+    });
+  }
+
+  void _shareGame() {
+    final int id = _game?.id ?? widget.gameId!;
+    final String url = "${Uri.base.origin}/game/$id";
+    Clipboard.setData(ClipboardData(text: url)).then((_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Ссылка на игру скопирована в буфер обмена'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     });
   }
 
@@ -64,8 +83,13 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_getTitle()),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.of(context).pop()),
+        // leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.of(context).pop()),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.share_outlined),
+            onPressed: _shareGame,
+            tooltip: 'Поделиться игрой',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
@@ -83,12 +107,12 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   }
 
   String _getTitle() {
-    if (widget.game.teamStats != null && widget.game.teamStats!.length >= 2) {
-      final team1 = widget.game.teamStats![0];
-      final team2 = widget.game.teamStats![1];
+    if (_game != null && _game!.teamStats != null && _game!.teamStats!.length >= 2) {
+      final team1 = _game!.teamStats![0];
+      final team2 = _game!.teamStats![1];
       return '${team1.team?.name ?? 'Команда 1'} vs ${team2.team?.name ?? 'Команда 2'}';
     }
-    return widget.game.title;
+    return _game?.title ?? (widget.game?.title ?? 'Детали игры');
   }
 
   Widget _buildBody() {
@@ -96,9 +120,13 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
       return const Center(child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2));
     }
 
+    if (_game == null) {
+        return const Center(child: Text('Игра не найдена'));
+    }
+
     // Определяем команды-победители и проигравшие
-    final team1 = _game.teamStats![0];
-    final team2 = _game.teamStats![1];
+    final team1 = _game!.teamStats![0];
+    final team2 = _game!.teamStats![1];
     final winnerTeam = team1.isWinner ? team1 : team2;
     final loserTeam = team1.isWinner ? team2 : team1;
     final winnerStats = team1.isWinner ? team1.playerStats! : team2.playerStats!;
@@ -292,17 +320,17 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   }
 
   Widget _buildGameHeader() {
-    if (widget.game.teamStats == null || widget.game.teamStats!.length < 2) {
+    if (_game == null || _game!.teamStats == null || _game!.teamStats!.length < 2) {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Text(widget.game.title, style: Theme.of(context).textTheme.headlineSmall, textAlign: TextAlign.center),
+          child: Text(_game?.title ?? (widget.game?.title ?? 'Детали игры'), style: Theme.of(context).textTheme.headlineSmall, textAlign: TextAlign.center),
         ),
       );
     }
 
-    final team1 = widget.game.teamStats![0];
-    final team2 = widget.game.teamStats![1];
+    final team1 = _game!.teamStats![0];
+    final team2 = _game!.teamStats![1];
     final winner = team1.isWinner ? team1 : team2;
     final loser = team1.isWinner ? team2 : team1;
 
@@ -312,7 +340,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
         child: Column(
           children: [
             // Информация о турнире
-            if (widget.game.tournament != null) ...[
+            if (_game!.tournament != null) ...[
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
@@ -320,7 +348,7 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  '${widget.game.tournament!.league?.name ?? ''} • ${widget.game.tournament!.name}',
+                  '${_game!.tournament!.league?.name ?? ''} • ${_game!.tournament!.name}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 12),
                 ),
               ),
@@ -393,10 +421,12 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   }
 
   String _formatDate() {
-    return '${widget.game.scheduledAt.day.toString().padLeft(2, '0')}.${widget.game.scheduledAt.month.toString().padLeft(2, '0')}.${widget.game.scheduledAt.year}';
+    if (_game == null) return '';
+    return '${_game!.scheduledAt.day.toString().padLeft(2, '0')}.${_game!.scheduledAt.month.toString().padLeft(2, '0')}.${_game!.scheduledAt.year}';
   }
 
   String _formatTime() {
-    return '${widget.game.scheduledAt.hour.toString().padLeft(2, '0')}:${widget.game.scheduledAt.minute.toString().padLeft(2, '0')}';
+    if (_game == null) return '';
+    return '${_game!.scheduledAt.hour.toString().padLeft(2, '0')}:${_game!.scheduledAt.minute.toString().padLeft(2, '0')}';
   }
 }

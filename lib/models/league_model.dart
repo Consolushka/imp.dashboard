@@ -3,11 +3,13 @@ class League {
   final int id;
   final String name;
   final String alias;
+  final int order;
 
   const League({
     required this.id,
     required this.name,
     required this.alias,
+    required this.order,
   });
 
   factory League.fromJson(Map<String, dynamic> json) {
@@ -15,6 +17,7 @@ class League {
       id: json['id'] as int,
       name: json['name'] as String,
       alias: json['alias'] as String,
+      order: json['order'] as int? ?? 0,
     );
   }
 
@@ -23,6 +26,7 @@ class League {
       'id': id,
       'name': name,
       'alias': alias,
+      'order': order,
     };
   }
 
@@ -37,5 +41,5 @@ class League {
   int get hashCode => id.hashCode;
 
   @override
-  String toString() => 'League{id: $id, name: $name, alias: $alias}';
+  String toString() => 'League{id: $id, name: $name, alias: $alias, order: $order}';
 }

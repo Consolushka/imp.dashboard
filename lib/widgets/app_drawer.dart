@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:imp/screens/about_screen.dart';
-import '../screens/tournaments_screen.dart';
-import '../screens/games_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -47,14 +45,14 @@ class AppDrawer extends StatelessWidget {
                     context,
                     icon: Icons.home_outlined,
                     title: 'Главная',
-                    onTap: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                    onTap: () => context.go('/'),
                   ),
                   _buildDrawerItem(
                     context,
                     icon: Icons.emoji_events_outlined,
                     title: 'Все лиги',
                     onTap: () {
-                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      context.go('/');
                     },
                   ),
                   _buildDrawerItem(
@@ -62,12 +60,8 @@ class AppDrawer extends StatelessWidget {
                     icon: Icons.account_tree_outlined,
                     title: 'Все турниры',
                     onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const TournamentsScreen(),
-                        ),
-                      );
+                      context.pop();
+                      context.push('/tournaments');
                     },
                   ),
                   _buildDrawerItem(
@@ -75,12 +69,8 @@ class AppDrawer extends StatelessWidget {
                     icon: Icons.sports_basketball_outlined,
                     title: 'Последние игры',
                     onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const GamesScreen(isRecentGames: true),
-                        ),
-                      );
+                      context.pop();
+                      context.push('/games?recent=true');
                     },
                   ),
                   const Divider(height: 1),
@@ -89,12 +79,8 @@ class AppDrawer extends StatelessWidget {
                     icon: Icons.info_outline,
                     title: 'О приложении',
                     onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const AboutImpScreen(),
-                        ),
-                      );
+                      context.pop();
+                      context.push('/about');
                     },
                   ),
                 ],
@@ -122,29 +108,6 @@ class AppDrawer extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 24,
         vertical: 4,
-      ),
-    );
-  }
-
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: const Text('О приложении IMP'),
-        content: const Text(
-          'Приложение для просмотра баскетбольной статистики.\n'
-              'Версия 1.0.0',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
-              'Закрыть',
-              style: TextStyle(color: Colors.black),
-            ),
-          ),
-        ],
       ),
     );
   }

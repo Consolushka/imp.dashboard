@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/tournament_model.dart';
-import '../screens/leaderboard_screen.dart';
 
 class TournamentCard extends StatelessWidget {
   final Tournament tournament;
@@ -124,11 +124,7 @@ class TournamentCard extends StatelessWidget {
                     onSelected: (value) {
                       switch (value) {
                         case 'leaderboard':
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => LeaderboardScreen(tournament: tournament),
-                            ),
-                          );
+                          context.push('/leaderboard', extra: tournament);
                           break;
                         case 'games':
                           if (onTap != null) onTap!();
@@ -189,11 +185,7 @@ class TournamentCard extends StatelessWidget {
                   // Кнопка лидерборда
                   OutlinedButton.icon(
                     onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => LeaderboardScreen(tournament: tournament),
-                        ),
-                      );
+                      context.push('/leaderboard', extra: tournament);
                     },
                     icon: const Icon(Icons.leaderboard_outlined, size: 16),
                     label: const Text('Лидерборд'),
@@ -213,7 +205,6 @@ class TournamentCard extends StatelessWidget {
     );
   }
 
-  // ... остальные методы остаются без изменений
   String _formatDateRange() {
     final startDate = '${tournament.startAt.day.toString().padLeft(2, '0')}.${tournament.startAt.month.toString().padLeft(2, '0')}.${tournament.startAt.year}';
     final endDate = '${tournament.endAt.day.toString().padLeft(2, '0')}.${tournament.endAt.month.toString().padLeft(2, '0')}.${tournament.endAt.year}';

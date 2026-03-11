@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:imp/widgets/error_dialog.dart';
 import '../infra/statistics/client.dart';
 import '../core/di.dart';
 import '../models/league_model.dart';
 import '../widgets/league_card.dart';
 import '../widgets/app_drawer.dart';
-import 'tournaments_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,7 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // Временные тестовые данные - замените на реальные API-вызовы
   void _loadLeagues() async {
     try {
-      _leagues = await apiClient.leagues();
+      final leagues = await apiClient.leagues();
+      leagues.sort((a, b) => a.order.compareTo(b.order));
+      _leagues = leagues;
     } on Exception catch (e) {
       if (mounted){
         ErrorDialog.show(context, title: "Ошибка", message: e.toString());
@@ -42,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onLeagueTap(League league) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => TournamentsScreen(league: league)));
+    context.push('/tournaments', extra: league);
   }
 
   @override

@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:imp/widgets/error_dialog.dart';
 import '../core/di.dart';
 import '../infra/statistics/client.dart';
@@ -8,7 +9,6 @@ import '../models/tournament_model.dart';
 import '../models/game_model.dart';
 import '../widgets/game_card.dart';
 import '../widgets/app_drawer.dart';
-import 'game_details_screen.dart';
 
 class GamesScreen extends StatefulWidget {
   final Tournament? tournament;
@@ -118,11 +118,7 @@ class _GamesScreenState extends State<GamesScreen> {
   }
 
   void _onGameTap(Game game) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => GameDetailScreen(game: game),
-      ),
-    );
+    context.push('/game/${game.id}', extra: game);
   }
 
   @override
@@ -133,7 +129,7 @@ class _GamesScreenState extends State<GamesScreen> {
         leading: (widget.tournament != null || widget.isRecentGames)
             ? IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         )
             : null,
         actions: [
