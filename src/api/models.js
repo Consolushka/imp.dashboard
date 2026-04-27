@@ -1,4 +1,22 @@
 /**
+ * Модель лиги
+ */
+export class LeagueModel {
+  constructor(data) {
+    this.id = data.id
+    this.name = data.name
+    this.alias = data.alias
+    this.order = data.order
+    
+    // Дополнительные поля для UI (мокаем, так как в апи их нет)
+    this.tier = data.tier || 1
+    this.tournamentsCount = data.tournaments_count || 1
+    this.topPlayer = data.top_player || 'N/A'
+    this.matchesCount = data.matches_count || 0
+  }
+}
+
+/**
  * Модель турнира
  */
 export class TournamentModel {

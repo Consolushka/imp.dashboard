@@ -1,8 +1,39 @@
-import { GameModel, RankedPlayerModel, PlayerOfTheDayModel, TournamentModel } from './models'
+import { GameModel, RankedPlayerModel, PlayerOfTheDayModel, TournamentModel, LeagueModel } from './models'
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
 export const mockApi = {
+  /**
+   * Получить список лиг
+   */
+  async getLeagues() {
+    await sleep(500)
+    const rawData = [
+      { id: 1, name: 'NBA', alias: 'NBA', order: 1, tier: 1, description: 'North American Pro League', tournaments_count: 1, top_player: 'N. JOKIC', matches_count: 450 },
+      { id: 2, name: 'EUROLEAGUE', alias: 'EUROLEAGUE', order: 2, tier: 1, description: 'Top European Competition', tournaments_count: 1, top_player: 'M. JAMES', matches_count: 180 },
+      { id: 3, name: 'ACB', alias: 'ACB', order: 3, tier: 2, description: 'Spanish National League', tournaments_count: 2, top_player: 'F. CAMPAZZO', matches_count: 212 },
+      { id: 4, name: 'LNB', alias: 'LNB', order: 4, tier: 2, description: 'French Pro A League', tournaments_count: 1, top_player: 'T. SHORTS', matches_count: 165 },
+      { id: 5, name: 'CBA', alias: 'CBA', order: 5, tier: 3, description: 'Chinese Basketball Assoc.', tournaments_count: 1, top_player: 'Y. JIANLIAN', matches_count: 320 },
+      { id: 6, name: 'NCAA', alias: 'NCAA', order: 6, tier: 1, description: 'Collegiate Basketball', tournaments_count: 8, top_player: 'Z. EDEY', matches_count: 840 }
+    ]
+    return {
+      data: rawData.map(l => new LeagueModel(l))
+    }
+  },
+
+  /**
+   * Получить статистику по лигам
+   */
+  async getLeagueSummaryStats() {
+    await sleep(300)
+    return {
+      totalDataPoints: '1.2M+',
+      activeLeagues: 42,
+      trackedPlayers: '8,500',
+      totalMatches: '24,812'
+    }
+  },
+
   /**
    * Получить список турниров
    */
