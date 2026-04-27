@@ -1,9 +1,49 @@
+<script setup>
+import { ref, onMounted, watch } from 'vue'
+import { mockApi } from '../../api/mock'
+import { useMetricStore } from '../../store/metricStore'
+
+const props = defineProps({
+  tournamentId: {
+    type: Number,
+    required: true
+  }
+})
+
+const metricStore = useMetricStore()
+const players = ref([])
+const isLoading = ref(true)
+
+const fetchPlayers = async () => {
+  isLoading.value = true
+  try {
+    const response = await mockApi.getPlayersOfTheDay(
+      props.tournamentId,
+      metricStore.globalReliabilityOn
+    )
+    players.value = response.data
+  } catch (error) {
+    console.error('Failed to fetch players of the day:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(fetchPlayers)
+watch([() => props.tournamentId, () => metricStore.globalReliabilityOn], fetchPlayers)
+</script>
+
 <template>
   <section class="bg-surface-white border-2 border-border-dark shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
     <div class="bg-tertiary p-md flex justify-between items-center">
       <h3 class="font-h3 text-h3 text-on-tertiary uppercase">PLAYERS OF THE DAY</h3>
     </div>
-    <div class="overflow-x-auto w-full">
+    
+    <div v-if="isLoading" class="p-md space-y-4">
+      <div v-for="i in 4" :key="i" class="h-12 bg-ghost-gray animate-pulse border-b border-border-light"></div>
+    </div>
+    
+    <div v-else class="overflow-x-auto w-full">
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-ghost-gray border-b-2 border-border-dark">
@@ -17,41 +57,36 @@
           </tr>
         </thead>
         <tbody>
-          <tr class="border-b border-border-light hover:bg-ghost-gray transition-colors">
-            <td class="p-sm border-r border-border-light font-body-reg text-body-reg text-primary font-medium">L. James</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">LAL</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-on-surface-variant text-right">36.5</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">28</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">10</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">8</td>
-            <td class="p-sm font-data-mono text-data-mono text-status-positive font-bold text-right bg-secondary-fixed/10">+18.4</td>
-          </tr>
-          <tr class="border-b border-border-light bg-surface-container-low hover:bg-ghost-gray transition-colors">
-            <td class="p-sm border-r border-border-light font-body-reg text-body-reg text-primary font-medium">N. Jokic</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">DEN</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-on-surface-variant text-right">34.2</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">24</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">14</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">12</td>
-            <td class="p-sm font-data-mono text-data-mono text-status-positive font-bold text-right bg-secondary-fixed/10">+15.2</td>
-          </tr>
-          <tr class="border-b border-border-light hover:bg-ghost-gray transition-colors">
-            <td class="p-sm border-r border-border-light font-body-reg text-body-reg text-primary font-medium">S. Curry</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">GSW</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-on-surface-variant text-right">38.0</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">32</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">4</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">6</td>
-            <td class="p-sm font-data-mono text-data-mono text-status-positive font-bold text-right bg-secondary-fixed/10">+12.1</td>
-          </tr>
-          <tr class="border-b border-border-light bg-surface-container-low hover:bg-ghost-gray transition-colors">
-            <td class="p-sm border-r border-border-light font-body-reg text-body-reg text-primary font-medium">J. Tatum</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">BOS</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-on-surface-variant text-right">39.1</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">22</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">8</td>
-            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">4</td>
-            <td class="p-sm font-data-mono text-data-mono text-status-negative font-bold text-right bg-secondary-fixed/10">-4.5</td>
+          <tr 
+            v-for="(player, index) in players" 
+            :key="player.id"
+            class="border-b border-border-light hover:bg-ghost-gray transition-colors"
+            :class="{ 'bg-surface-container-low': index % 2 !== 0 }"
+          >
+            <td class="p-sm border-r border-border-light font-body-reg text-body-reg text-primary font-medium">
+              {{ player.fullName }}
+            </td>
+            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">
+              {{ player.teamAlias }}
+            </td>
+            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-on-surface-variant text-right">
+              {{ player.min }}
+            </td>
+            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">
+              {{ player.pts }}
+            </td>
+            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">
+              {{ player.reb }}
+            </td>
+            <td class="p-sm border-r border-border-light font-data-mono text-data-mono text-primary text-right">
+              {{ player.ast }}
+            </td>
+            <td 
+              class="p-sm font-data-mono text-data-mono font-bold text-right bg-secondary-fixed/10"
+              :class="player.imp >= 0 ? 'text-status-positive' : 'text-status-negative'"
+            >
+              {{ player.imp >= 0 ? '+' : '' }}{{ player.imp }}
+            </td>
           </tr>
         </tbody>
       </table>
