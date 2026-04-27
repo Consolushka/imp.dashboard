@@ -45,7 +45,8 @@ watch(() => props.tournamentId, fetchGames)
         :key="game.id"
         class="flex flex-col border-b-2 border-border-dark p-md hover:bg-ghost-gray transition-colors cursor-pointer"
       >
-        <div class="flex justify-between items-center mb-sm">
+        <!-- Row 1: Status and Date (Always same) -->
+        <div class="flex justify-between items-center mb-4 sm:mb-sm">
           <span class="font-data-mono text-data-mono text-neutral-medium uppercase">
             {{ game.isFinal ? 'FINAL' : 'LIVE' }}
           </span>
@@ -54,7 +55,8 @@ watch(() => props.tournamentId, fetchGames)
           </span>
         </div>
         
-        <div class="flex justify-between items-center">
+        <!-- Desktop Layout (sm and up) -->
+        <div class="hidden sm:flex justify-between items-center">
           <!-- Away Team -->
           <div class="flex items-center gap-3 w-1/3">
             <div class="w-10 h-10 bg-primary-fixed rounded-full border border-border-dark flex items-center justify-center">
@@ -98,6 +100,58 @@ watch(() => props.tournamentId, fetchGames)
             <div class="w-10 h-10 bg-primary-fixed rounded-full border border-border-dark flex items-center justify-center">
               <span class="material-symbols-outlined text-tertiary">sports_basketball</span>
             </div>
+          </div>
+        </div>
+
+        <!-- Mobile Layout (below sm) -->
+        <div class="flex flex-col sm:hidden gap-4">
+          <!-- Row 2: Teams (Logos and Aliases) -->
+          <div class="flex justify-between items-center">
+            <!-- Away -->
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-primary-fixed rounded-full border border-border-dark flex items-center justify-center">
+                <span class="material-symbols-outlined text-tertiary">sports_basketball</span>
+              </div>
+              <span 
+                class="font-h3 text-h3"
+                :class="game.awayTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
+              >
+                {{ game.awayTeamStats.team.alias }}
+              </span>
+            </div>
+
+            <!-- VS Divider (optional, but looks good for structure) -->
+            <span class="font-label-caps text-label-caps text-outline">VS</span>
+
+            <!-- Home -->
+            <div class="flex items-center gap-3">
+              <span 
+                class="font-h3 text-h3"
+                :class="game.homeTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
+              >
+                {{ game.homeTeamStats.team.alias }}
+              </span>
+              <div class="w-10 h-10 bg-primary-fixed rounded-full border border-border-dark flex items-center justify-center">
+                <span class="material-symbols-outlined text-tertiary">sports_basketball</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 3: Score (Centered) -->
+          <div class="flex justify-center items-center gap-6 bg-ghost-gray py-2 border border-border-dark">
+            <span 
+              class="font-display-hero text-display-hero leading-none"
+              :class="game.awayTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
+            >
+              {{ game.awayTeamStats.score }}
+            </span>
+            <span class="font-h2 text-h2 text-outline leading-none">-</span>
+            <span 
+              class="font-display-hero text-display-hero leading-none"
+              :class="game.homeTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
+            >
+              {{ game.homeTeamStats.score }}
+            </span>
           </div>
         </div>
       </div>
