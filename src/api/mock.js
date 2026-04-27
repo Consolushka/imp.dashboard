@@ -40,14 +40,28 @@ export const mockApi = {
   async getTournaments() {
     await sleep(400)
     const rawData = [
-      { id: 1, league_id: 1, name: 'NBA', start_at: '2025-10-20', end_at: '2026-06-20' },
-      { id: 2, league_id: 2, name: 'Euroleague', start_at: '2025-10-01', end_at: '2026-05-25' },
-      { id: 3, league_id: 3, name: 'ACB', start_at: '2025-09-28', end_at: '2026-06-15' },
-      { id: 4, league_id: 4, name: 'VTB', start_at: '2025-10-05', end_at: '2026-06-01' },
-      { id: 5, league_id: 5, name: 'LNB', start_at: '2025-09-15', end_at: '2026-05-30' }
+      { id: 1, league_id: 1, name: 'NBA Playoffs', start_at: '2026-04-15', end_at: '2026-06-20', tier: 1, status: 'ONGOING', teams_count: 16, top_performer: 'Nikola Jokić', matches_count: 84 },
+      { id: 2, league_id: 2, name: 'EuroLeague Regular Season', start_at: '2025-10-01', end_at: '2026-04-10', tier: 1, status: 'ONGOING', teams_count: 18, top_performer: 'Mike James', matches_count: 306 },
+      { id: 3, league_id: 3, name: 'ACB Liga Endesa', start_at: '2025-09-28', end_at: '2026-05-15', tier: 2, status: 'ONGOING', teams_count: 18, top_performer: 'Facu Campazzo', matches_count: 153 },
+      { id: 4, league_id: 4, name: 'LNB Pro A', start_at: '2025-09-15', end_at: '2026-05-20', tier: 2, status: 'ONGOING', teams_count: 18, top_performer: 'Nadair Hifi', matches_count: 144 },
+      { id: 5, league_id: 5, name: 'CBA Playoffs', start_at: '2026-03-10', end_at: '2026-04-20', tier: 2, status: 'COMPLETED', teams_count: 12, top_performer: 'Zhou Qi', matches_count: 38 },
+      { id: 6, league_id: 6, name: 'NCAA March Madness', start_at: '2026-03-15', end_at: '2026-04-05', tier: 1, status: 'ARCHIVED', teams_count: 68, top_performer: 'Zach Edey', matches_count: 67 }
     ]
     return {
       data: rawData.map(t => new TournamentModel(t))
+    }
+  },
+
+  /**
+   * Получить сводную статистику по турнирам
+   */
+  async getTournamentSummaryStats() {
+    await sleep(300)
+    return {
+      totalDataPoints: '1.2M+',
+      activeTournaments: 12,
+      trackedPlayers: '8,500',
+      totalMatches: '24,812'
     }
   },
 

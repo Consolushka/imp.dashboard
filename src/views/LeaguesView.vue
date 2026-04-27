@@ -1,10 +1,20 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useLeagueStore } from '../store/leagueStore'
 import LeagueCard from '../components/leagues/LeagueCard.vue'
 import SummaryStatistics from '../components/leagues/SummaryStatistics.vue'
 
 const leagueStore = useLeagueStore()
+
+const summaryItems = computed(() => {
+  if (!leagueStore.summaryStats) return []
+  return [
+    { label: 'Total Data Points', value: leagueStore.summaryStats.totalDataPoints },
+    { label: 'Active Leagues', value: leagueStore.summaryStats.activeLeagues },
+    { label: 'Tracked Players', value: leagueStore.summaryStats.trackedPlayers },
+    { label: 'Total Matches', value: leagueStore.summaryStats.totalMatches }
+  ]
+})
 
 onMounted(() => {
   leagueStore.fetchLeagues()
@@ -49,8 +59,8 @@ onMounted(() => {
 
       <!-- Footer Statistics -->
       <SummaryStatistics 
-        v-if="leagueStore.summaryStats" 
-        :stats="leagueStore.summaryStats" 
+        v-if="summaryItems.length > 0" 
+        :items="summaryItems" 
       />
     </template>
 

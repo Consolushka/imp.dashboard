@@ -1,10 +1,21 @@
 <script setup>
-defineProps({
+import { useRouter } from 'vue-router'
+
+const props = defineProps({
   league: {
     type: Object,
     required: true
   }
 })
+
+const router = useRouter()
+
+const viewTournaments = () => {
+  router.push({ 
+    name: 'tournaments', 
+    query: { leagues: props.league.id } 
+  })
+}
 </script>
 
 <template>
@@ -41,7 +52,10 @@ defineProps({
       </div>
     </div>
     
-    <button class="w-full bg-secondary-container text-white py-2 font-label-caps border-2 border-border-dark active:translate-y-1 active:shadow-none transition-all text-xs uppercase cursor-pointer hover:bg-secondary">
+    <button 
+      @click="viewTournaments"
+      class="w-full bg-secondary-container text-white py-2 font-label-caps border-2 border-border-dark active:translate-y-1 active:shadow-none transition-all text-xs uppercase cursor-pointer hover:bg-secondary"
+    >
       View Tournaments
     </button>
   </div>

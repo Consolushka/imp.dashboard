@@ -26,6 +26,13 @@ export class TournamentModel {
     this.name = data.name
     this.startAt = data.start_at ? new Date(data.start_at) : null
     this.endAt = data.end_at ? new Date(data.end_at) : null
+    
+    // Дополнительные поля для UI
+    this.tier = data.tier || 1
+    this.status = data.status || 'ONGOING'
+    this.teamsCount = data.teams_count || 0
+    this.topPerformer = data.top_performer || 'N/A'
+    this.matchesCount = data.matches_count || 0
   }
 }
 
