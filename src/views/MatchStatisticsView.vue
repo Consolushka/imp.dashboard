@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { mockApi } from '@/api/mock'
 import { useMetricStore } from '@/store/metricStore'
@@ -16,7 +16,32 @@ const isLoading = ref(true)
 const matchData = ref(null)
 const keyPerformances = ref([])
 const currentPerformanceIndex = ref(0)
-const isLocalReliability = ref(metricStore.globalReliabilityOn)
+
+// Initialize from URL query or defaults
+const reliabilityFromQuery = route.query.reliability
+const isLocalReliability = ref(
+  reliabilityFromQuery !== undefined 
+    ? reliabilityFromQuery === 'true' 
+    : metricStore.globalReliabilityOn
+)
+
+const tabFromQuery = route.query.tab
+const selectedTab = ref(
+  tabFromQuery === 'imp-only' ? 'IMP ONLY' : 'TRADITIONAL'
+)
+
+const tabOptions = ['IMP ONLY', 'TRADITIONAL']
+
+// Sync state to URL
+watch([selectedTab, isLocalReliability], ([newTab, newReliability]) => {
+  router.replace({
+    query: {
+      ...route.query,
+      tab: newTab === 'IMP ONLY' ? 'imp-only' : 'traditional',
+      reliability: String(newReliability)
+    }
+  })
+})
 
 const currentPerformance = computed(() => keyPerformances.value[currentPerformanceIndex.value] || null)
 
@@ -29,9 +54,6 @@ const prevPerformance = () => {
   if (keyPerformances.value.length === 0) return
   currentPerformanceIndex.value = (currentPerformanceIndex.value - 1 + keyPerformances.value.length) % keyPerformances.value.length
 }
-
-const selectedView = ref('TRADITIONAL')
-const viewOptions = ['IMP ONLY', 'TRADITIONAL']
 
 const TRADITIONAL_COLUMNS = [
   { key: 'player', label: 'Player', align: 'left' },
@@ -52,7 +74,7 @@ const IMP_ONLY_COLUMNS = TRADITIONAL_COLUMNS.filter(col =>
 )
 
 const columns = computed(() => {
-  return selectedView.value === 'IMP ONLY' ? IMP_ONLY_COLUMNS : TRADITIONAL_COLUMNS
+  return selectedTab.value === 'IMP ONLY' ? IMP_ONLY_COLUMNS : TRADITIONAL_COLUMNS
 })
 
 const sortableColumns = ['min', 'plusMinus', 'pts', 'imp']
@@ -98,7 +120,7 @@ onMounted(async () => {
       </div>
       <div class="mt-md md:mt-0 flex gap-base">
         <div class="flex items-center gap-md">
-          <span class="font-label-caps text-label-caps uppercase whitespace-nowrap">Local Reliability</span>
+          <span class="font-label-caps text-label-caps uppercase whitespace-nowrap">Reliability</span>
           <ToggleSwitch v-model="isLocalReliability" />
         </div>
       </div>
@@ -177,7 +199,7 @@ onMounted(async () => {
 
     <!-- Stats View Selector -->
     <div class="mb-xl">
-      <ViewSelector v-model="selectedView" :options="viewOptions" />
+      <ViewSelector v-model="selectedTab" :options="tabOptions" />
     </div>
 
     <!-- Stats Section: Home Team -->
