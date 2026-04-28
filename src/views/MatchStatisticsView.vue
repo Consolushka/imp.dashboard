@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { mockApi } from '@/api/mock'
 import { useMetricStore } from '@/store/metricStore'
@@ -14,7 +14,22 @@ const metricStore = useMetricStore()
 
 const isLoading = ref(true)
 const matchData = ref(null)
+const keyPerformances = ref([])
+const currentPerformanceIndex = ref(0)
 const isLocalReliability = ref(metricStore.globalReliabilityOn)
+
+const currentPerformance = computed(() => keyPerformances.value[currentPerformanceIndex.value] || null)
+
+const nextPerformance = () => {
+  if (keyPerformances.value.length === 0) return
+  currentPerformanceIndex.value = (currentPerformanceIndex.value + 1) % keyPerformances.value.length
+}
+
+const prevPerformance = () => {
+  if (keyPerformances.value.length === 0) return
+  currentPerformanceIndex.value = (currentPerformanceIndex.value - 1 + keyPerformances.value.length) % keyPerformances.value.length
+}
+
 const selectedView = ref('TRADITIONAL')
 const viewOptions = ['IMP ONLY', 'TRADITIONAL', 'ADVANCED']
 
@@ -37,12 +52,18 @@ const sortableColumns = ['min', 'plusMinus', 'pts', 'imp']
 onMounted(async () => {
   isLoading.value = true
   try {
-    const data = await mockApi.getMatchDetails(route.params.id)
-    if (!data) {
+    const [details, performances] = await Promise.all([
+      mockApi.getMatchDetails(route.params.id),
+      mockApi.getKeyPerformances(route.params.id)
+    ])
+    
+    if (!details) {
       router.push({ name: 'not-found' })
       return
     }
-    matchData.value = data
+    
+    matchData.value = details
+    keyPerformances.value = performances?.data || []
   } catch (error) {
     console.error('Failed to fetch match details:', error)
     router.push({ name: 'not-found' })
@@ -106,29 +127,41 @@ onMounted(async () => {
       <!-- Key Performances (Using slot for logic) -->
       <DarkCard title="Key Performances" class="md:col-span-4">
         <template #header-actions>
-          <button class="bg-on-primary text-primary w-6 h-6 flex items-center justify-center hover:bg-secondary-container hover:text-white transition-colors cursor-pointer">
+          <button 
+            @click="prevPerformance"
+            class="bg-on-primary text-primary w-6 h-6 flex items-center justify-center hover:bg-secondary-container hover:text-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="keyPerformances.length <= 1"
+          >
             <span class="material-symbols-outlined text-sm">chevron_left</span>
           </button>
-          <button class="bg-on-primary text-primary w-6 h-6 flex items-center justify-center hover:bg-secondary-container hover:text-white transition-colors cursor-pointer">
+          <button 
+            @click="nextPerformance"
+            class="bg-on-primary text-primary w-6 h-6 flex items-center justify-center hover:bg-secondary-container hover:text-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="keyPerformances.length <= 1"
+          >
             <span class="material-symbols-outlined text-sm">chevron_right</span>
           </button>
         </template>
         
         <div class="space-y-sm mt-md">
-          <div class="flex items-center justify-between">
-            <span class="font-h3 text-h3 uppercase tracking-tighter">N. Jokic</span>
-            <span class="bg-secondary-container text-white px-sm font-data-mono">98.4 IMP</span>
+          <div v-if="currentPerformance" class="flex items-center justify-between">
+            <span class="font-h3 text-h3 uppercase tracking-tighter">{{ currentPerformance.player }}</span>
+            <span class="bg-secondary-container text-white px-sm font-data-mono">{{ currentPerformance.imp }}</span>
           </div>
-          <p class="font-body-reg text-body-reg text-neutral-medium">
-            The <span class="text-secondary-container font-bold">IMP (Impact Value)</span> utilizes tracking data to measure a player's real-time influence on win probability.
+          <p v-if="currentPerformance" class="font-body-reg text-body-reg text-neutral-medium">
+            {{ currentPerformance.description }}
           </p>
+          <p v-else class="text-neutral-medium italic text-center">No key performances available for this match.</p>
         </div>
 
         <template #footer>
           <div class="flex gap-xs">
-            <div class="h-1.5 w-8 bg-secondary-container"></div>
-            <div class="h-1.5 w-8 bg-neutral-charcoal"></div>
-            <div class="h-1.5 w-8 bg-neutral-charcoal"></div>
+            <div 
+              v-for="(_, index) in keyPerformances" 
+              :key="index"
+              class="h-1.5 transition-all duration-300"
+              :class="index === currentPerformanceIndex ? 'w-8 bg-secondary-container' : 'w-4 bg-neutral-charcoal'"
+            ></div>
           </div>
         </template>
       </DarkCard>

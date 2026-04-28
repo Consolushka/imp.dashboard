@@ -295,5 +295,31 @@ export const mockApi = {
         { player: 'D\'Angelo Russell', min: '28:40', 'plusMinus': -22, pts: 8, reb: 1, ast: 5, fgPct: '28.5', to: 2, blk: 0, stl: 0, imp: 24.7 }
       ]
     }
+  },
+
+  /**
+   * Получить ключевые показатели матча
+   */
+  async getKeyPerformances(matchId) {
+    await sleep(400)
+    return {
+      data: [
+        { 
+          player: 'Nikola Jokic', 
+          imp: '98.4 IMP', 
+          description: 'Nikola Jokic dominated with a 98.4 IMP, utilizing tracking data to measure real-time influence on win probability.' 
+        },
+        { 
+          player: 'Jamal Murray', 
+          imp: '82.1 IMP', 
+          description: 'Jamal Murray\'s 82.1 IMP in the 4th quarter was crucial for Denver\'s late offensive surge.' 
+        },
+        { 
+          player: 'Anthony Davis', 
+          imp: '88.2 IMP', 
+          description: 'Anthony Davis recorded an 88.2 IMP, leading the defense with 4 blocks and commanding the paint.' 
+        }
+      ]
+    }
   }
 }
