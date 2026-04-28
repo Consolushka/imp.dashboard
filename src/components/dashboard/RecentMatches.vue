@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { mockApi } from '../../api/mock'
 
 const props = defineProps({
@@ -9,8 +10,16 @@ const props = defineProps({
   }
 })
 
+const router = useRouter()
 const games = ref([])
 const isLoading = ref(true)
+
+const viewStats = (id) => {
+  router.push({
+    name: 'match-statistics',
+    params: { id }
+  })
+}
 
 const fetchGames = async () => {
   isLoading.value = true
@@ -43,6 +52,7 @@ watch(() => props.tournamentId, fetchGames)
       <div 
         v-for="game in games" 
         :key="game.id"
+        @click="viewStats(game.id)"
         class="flex flex-col border-b-2 border-border-dark p-md hover:bg-ghost-gray transition-colors cursor-pointer"
       >
         <!-- Row 1: Status and Date (Always same) -->

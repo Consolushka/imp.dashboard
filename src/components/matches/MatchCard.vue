@@ -1,10 +1,21 @@
 <script setup>
-defineProps({
+import { useRouter } from 'vue-router'
+
+const props = defineProps({
   match: {
     type: Object,
     required: true
   }
 })
+
+const router = useRouter()
+
+const viewStats = () => {
+  router.push({
+    name: 'match-statistics',
+    params: { id: props.match.id }
+  })
+}
 
 const formatMatchDate = (date) => {
   return date.toLocaleDateString('en-US', {
@@ -72,7 +83,10 @@ const formatMatchDate = (date) => {
     </div>
 
     <!-- Stats Button -->
-    <button class="w-full bg-secondary-container text-on-secondary font-h3 text-base py-2 border-2 border-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0 active:shadow-none translate-x-[-1px] translate-y-[-1px] transition-all uppercase cursor-pointer hover:bg-secondary">
+    <button
+      @click="viewStats"
+      class="w-full bg-secondary-container text-on-secondary font-h3 text-base py-2 border-2 border-primary shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0 active:shadow-none translate-x-[-1px] translate-y-[-1px] transition-all uppercase cursor-pointer hover:bg-secondary"
+    >
       VIEW STATS
     </button>
   </article>

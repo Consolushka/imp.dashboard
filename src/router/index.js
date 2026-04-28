@@ -28,6 +28,23 @@ const router = createRouter({
       path: '/analytics',
       name: 'analytics',
       component: () => import('../views/AnalyticsView.vue')
+    },
+    {
+      path: '/statistics',
+      name: 'statistics',
+      redirect: to => {
+        return { name: 'match-statistics', params: { id: 1 } }
+      }
+    },
+    {
+      path: '/matches/:id/statistics',
+      name: 'match-statistics',
+      component: () => import('../views/MatchStatisticsView.vue')
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('../views/NotFoundView.vue')
     }
   ]
 })

@@ -8,7 +8,7 @@ const props = defineProps({
     required: true
   }
 })
-
+// todo: to abstract component
 const insights = ref([])
 const currentIndex = ref(0)
 const isLoading = ref(true)
