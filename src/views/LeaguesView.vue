@@ -26,7 +26,7 @@ onMounted(() => {
     <!-- Header matching Dashboard Style -->
     <div class="border-b-2 border-border-dark pb-sm">
       <div class="flex justify-between items-center">
-        <h2 class="font-h1 text-h1 text-primary uppercase">LEAGUE DIRECTORY</h2>
+        <h2 class="font-h1 text-h1 text-primary uppercase">LEAGUES</h2>
         
         <!-- Action Buttons matching leagues.html but with neo-brutalist style -->
         <div class="hidden sm:flex gap-4">

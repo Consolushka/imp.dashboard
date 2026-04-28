@@ -57,7 +57,7 @@ watch(() => matchStore.selectedTournaments, (newVal) => {
     <div class="border-b-2 border-border-dark pb-sm">
       <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-md">
         <div>
-          <h2 class="font-h1 text-h1 text-primary uppercase">MATCH DIRECTORY</h2>
+          <h2 class="font-h1 text-h1 text-primary uppercase">MATCHES</h2>
           <p class="font-body-lg text-body-lg text-on-surface-variant mt-xs">
             Review detailed statistical breakdowns and performance data for all recently finalized fixtures.
           </p>
