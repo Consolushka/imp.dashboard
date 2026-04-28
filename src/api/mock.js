@@ -270,13 +270,76 @@ export const mockApi = {
   async getMatchDetails(matchId) {
     await sleep(700)
     
-    // Мокаем данные для любого существующего ID
-    if (!matchId || isNaN(Number(matchId)) || Number(matchId) > 3000) {
+    const id = Number(matchId)
+    if (!id || isNaN(id) || id > 3000) {
       return null
     }
 
-    return {
-      id: Number(matchId),
+    const matches = {
+      1775: {
+        id: 1775,
+        title: "HOU - LAL",
+        subtitle: "Regular Season",
+        isFinal: true,
+        homeTeam: { name: "HOUSTON", alias: "HOU", score: 115, isWinner: true },
+        awayTeam: { name: "LA LAKERS", alias: "LAL", score: 96, isWinner: false },
+        homeStats: [
+          { player: 'Alperen Sengun', min: '34:12', 'plusMinus': 21, pts: 28, reb: 14, ast: 5, fgPct: '61.4', to: 2, blk: 3, stl: 1, imp: 92.4 },
+          { player: 'Jalen Green', min: '36:45', 'plusMinus': 15, pts: 22, reb: 4, ast: 9, fgPct: '48.2', to: 4, blk: 0, stl: 2, imp: 78.1 },
+          { player: 'Fred VanVleet', min: '32:20', 'plusMinus': 10, pts: 18, reb: 3, ast: 8, fgPct: '42.0', to: 1, blk: 0, stl: 1, imp: 60.5 },
+          { player: 'Dillon Brooks', min: '35:12', 'plusMinus': 12, pts: 15, reb: 5, ast: 4, fgPct: '45.7', to: 2, blk: 1, stl: 3, imp: 58.8 }
+        ],
+        awayStats: [
+          { player: 'Anthony Davis', min: '38:50', 'plusMinus': -12, pts: 24, reb: 12, ast: 3, fgPct: '50.2', to: 3, blk: 2, stl: 1, imp: 80.2 },
+          { player: 'LeBron James', min: '36:15', 'plusMinus': -18, pts: 20, reb: 6, ast: 8, fgPct: '44.8', to: 4, blk: 1, stl: 0, imp: 65.5 },
+          { player: 'Austin Reaves', min: '30:00', 'plusMinus': -10, pts: 14, reb: 4, ast: 5, fgPct: '41.6', to: 2, blk: 0, stl: 1, imp: 48.2 },
+          { player: 'D\'Angelo Russell', min: '26:40', 'plusMinus': -25, pts: 10, reb: 2, ast: 4, fgPct: '35.5', to: 3, blk: 0, stl: 0, imp: 30.7 }
+        ]
+      },
+      1776: {
+        id: 1776,
+        title: "BOS - GSW",
+        subtitle: "Regular Season • Rivalry Week",
+        isFinal: true,
+        homeTeam: { name: "BOSTON", alias: "BOS", score: 98, isWinner: false },
+        awayTeam: { name: "GOLDEN STATE", alias: "GSW", score: 104, isWinner: true },
+        homeStats: [
+          { player: 'Jayson Tatum', min: '40:12', 'plusMinus': -4, pts: 28, reb: 9, ast: 5, fgPct: '45.4', to: 3, blk: 1, stl: 1, imp: 85.4 },
+          { player: 'Jaylen Brown', min: '38:45', 'plusMinus': -8, pts: 22, reb: 5, ast: 4, fgPct: '41.2', to: 2, blk: 0, stl: 2, imp: 70.1 },
+          { player: 'Kristaps Porzingis', min: '32:20', 'plusMinus': -2, pts: 16, reb: 8, ast: 2, fgPct: '50.0', to: 1, blk: 3, stl: 0, imp: 62.5 },
+          { player: 'Jrue Holiday', min: '34:12', 'plusMinus': -6, pts: 14, reb: 4, ast: 6, fgPct: '42.7', to: 2, blk: 1, stl: 1, imp: 55.8 }
+        ],
+        awayStats: [
+          { player: 'Stephen Curry', min: '38:50', 'plusMinus': 8, pts: 32, reb: 5, ast: 7, fgPct: '48.2', to: 3, blk: 0, stl: 2, imp: 92.2 },
+          { player: 'Klay Thompson', min: '35:15', 'plusMinus': 10, pts: 24, reb: 4, ast: 3, fgPct: '45.8', to: 2, blk: 1, stl: 1, imp: 75.5 },
+          { player: 'Draymond Green', min: '30:00', 'plusMinus': 5, pts: 15, reb: 6, ast: 4, fgPct: '42.6', to: 1, blk: 1, stl: 1, imp: 55.2 },
+          { player: 'Andrew Wiggins', min: '28:40', 'plusMinus': 12, pts: 12, reb: 5, ast: 2, fgPct: '40.5', to: 1, blk: 0, stl: 2, imp: 45.7 }
+        ]
+      },
+      1777: {
+        id: 1777,
+        title: "GSW - BOS",
+        subtitle: "Regular Season",
+        isFinal: true,
+        homeTeam: { name: "GOLDEN STATE", alias: "GSW", score: 108, isWinner: false },
+        awayTeam: { name: "BOSTON", alias: "BOS", score: 112, isWinner: true },
+        homeStats: [
+          { player: 'Stephen Curry', min: '39:50', 'plusMinus': -2, pts: 29, reb: 6, ast: 8, fgPct: '45.2', to: 4, blk: 0, stl: 1, imp: 88.2 },
+          { player: 'Klay Thompson', min: '36:15', 'plusMinus': -5, pts: 21, reb: 3, ast: 2, fgPct: '42.8', to: 2, blk: 0, stl: 0, imp: 65.5 },
+          { player: 'Jonathan Kuminga', min: '32:00', 'plusMinus': -8, pts: 16, reb: 7, ast: 3, fgPct: '48.6', to: 2, blk: 1, stl: 1, imp: 55.2 },
+          { player: 'Draymond Green', min: '30:40', 'plusMinus': 2, pts: 10, reb: 8, ast: 9, fgPct: '50.5', to: 3, blk: 1, stl: 2, imp: 60.7 }
+        ],
+        awayStats: [
+          { player: 'Jayson Tatum', min: '41:12', 'plusMinus': 6, pts: 31, reb: 11, ast: 6, fgPct: '48.4', to: 3, blk: 1, stl: 2, imp: 95.4 },
+          { player: 'Jaylen Brown', min: '39:45', 'plusMinus': 8, pts: 26, reb: 6, ast: 3, fgPct: '46.2', to: 2, blk: 0, stl: 1, imp: 78.1 },
+          { player: 'Derrick White', min: '35:20', 'plusMinus': 4, pts: 15, reb: 4, ast: 7, fgPct: '44.0', to: 1, blk: 1, stl: 2, imp: 62.5 },
+          { player: 'Kristaps Porzingis', min: '30:12', 'plusMinus': 10, pts: 18, reb: 9, ast: 2, fgPct: '52.7', to: 1, blk: 2, stl: 0, imp: 68.8 }
+        ]
+      }
+    }
+
+    const defaultMatch = {
+      id: id,
       title: "DEN - LAL",
       subtitle: "Playoff Series • Western Conference Finals • Game 5",
       isFinal: true,
@@ -295,6 +358,8 @@ export const mockApi = {
         { player: 'D\'Angelo Russell', min: '28:40', 'plusMinus': -22, pts: 8, reb: 1, ast: 5, fgPct: '28.5', to: 2, blk: 0, stl: 0, imp: 24.7 }
       ]
     }
+
+    return matches[id] || defaultMatch
   },
 
   /**
@@ -302,24 +367,43 @@ export const mockApi = {
    */
   async getKeyPerformances(matchId) {
     await sleep(400)
-    return {
-      data: [
-        { 
-          player: 'Nikola Jokic', 
-          imp: '98.4 IMP', 
-          description: 'Nikola Jokic dominated with a 98.4 IMP, utilizing tracking data to measure real-time influence on win probability.' 
-        },
-        { 
-          player: 'Jamal Murray', 
-          imp: '82.1 IMP', 
-          description: 'Jamal Murray\'s 82.1 IMP in the 4th quarter was crucial for Denver\'s late offensive surge.' 
-        },
-        { 
-          player: 'Anthony Davis', 
-          imp: '88.2 IMP', 
-          description: 'Anthony Davis recorded an 88.2 IMP, leading the defense with 4 blocks and commanding the paint.' 
-        }
+    const id = Number(matchId)
+    
+    const performances = {
+      1775: [
+        { player: 'Alperen Sengun', imp: '92.4 IMP', description: 'Sengun commanded the paint with 28 points and 14 rebounds.' },
+        { player: 'Anthony Davis', imp: '80.2 IMP', description: 'AD was a force inside, despite the blowout loss.' }
+      ],
+      1776: [
+        { player: 'Stephen Curry', imp: '92.2 IMP', description: 'Curry hit 6 threes in the second half to lead the comeback.' },
+        { player: 'Jayson Tatum', imp: '85.4 IMP', description: 'Tatum played a solid game, creating opportunities for his team.' }
+      ],
+      1777: [
+        { player: 'Jayson Tatum', imp: '95.4 IMP', description: 'Tatum scored 31 points to seal a tough road victory.' },
+        { player: 'Stephen Curry', imp: '88.2 IMP', description: 'Curry kept his team in the game with incredible shot-making.' }
       ]
+    }
+
+    const defaultPerformances = [
+      { 
+        player: 'Nikola Jokic', 
+        imp: '98.4 IMP', 
+        description: 'Nikola Jokic dominated with a 98.4 IMP, utilizing tracking data to measure real-time influence on win probability.' 
+      },
+      { 
+        player: 'Jamal Murray', 
+        imp: '82.1 IMP', 
+        description: 'Jamal Murray\'s 82.1 IMP in the 4th quarter was crucial for Denver\'s late offensive surge.' 
+      },
+      { 
+        player: 'Anthony Davis', 
+        imp: '88.2 IMP', 
+        description: 'Anthony Davis recorded an 88.2 IMP, leading the defense with 4 blocks and commanding the paint.' 
+      }
+    ]
+
+    return {
+      data: performances[id] || defaultPerformances
     }
   }
 }
