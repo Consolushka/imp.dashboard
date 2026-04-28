@@ -31,9 +31,9 @@ const prevPerformance = () => {
 }
 
 const selectedView = ref('TRADITIONAL')
-const viewOptions = ['IMP ONLY', 'TRADITIONAL', 'ADVANCED']
+const viewOptions = ['IMP ONLY', 'TRADITIONAL']
 
-const columns = [
+const TRADITIONAL_COLUMNS = [
   { key: 'player', label: 'Player', align: 'left' },
   { key: 'min', label: 'Min', align: 'right' },
   { key: 'plusMinus', label: '+/-', align: 'right' },
@@ -46,6 +46,14 @@ const columns = [
   { key: 'stl', label: 'Stl', align: 'right' },
   { key: 'imp', label: 'Imp', align: 'right' }
 ]
+
+const IMP_ONLY_COLUMNS = TRADITIONAL_COLUMNS.filter(col => 
+  ['player', 'min', 'plusMinus', 'imp'].includes(col.key)
+)
+
+const columns = computed(() => {
+  return selectedView.value === 'IMP ONLY' ? IMP_ONLY_COLUMNS : TRADITIONAL_COLUMNS
+})
 
 const sortableColumns = ['min', 'plusMinus', 'pts', 'imp']
 
