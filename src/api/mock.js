@@ -66,6 +66,19 @@ export const mockApi = {
   },
 
   /**
+   * Получить еженедельных лидеров
+   */
+  async getWeeklyLeaders() {
+    await sleep(400)
+    return [
+      { category: 'points', player: 'L. DONCIC', value: '38.4 PPG' },
+      { category: 'assists', player: 'T. YOUNG', value: '12.1 APG' },
+      { category: 'rebounds', player: 'N. JOKIC', value: '13.8 RPG' },
+      { category: 'imp', player: 'L. DONCIC', value: '+18.4 IMP' }
+    ]
+  },
+
+  /**
    * Получить игры турнира
    */
   async getTournamentGames(tournamentId) {
@@ -76,7 +89,7 @@ export const mockApi = {
       {
         id: 1775,
         scheduled_at: "2026-04-27T01:30:00.000000Z",
-        tournament_id: tournamentId,
+        tournament_id: tournamentId || 1, // Если ID не передан, привязываем к 1
         title: "HOU - LAL",
         duration: 48,
         game_team_stats: [
@@ -101,7 +114,7 @@ export const mockApi = {
       {
         id: 1776,
         scheduled_at: "2026-04-27T04:00:00.000000Z",
-        tournament_id: tournamentId,
+        tournament_id: tournamentId || 2, // Привязываем ко 2
         title: "BOS - GSW",
         duration: 48,
         game_team_stats: [
@@ -122,12 +135,37 @@ export const mockApi = {
             team: { id: 41, name: "Celtics", home_town: "Boston" }
           }
         ]
+      },
+      {
+        id: 1777,
+        scheduled_at: "2026-04-26T20:00:00.000000Z",
+        tournament_id: tournamentId || 1,
+        title: "GSW - BOS",
+        duration: 48,
+        game_team_stats: [
+          {
+            id: 3514,
+            game_id: 1777,
+            team_id: 41,
+            score: 112,
+            final_differential: 4,
+            team: { id: 41, name: "Celtics", home_town: "Boston" }
+          },
+          {
+            id: 3515,
+            game_id: 1777,
+            team_id: 40,
+            score: 108,
+            final_differential: -4,
+            team: { id: 40, name: "Warriors", home_town: "Golden State" }
+          }
+        ]
       }
     ]
 
     return {
       data: rawData.map(g => new GameModel(g)),
-      total: 2,
+      total: 3,
       per_page: 15,
       current_page: 1
     }

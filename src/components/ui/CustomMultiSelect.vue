@@ -21,6 +21,10 @@ const props = defineProps({
   labelKey: {
     type: String,
     default: 'label'
+  },
+  icon: {
+    type: String,
+    default: 'expand_more'
   }
 })
 
@@ -74,7 +78,12 @@ onUnmounted(() => {
       class="bg-surface-white border-2 border-primary px-4 sm:px-lg py-2 sm:py-sm flex items-center gap-2 sm:gap-md font-label-caps text-xs sm:text-sm font-bold shadow-[4px_4px_0px_0px_rgba(28,27,27,1)] transition-all active:translate-y-[2px] active:shadow-none uppercase cursor-pointer hover:bg-ghost-gray"
     >
       {{ label }}
-      <span class="material-symbols-outlined text-primary text-sm sm:text-base">filter_list</span>
+      <span 
+        class="material-symbols-outlined text-primary text-sm sm:text-base transition-transform duration-200"
+        :class="{ 'rotate-180': isOpen }"
+      >
+        {{ icon }}
+      </span>
     </button>
 
     <div 
