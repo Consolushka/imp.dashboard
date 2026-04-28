@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { mockApi } from '@/api/mock'
+import { useMetricStore } from '@/store/metricStore'
 import ToggleSwitch from '@/components/ui/ToggleSwitch.vue'
 import DarkCard from '@/components/ui/DarkCard.vue'
 import DataTable from '@/components/ui/DataTable.vue'
@@ -9,10 +10,11 @@ import ViewSelector from '@/components/ui/ViewSelector.vue'
 
 const route = useRoute()
 const router = useRouter()
+const metricStore = useMetricStore()
 
 const isLoading = ref(true)
 const matchData = ref(null)
-const isLocalReliability = ref(false)
+const isLocalReliability = ref(metricStore.globalReliabilityOn)
 const selectedView = ref('TRADITIONAL')
 const viewOptions = ['IMP ONLY', 'TRADITIONAL', 'ADVANCED']
 
