@@ -283,16 +283,16 @@ export const mockApi = {
       homeTeam: { name: "DENVER", alias: "DEN", score: 114, isWinner: true },
       awayTeam: { name: "LA LAKERS", alias: "LAL", score: 102, isWinner: false },
       homeStats: [
-        { player: 'Nikola Jokic', min: '41:12', '+/-': 18, pts: 32, reb: 12, ast: 11, fgPct: '58.4', to: 2, blk: 1, stl: 3, imp: 98.4 },
-        { player: 'Jamal Murray', min: '38:45', '+/-': 12, pts: 26, reb: 4, ast: 7, fgPct: '45.2', to: 3, blk: 0, stl: 1, imp: 82.1 },
-        { player: 'Michael Porter Jr.', min: '34:20', '+/-': 5, pts: 19, reb: 8, ast: 2, fgPct: '52.0', to: 1, blk: 2, stl: 0, imp: 64.5 },
-        { player: 'Aaron Gordon', min: '36:12', '+/-': 9, pts: 14, reb: 7, ast: 3, fgPct: '66.7', to: 2, blk: 1, stl: 1, imp: 55.8 }
+        { player: 'Nikola Jokic', min: '41:12', 'plusMinus': 18, pts: 32, reb: 12, ast: 11, fgPct: '58.4', to: 2, blk: 1, stl: 3, imp: 98.4 },
+        { player: 'Jamal Murray', min: '38:45', 'plusMinus': 12, pts: 26, reb: 4, ast: 7, fgPct: '45.2', to: 3, blk: 0, stl: 1, imp: 82.1 },
+        { player: 'Michael Porter Jr.', min: '34:20', 'plusMinus': 5, pts: 19, reb: 8, ast: 2, fgPct: '52.0', to: 1, blk: 2, stl: 0, imp: 64.5 },
+        { player: 'Aaron Gordon', min: '36:12', 'plusMinus': 9, pts: 14, reb: 7, ast: 3, fgPct: '66.7', to: 2, blk: 1, stl: 1, imp: 55.8 }
       ],
       awayStats: [
-        { player: 'Anthony Davis', min: '42:50', '+/-': -8, pts: 28, reb: 15, ast: 2, fgPct: '54.2', to: 4, blk: 4, stl: 1, imp: 88.2 },
-        { player: 'LeBron James', min: '40:15', '+/-': -14, pts: 24, reb: 8, ast: 10, fgPct: '41.8', to: 5, blk: 1, stl: 2, imp: 79.5 },
-        { player: 'Austin Reaves', min: '32:00', '+/-': -5, pts: 16, reb: 3, ast: 4, fgPct: '47.6', to: 2, blk: 0, stl: 2, imp: 51.2 },
-        { player: 'D\'Angelo Russell', min: '28:40', '+/-': -22, pts: 8, reb: 1, ast: 5, fgPct: '28.5', to: 2, blk: 0, stl: 0, imp: 24.7 }
+        { player: 'Anthony Davis', min: '42:50', 'plusMinus': -8, pts: 28, reb: 15, ast: 2, fgPct: '54.2', to: 4, blk: 4, stl: 1, imp: 88.2 },
+        { player: 'LeBron James', min: '40:15', 'plusMinus': -14, pts: 24, reb: 8, ast: 10, fgPct: '41.8', to: 5, blk: 1, stl: 2, imp: 79.5 },
+        { player: 'Austin Reaves', min: '32:00', 'plusMinus': -5, pts: 16, reb: 3, ast: 4, fgPct: '47.6', to: 2, blk: 0, stl: 2, imp: 51.2 },
+        { player: 'D\'Angelo Russell', min: '28:40', 'plusMinus': -22, pts: 8, reb: 1, ast: 5, fgPct: '28.5', to: 2, blk: 0, stl: 0, imp: 24.7 }
       ]
     }
   }

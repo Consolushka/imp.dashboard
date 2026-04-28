@@ -21,7 +21,7 @@ const viewOptions = ['IMP ONLY', 'TRADITIONAL', 'ADVANCED']
 const columns = [
   { key: 'player', label: 'Player', align: 'left' },
   { key: 'min', label: 'Min', align: 'right' },
-  { key: '+/-', label: '+/-', align: 'right' },
+  { key: 'plusMinus', label: '+/-', align: 'right' },
   { key: 'pts', label: 'Pts', align: 'right' },
   { key: 'reb', label: 'Reb', align: 'right' },
   { key: 'ast', label: 'Ast', align: 'right' },
@@ -32,7 +32,7 @@ const columns = [
   { key: 'imp', label: 'Imp', align: 'right' }
 ]
 
-const sortableColumns = ['min', '+/-', 'pts', 'imp']
+const sortableColumns = ['min', 'plusMinus', 'pts', 'imp']
 
 onMounted(async () => {
   isLoading.value = true
@@ -150,7 +150,16 @@ onMounted(async () => {
         :data="matchData.homeStats"
         highlighted-column="imp"
         :sortable-columns="sortableColumns"
-      />
+      >
+        <template #cell-player="{ value }">
+          <span class="font-bold">{{ value }}</span>
+        </template>
+        <template #cell-plusMinus="{ value }">
+          <span :class="value > 0 ? 'text-status-positive' : value < 0 ? 'text-status-negative' : ''">
+            {{ value > 0 ? '+' + value : value }}
+          </span>
+        </template>
+      </DataTable>
     </section>
 
     <!-- Stats Section: Away Team -->
@@ -164,7 +173,16 @@ onMounted(async () => {
         :data="matchData.awayStats"
         highlighted-column="imp"
         :sortable-columns="sortableColumns"
-      />
+      >
+        <template #cell-player="{ value }">
+          <span class="font-bold">{{ value }}</span>
+        </template>
+        <template #cell-plusMinus="{ value }">
+          <span :class="value > 0 ? 'text-status-positive' : value < 0 ? 'text-status-negative' : ''">
+            {{ value > 0 ? '+' + value : value }}
+          </span>
+        </template>
+      </DataTable>
     </section>
   </main>
 </template>
