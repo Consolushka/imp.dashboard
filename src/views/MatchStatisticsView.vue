@@ -143,7 +143,7 @@ onMounted(async () => {
             <span class="font-h1 text-h1 text-neutral-medium">:</span>
             <span class="font-display-hero text-display-hero" :class="{ 'text-status-positive': matchData.awayTeam.isWinner }">{{ matchData.awayTeam.score }}</span>
           </div>
-          <span class="font-label-caps text-label-caps bg-primary text-on-primary px-md py-micro mt-sm">{{ matchData.isFinal ? 'FINAL' : 'LIVE' }}</span>
+          <span class="font-label-caps text-label-caps bg-primary text-on-primary px-md py-micro mt-sm">FINAL</span>
         </div>
         <!-- Away Team -->
         <div class="flex flex-col items-center gap-md">

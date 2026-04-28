@@ -40,12 +40,12 @@ export const mockApi = {
   async getTournaments() {
     await sleep(400)
     const rawData = [
-      { id: 1, league_id: 1, name: 'NBA Playoffs', start_at: '2026-04-15', end_at: '2026-06-20', tier: 1, status: 'ONGOING', teams_count: 16, top_performer: 'Nikola Jokić', matches_count: 84 },
-      { id: 2, league_id: 2, name: 'EuroLeague Regular Season', start_at: '2025-10-01', end_at: '2026-04-10', tier: 1, status: 'ONGOING', teams_count: 18, top_performer: 'Mike James', matches_count: 306 },
-      { id: 3, league_id: 3, name: 'ACB Liga Endesa', start_at: '2025-09-28', end_at: '2026-05-15', tier: 2, status: 'ONGOING', teams_count: 18, top_performer: 'Facu Campazzo', matches_count: 153 },
-      { id: 4, league_id: 4, name: 'LNB Pro A', start_at: '2025-09-15', end_at: '2026-05-20', tier: 2, status: 'ONGOING', teams_count: 18, top_performer: 'Nadair Hifi', matches_count: 144 },
-      { id: 5, league_id: 5, name: 'CBA Playoffs', start_at: '2026-03-10', end_at: '2026-04-20', tier: 2, status: 'COMPLETED', teams_count: 12, top_performer: 'Zhou Qi', matches_count: 38 },
-      { id: 6, league_id: 6, name: 'NCAA March Madness', start_at: '2026-03-15', end_at: '2026-04-05', tier: 1, status: 'ARCHIVED', teams_count: 68, top_performer: 'Zach Edey', matches_count: 67 }
+      { id: 1, league_id: 1, name: 'NBA Playoffs', start_at: '2026-04-15', end_at: '2026-06-20', tier: 1, teams_count: 16, top_player: 'Nikola Jokić', matches_count: 84 },
+      { id: 2, league_id: 2, name: 'EuroLeague Regular Season', start_at: '2025-10-01', end_at: '2026-04-10', tier: 1, teams_count: 18, top_player: 'Mike James', matches_count: 306 },
+      { id: 3, league_id: 3, name: 'ACB Liga Endesa', start_at: '2025-09-28', end_at: '2026-05-15', tier: 2, teams_count: 18, top_player: 'Facu Campazzo', matches_count: 153 },
+      { id: 4, league_id: 4, name: 'LNB Pro A', start_at: '2025-09-15', end_at: '2026-05-20', tier: 2, teams_count: 18, top_player: 'Nadair Hifi', matches_count: 144 },
+      { id: 5, league_id: 5, name: 'CBA Playoffs', start_at: '2026-03-10', end_at: '2026-04-20', tier: 2, teams_count: 12, top_player: 'Zhou Qi', matches_count: 38 },
+      { id: 6, league_id: 6, name: 'NCAA March Madness', start_at: '2026-03-15', end_at: '2026-04-05', tier: 1, teams_count: 68, top_player: 'Zach Edey', matches_count: 67 }
     ]
     return {
       data: rawData.map(t => new TournamentModel(t))
@@ -280,7 +280,6 @@ export const mockApi = {
         id: 1775,
         title: "HOU - LAL",
         subtitle: "Regular Season",
-        isFinal: true,
         homeTeam: { name: "HOUSTON", alias: "HOU", score: 115, isWinner: true },
         awayTeam: { name: "LA LAKERS", alias: "LAL", score: 96, isWinner: false },
         homeStats: [
@@ -300,7 +299,6 @@ export const mockApi = {
         id: 1776,
         title: "BOS - GSW",
         subtitle: "Regular Season • Rivalry Week",
-        isFinal: true,
         homeTeam: { name: "BOSTON", alias: "BOS", score: 98, isWinner: false },
         awayTeam: { name: "GOLDEN STATE", alias: "GSW", score: 104, isWinner: true },
         homeStats: [
@@ -320,7 +318,6 @@ export const mockApi = {
         id: 1777,
         title: "GSW - BOS",
         subtitle: "Regular Season",
-        isFinal: true,
         homeTeam: { name: "GOLDEN STATE", alias: "GSW", score: 108, isWinner: false },
         awayTeam: { name: "BOSTON", alias: "BOS", score: 112, isWinner: true },
         homeStats: [
@@ -342,7 +339,6 @@ export const mockApi = {
       id: id,
       title: "DEN - LAL",
       subtitle: "Playoff Series • Western Conference Finals • Game 5",
-      isFinal: true,
       homeTeam: { name: "DENVER", alias: "DEN", score: 114, isWinner: true },
       awayTeam: { name: "LA LAKERS", alias: "LAL", score: 102, isWinner: false },
       homeStats: [
@@ -404,6 +400,18 @@ export const mockApi = {
 
     return {
       data: performances[id] || defaultPerformances
+    }
+  },
+
+  /**
+   * Рассчитать необработанный IMP
+   */
+  async calculateRawImp(payload) {
+    await sleep(300)
+    // Эмуляция расчета
+    const base = (payload.plus_minus / payload.played_seconds) * payload.duration * 100
+    return {
+      data: base.toFixed(1)
     }
   }
 }

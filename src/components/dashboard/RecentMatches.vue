@@ -58,7 +58,7 @@ watch(() => props.tournamentId, fetchGames)
         <!-- Row 1: Status and Date (Always same) -->
         <div class="flex justify-between items-center mb-4 sm:mb-sm">
           <span class="font-data-mono text-data-mono text-neutral-medium uppercase">
-            {{ game.isFinal ? 'FINAL' : 'LIVE' }}
+            FINAL
           </span>
           <span class="font-data-mono text-data-mono bg-border-dark text-surface-white px-2 py-1 text-xs">
             {{ game.scheduledAt.toLocaleDateString() }}

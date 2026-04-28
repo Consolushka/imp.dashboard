@@ -29,10 +29,16 @@ export class TournamentModel {
     
     // Дополнительные поля для UI
     this.tier = data.tier || 1
-    this.status = data.status || 'ONGOING'
     this.teamsCount = data.teams_count || 0
-    this.topPerformer = data.top_performer || 'N/A'
+    this.topPlayer = data.top_player || 'N/A'
     this.matchesCount = data.matches_count || 0
+  }
+
+  get status() {
+    const now = new Date()
+    if (this.endAt && now > this.endAt) return 'COMPLETED'
+    if (this.startAt && now >= this.startAt) return 'ONGOING'
+    return 'UPCOMING'
   }
 }
 
@@ -71,8 +77,6 @@ export class GameModel {
     // В данном апи просто берем первую и вторую
     this.homeTeamStats = stats[1] ? new TeamStatsModel(stats[1]) : null
     this.awayTeamStats = stats[0] ? new TeamStatsModel(stats[0]) : null
-    
-    this.isFinal = true // В моках считаем все завершенными
   }
 }
 

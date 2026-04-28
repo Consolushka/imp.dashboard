@@ -22,7 +22,7 @@ export const useMatchStore = defineStore('match', () => {
         mockApi.getTournamentGames(null), 
         mockApi.getWeeklyLeaders()
       ])
-      matches.value = matchesRes.data.filter(m => m.isFinal) // Только завершенные
+      matches.value = matchesRes.data
       weeklyLeaders.value = leadersRes
     } catch (error) {
       console.error('Failed to fetch matches data:', error)

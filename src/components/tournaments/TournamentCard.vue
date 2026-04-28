@@ -48,8 +48,8 @@ const getStatusColor = (status) => {
           <span class="font-data-mono text-data-mono font-bold">{{ tournament.teamsCount }}</span>
         </div>
         <div class="flex justify-between border-b border-outline-variant pb-micro">
-          <span class="font-label-caps text-xs text-on-surface-variant uppercase">Top Performer</span>
-          <span class="font-data-mono text-data-mono font-bold">{{ tournament.topPerformer }}</span>
+          <span class="font-label-caps text-xs text-on-surface-variant uppercase">Top Player</span>
+          <span class="font-data-mono text-data-mono font-bold">{{ tournament.topPlayer }}</span>
         </div>
         <div class="flex justify-between border-b border-outline-variant pb-micro">
           <span class="font-label-caps text-xs text-on-surface-variant uppercase">Total Matches</span>
