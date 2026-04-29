@@ -9,7 +9,6 @@ const metricStore = useMetricStore()
   <nav class="main-nav">
     <div class="nav-links">
       <RouterLink to="/">Dashboard</RouterLink>
-      <RouterLink to="/analytics">Analytics</RouterLink>
       <RouterLink to="/ideology">Ideology</RouterLink>
     </div>
     

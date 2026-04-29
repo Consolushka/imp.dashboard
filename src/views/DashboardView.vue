@@ -36,7 +36,7 @@ onMounted(() => {
         
         <div class="flex justify-between items-center mt-xs">
           <p class="font-body-lg text-body-lg text-on-surface-variant">Your daily briefing on top players, latest results, and statistical trends.</p>
-          
+
           <!-- Reliability Toggle -->
           <div class="flex items-center gap-3 bg-surface-white border-2 border-border-dark p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
             <span class="font-label-caps text-label-caps uppercase text-primary text-xs">GLOBAL RELIABILITY MODE</span>

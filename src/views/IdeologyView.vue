@@ -89,7 +89,7 @@ import CardImportant from '../components/ui/CardImportant.vue'
     </section>
 
     <!-- RELIABILITY SECTION -->
-    <section class="bg-surface-container p-lg lg:p-xl border-t-4 border-primary space-y-lg">
+    <section class="space-y-lg">
       <div class="flex items-baseline gap-base">
         <h2 class="font-h1 text-h1 uppercase">The <span class="text-secondary">Reliability</span> Engine</h2>
         <div class="h-1 flex-grow bg-primary"></div>

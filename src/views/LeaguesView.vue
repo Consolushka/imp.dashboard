@@ -27,7 +27,8 @@ onMounted(() => {
     <div class="border-b-2 border-border-dark pb-sm">
       <div class="flex justify-between items-center">
         <h2 class="font-h1 text-h1 text-primary uppercase">LEAGUES</h2>
-        
+
+<!--        todo: remove-->
         <!-- Action Buttons matching leagues.html but with neo-brutalist style -->
         <div class="hidden sm:flex gap-4">
           <button class="px-4 py-2 bg-primary text-white border-2 border-border-dark shadow-[4px_4px_0px_0px_rgba(254,106,52,1)] font-label-caps uppercase text-sm hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all cursor-pointer">

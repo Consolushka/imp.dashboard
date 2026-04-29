@@ -25,11 +25,6 @@ const router = createRouter({
       component: () => import('../views/MatchesView.vue')
     },
     {
-      path: '/analytics',
-      name: 'analytics',
-      component: () => import('../views/AnalyticsView.vue')
-    },
-    {
       path: '/ideology',
       name: 'ideology',
       component: () => import('../views/IdeologyView.vue')
