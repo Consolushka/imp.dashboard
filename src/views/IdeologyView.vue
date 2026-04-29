@@ -97,22 +97,15 @@ import CardImportant from '../components/ui/CardImportant.vue'
       
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-xl">
         <div class="lg:col-span-5 space-y-md">
-          <p class="font-body-reg text-neutral-charcoal">
-            Raw stats are deceptive in low-sample sizes. To solve this, we inject a statistical stabilizer. We utilize the <strong class="font-bold">Hill Equation</strong> to dampen variance.
-          </p>
-          <div class="bg-white p-md neo-border font-data-mono">
-            <p class="text-secondary text-sm mb-xs">SIGMOID FUNCTION (n=2)</p>
-            <p class="text-h3">R = x² / (x² + k²)</p>
-          </div>
-          <p class="text-sm text-neutral-medium italic">
-            Where 'x' represents minutes played and 'k' is the saturation constant. This ensures that garbage-time spikes do not compromise the integrity of the leaderboard.
+          <p class="font-body-lg text-body-lg text-neutral-charcoal">
+            Our <strong>Reliability</strong> metric ensures pinpoint accuracy in player evaluation through a smart, <strong>dual-phase approach</strong>. Initially, it <strong>filters out statistical noise</strong> from small sample sizes, building trust until a player reaches the <strong>"Gold Standard" of playtime</strong>, where data reliability hits exactly <strong>100%</strong>. Beyond this peak, the system seamlessly applies a <strong>fatigue factor</strong> to gracefully account for late-game exhaustion and overtime anomalies. This guarantees realistic, high-quality stats <strong>without unfairly penalizing star players</strong> who carry a heavy rotational load.
           </p>
         </div>
         <div class="lg:col-span-7">
           <div class="bg-white p-base neo-border neo-shadow">
-            <img alt="Statistical Chart" class="w-full h-[300px] object-cover grayscale brightness-95 border border-primary" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8TL2p4M-tWYUJTMfFqpAxtyr6Ak-Sz1gf4cdLBFxM2J3UWN5h6Y-ABK3F02dlUxZxeBYVFuAvfAa0vcgTmDQtb0h66__fV4Y5I3nnPJPuhtMIe8f0Z99QCTVny0IUMppdy-y9YZ26-Y7axUo9rOJjS48EL-zquZwAWbLaQ91QJ8JLhwhU-ovKdhxHeqB0YXs1bffiRzGiEgO0viySCEA-xjIG9CpHP07uXsN2yVjdJCE99Pu9EpWWuG6Z5adX9HiI9MIvL11xYig" />
+            <img alt="Reliability Curve" class="w-full h-[300px] object-contain border border-primary bg-stone-950" src="/reliability_graph.jpg" />
             <div class="mt-base flex justify-between items-center px-xs">
-              <p class="font-label-caps text-xs text-primary">FIG 5.1: HILL EQUATION SATURATION CURVE</p>
+              <p class="font-label-caps text-xs text-primary">RELIABILITY CURVE</p>
               <span class="material-symbols-outlined text-secondary">analytics</span>
             </div>
           </div>
