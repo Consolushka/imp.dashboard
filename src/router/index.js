@@ -30,6 +30,11 @@ const router = createRouter({
       component: () => import('../views/AnalyticsView.vue')
     },
     {
+      path: '/ideology',
+      name: 'ideology',
+      component: () => import('../views/IdeologyView.vue')
+    },
+    {
       path: '/statistics',
       name: 'statistics',
       redirect: to => {

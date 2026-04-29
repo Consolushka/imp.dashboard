@@ -10,6 +10,7 @@ const metricStore = useMetricStore()
     <div class="nav-links">
       <RouterLink to="/">Dashboard</RouterLink>
       <RouterLink to="/analytics">Analytics</RouterLink>
+      <RouterLink to="/ideology">Ideology</RouterLink>
     </div>
     
     <div class="metric-switcher">

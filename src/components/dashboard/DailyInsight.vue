@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { mockApi } from '../../api/mock'
+import CardImportant from '../ui/CardImportant.vue'
 
 const props = defineProps({
   tournamentId: {
@@ -8,7 +9,7 @@ const props = defineProps({
     required: true
   }
 })
-// todo: to abstract component
+
 const insights = ref([])
 const currentIndex = ref(0)
 const isLoading = ref(true)
@@ -41,11 +42,8 @@ watch(() => props.tournamentId, fetchInsights)
 </script>
 
 <template>
-  <section class="bg-secondary-container text-white border-2 border-border-dark shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-md flex flex-col gap-sm relative overflow-hidden min-h-[180px]">
-    <!-- Decorative bg icon -->
-    <span class="material-symbols-outlined absolute -bottom-4 -right-4 text-9xl text-white/10 select-none pointer-events-none">insights</span>
-    
-    <div class="flex justify-between items-center z-10">
+  <CardImportant icon="insights">
+    <template #header>
       <h3 class="font-h3 text-h3 uppercase">DAILY INSIGHT</h3>
       
       <!-- Pagination Controls -->
@@ -63,28 +61,26 @@ watch(() => props.tournamentId, fetchInsights)
           <span class="material-symbols-outlined text-sm">chevron_right</span>
         </button>
       </div>
-    </div>
+    </template>
     
-    <div v-if="isLoading" class="z-10 space-y-2 mt-2">
+    <div v-if="isLoading" class="space-y-2 mt-2">
       <div class="h-4 bg-white/20 animate-pulse w-full"></div>
       <div class="h-4 bg-white/20 animate-pulse w-3/4"></div>
     </div>
     
     <template v-else>
-      <div class="flex-1 flex flex-col justify-between mt-2">
-        <p class="font-body-reg text-body-reg z-10 transition-all duration-300">
-          {{ insights[currentIndex] }}
-        </p>
-        
-        <div class="flex justify-between items-end mt-4 z-10">
-          <span class="inline-block bg-white text-secondary-container font-data-mono text-data-mono px-3 py-1 font-bold border border-border-dark uppercase text-xs">
-            TREND DETECTED
-          </span>
-          <span v-if="insights.length > 1" class="font-data-mono text-xs opacity-70">
-            {{ currentIndex + 1 }} / {{ insights.length }}
-          </span>
-        </div>
+      <p class="font-body-reg text-body-reg transition-all duration-300">
+        {{ insights[currentIndex] }}
+      </p>
+      
+      <div class="flex justify-between items-end mt-4">
+        <span class="inline-block bg-white text-secondary-container font-data-mono text-data-mono px-3 py-1 font-bold border border-border-dark uppercase text-xs">
+          TREND DETECTED
+        </span>
+        <span v-if="insights.length > 1" class="font-data-mono text-xs opacity-70">
+          {{ currentIndex + 1 }} / {{ insights.length }}
+        </span>
       </div>
     </template>
-  </section>
+  </CardImportant>
 </template>

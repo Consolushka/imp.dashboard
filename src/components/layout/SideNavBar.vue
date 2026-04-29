@@ -8,6 +8,7 @@ const navLinks = [
   { to: '/tournaments', label: 'Tournaments', icon: 'workspace_premium' },
   { to: '/matches', label: 'Matches', icon: 'sports_basketball' },
   { to: '/analytics', label: 'Methodology', icon: 'menu_book' },
+  { to: '/ideology', label: 'Ideology', icon: 'psychology' },
 ]
 </script>
 
