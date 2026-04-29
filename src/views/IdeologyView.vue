@@ -79,16 +79,12 @@ import CardImportant from '../components/ui/CardImportant.vue'
           </div>
         </div>
         
-        <CardImportant icon="lightbulb" class="bg-secondary-container">
-          <template #header>
-<!--            <span class="material-symbols-outlined text-white text-h1 mb-base">lightbulb</span>-->
-            <h3 class="font-h3 text-h3 uppercase">What does IMP tells You?</h3>
-          </template>
-
-          <div class="text-white">
-            <strong class="text-white font-bold">IMP (with reliability disabled)</strong> tells us how the final score would differ if the player had played the entire game. It's the ultimate 'What If' simulator for professional rosters.
-          </div>
-        </CardImportant>
+        <CardImportant 
+          title="What does IMP tells You?" 
+          :items="['IMP (with reliability disabled) tells us how the final score would differ if the player had played the entire game. It\'s the ultimate \'What If\' simulator for professional rosters.']" 
+          icon="lightbulb" 
+          class="bg-secondary-container"
+        />
       </div>
     </section>
 
