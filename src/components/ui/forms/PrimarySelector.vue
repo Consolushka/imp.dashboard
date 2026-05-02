@@ -64,7 +64,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col sm:flex-row sm:items-center items-start gap-2 sm:gap-3" ref="selectRef">
+  <div class="flex flex-col sm:flex-row sm:items-center items-start gap-2 sm:gap-3 w-full sm:w-auto" ref="selectRef">
     <span v-if="label" class="font-label-caps text-label-caps uppercase text-primary text-xs sm:text-sm">{{ label }}</span>
     <div class="relative min-w-[160px] w-full sm:w-auto">
       <!-- Trigger Button -->

@@ -19,11 +19,17 @@ onMounted(() => {
   <div class="p-lg lg:p-xl flex flex-col gap-jumbo">
     <!-- Main Dashboard State -->
     <template v-if="!metricStore.isTournamentsLoading">
-      <!-- Header with Tournament Selector and Reliability Toggle -->
-      <div class="border-b-2 border-border-dark pb-sm">
-        <div class="flex justify-between items-center">
-          <h2 class="font-h1 text-h1 text-primary uppercase">TODAY'S OVERVIEW</h2>
-          
+      <!-- Header with Title/Description on the left and Selectors on the right -->
+      <!-- On small mobile (<640px), they stack vertically. On sm and up, they are side-by-side. -->
+      <div class="border-b-2 border-border-dark pb-sm flex flex-col sm:flex-row justify-between items-start sm:items-end gap-md">
+        <!-- Left: Title & Description -->
+        <div class="flex flex-col gap-xs flex-1 min-w-0">
+          <h2 class="font-h1 text-h1 text-primary uppercase leading-tight">TODAY'S OVERVIEW</h2>
+          <p class="font-body-lg text-body-lg text-on-surface-variant">Your daily briefing on top players, latest results, and statistical trends.</p>
+        </div>
+
+        <!-- Right: Tournament Selector & Reliability Toggle -->
+        <div class="flex flex-col items-start sm:items-end gap-md shrink-0 w-full sm:w-auto">
           <!-- Tournament Selector -->
           <PrimarySelector 
             v-model="metricStore.selectedTournamentId" 
@@ -31,14 +37,11 @@ onMounted(() => {
             value-key="id"
             label-key="name"
             label="Select Tournament"
+            class="w-full"
           />
-        </div>
-        
-        <div class="flex justify-between items-center mt-xs">
-          <p class="font-body-lg text-body-lg text-on-surface-variant">Your daily briefing on top players, latest results, and statistical trends.</p>
-
+          
           <!-- Reliability Toggle -->
-          <div class="flex items-center gap-3 bg-surface-white border-2 border-border-dark p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+          <div class="flex flex-row items-center justify-between gap-3 bg-surface-white border-2 border-border-dark p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] w-full sm:w-auto">
             <span class="font-label-caps text-label-caps uppercase text-primary text-xs">GLOBAL RELIABILITY MODE</span>
             <ToggleSwitch v-model="metricStore.globalReliabilityOn" />
           </div>

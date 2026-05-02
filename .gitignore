@@ -37,3 +37,7 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+.gemini/
+gha-creds-*.json
+.playwright-mcp/
