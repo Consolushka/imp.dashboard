@@ -19,7 +19,7 @@ const viewTournaments = () => {
 </script>
 
 <template>
-  <div class="bg-surface-white border-2 border-border-dark shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:translate-x-1 hover:shadow-[12px_12px_0px_0px_rgba(254,106,52,1)] transition-all p-lg flex flex-col gap-md">
+  <div class="bg-surface-white border-2 border-border-dark shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all p-lg flex flex-col gap-md">
     <div class="flex justify-between items-start">
       <div class="w-12 h-12 bg-primary flex items-center justify-center text-secondary-container">
         <span class="material-symbols-outlined !text-3xl" style="font-variation-settings: 'FILL' 1;">grid_view</span>
@@ -56,7 +56,7 @@ const viewTournaments = () => {
       @click="viewTournaments"
       class="w-full bg-secondary-container text-white py-2 font-label-caps border-2 border-border-dark active:translate-y-1 active:shadow-none transition-all text-xs uppercase cursor-pointer hover:bg-secondary"
     >
-      View Tournaments
+      VIEW MATCHES
     </button>
   </div>
 </template>
