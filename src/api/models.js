@@ -98,9 +98,10 @@ export class RankedPlayerModel {
     this.position = data.position
     this.id = data.player.id
     this.fullName = data.player.full_name
-    this.teamAlias = data.player.team_alias || 'UNK' // Добавляем алиас команды
+    this.teamAlias = data.player.team_alias || 'UNK'
     this.gamesCount = data.games_count
     this.avgImp = data.avg_imp
+    this.avgMinutes = data.avg_minutes || 0
   }
 }
 

@@ -5,8 +5,8 @@ import RecentMatches from '../components/dashboard/RecentMatches.vue'
 import PlayersOfTheDayTable from '../components/dashboard/PlayersOfTheDayTable.vue'
 import SeasonLeaders from '../components/dashboard/SeasonLeaders.vue'
 import DailyInsight from '../components/dashboard/DailyInsight.vue'
-import CustomSelect from '../components/ui/CustomSelect.vue'
-import ToggleSwitch from '../components/ui/ToggleSwitch.vue'
+import PrimarySelector from '../components/ui/forms/PrimarySelector.vue'
+import ToggleSwitch from '../components/ui/forms/ToggleSwitch.vue'
 
 const metricStore = useMetricStore()
 
@@ -25,7 +25,7 @@ onMounted(() => {
           <h2 class="font-h1 text-h1 text-primary uppercase">TODAY'S OVERVIEW</h2>
           
           <!-- Tournament Selector -->
-          <CustomSelect 
+          <PrimarySelector 
             v-model="metricStore.selectedTournamentId" 
             :options="metricStore.tournaments" 
             value-key="id"

@@ -25,6 +25,11 @@ const router = createRouter({
       component: () => import('../views/MatchesView.vue')
     },
     {
+      path: '/leaderboard',
+      name: 'leaderboard',
+      component: () => import('../views/LeaderboardView.vue')
+    },
+    {
       path: '/ideology',
       name: 'ideology',
       component: () => import('../views/IdeologyView.vue')

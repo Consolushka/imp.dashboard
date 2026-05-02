@@ -174,35 +174,80 @@ export const mockApi = {
   /**
    * Получить лидерборд
    */
-  async getLeaderboard(tournamentId, useReliability) {
-    await sleep(800)
+  async getLeaderboard(params) {
+    await sleep(100)
     
-    const rawData = [
+    // Simulate API filtering and ordering based on params
+    const { 
+      tournament_id, 
+      per, 
+      limit = 10, 
+      order = 'desc', 
+      min_games, 
+      team_id, 
+      min_minutes, 
+      max_minutes, 
+      use_reliability 
+    } = params || {}
+
+    // Initial mock dataset
+    let rawData = [
       {
         position: 1,
         player: { id: 101, full_name: "Nikola Jokic", birth_date_at: "1995-02-19", team_alias: "DEN" },
         games_count: 72,
-        avg_imp: useReliability ? 18.5 : 19.2
+        avg_imp: use_reliability ? 18.5 : 19.2,
+        avg_minutes: 34.2
       },
       {
         position: 2,
         player: { id: 102, full_name: "Shai Gilgeous-Alexander", birth_date_at: "1998-07-12", team_alias: "OKC" },
         games_count: 75,
-        avg_imp: useReliability ? 16.2 : 16.8
+        avg_imp: use_reliability ? 16.2 : 16.8,
+        avg_minutes: 36.1
       },
       {
         position: 3,
         player: { id: 103, full_name: "Luka Doncic", birth_date_at: "1999-02-28", team_alias: "DAL" },
         games_count: 70,
-        avg_imp: useReliability ? 15.8 : 17.1
+        avg_imp: use_reliability ? 15.8 : 17.1,
+        avg_minutes: 35.8
       },
       {
         position: 4,
         player: { id: 104, full_name: "Giannis Antetokounmpo", birth_date_at: "1994-12-06", team_alias: "MIL" },
         games_count: 73,
-        avg_imp: useReliability ? 14.9 : 15.5
+        avg_imp: use_reliability ? 14.9 : 15.5,
+        avg_minutes: 33.9
+      },
+      {
+        position: 5,
+        player: { id: 105, full_name: "Jayson Tatum", birth_date_at: "1998-03-03", team_alias: "BOS" },
+        games_count: 65,
+        avg_imp: use_reliability ? 14.0 : 14.6,
+        avg_minutes: 35.5
+      },
+      {
+        position: 6,
+        player: { id: 106, full_name: "Anthony Edwards", birth_date_at: "2001-08-05", team_alias: "MIN" },
+        games_count: 78,
+        avg_imp: use_reliability ? 13.5 : 13.9,
+        avg_minutes: 32.4
       }
     ]
+
+    // Sort order (imp vs worst)
+    rawData.sort((a, b) => {
+      return order === 'desc' ? b.avg_imp - a.avg_imp : a.avg_imp - b.avg_imp
+    })
+
+    // Re-assign positions after sort
+    rawData.forEach((item, index) => {
+      item.position = index + 1
+    })
+
+    // Apply limit
+    rawData = rawData.slice(0, Number(limit))
 
     return {
       data: rawData.map(p => new RankedPlayerModel(p))

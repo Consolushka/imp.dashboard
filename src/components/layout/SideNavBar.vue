@@ -7,6 +7,7 @@ const navLinks = [
   { to: '/leagues', label: 'Leagues', icon: 'emoji_events' },
   { to: '/tournaments', label: 'Tournaments', icon: 'workspace_premium' },
   { to: '/matches', label: 'Matches', icon: 'sports_basketball' },
+  { to: '/leaderboard', label: 'Leaderboard', icon: 'military_tech' },
   { to: '/ideology', label: 'Ideology', icon: 'psychology' },
 ]
 </script>

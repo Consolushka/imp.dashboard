@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useTournamentStore } from '../store/tournamentStore'
 import { useLeagueStore } from '../store/leagueStore'
 import TournamentCard from '../components/tournaments/TournamentCard.vue'
-import CustomMultiSelect from '../components/ui/CustomMultiSelect.vue'
+import PrimaryMultiselector from '../components/ui/forms/PrimaryMultiselector.vue'
 import SummaryStatistics from '../components/leagues/SummaryStatistics.vue'
 
 const tournamentStore = useTournamentStore()
@@ -78,7 +78,7 @@ watch(() => tournamentStore.selectedLeagues, (newVal) => {
         </div>
         
         <!-- Leagues Filter (Multi-Select) -->
-        <CustomMultiSelect 
+        <PrimaryMultiselector 
           v-model="tournamentStore.selectedLeagues"
           :options="leagueStore.leagues"
           label-key="name"

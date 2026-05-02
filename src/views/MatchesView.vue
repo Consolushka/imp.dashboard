@@ -5,7 +5,7 @@ import { useMatchStore } from '../store/matchStore'
 import { useTournamentStore } from '../store/tournamentStore'
 import MatchCard from '../components/matches/MatchCard.vue'
 import WeeklyLeaders from '../components/matches/WeeklyLeaders.vue'
-import CustomMultiSelect from '../components/ui/CustomMultiSelect.vue'
+import PrimaryMultiselector from '../components/ui/forms/PrimaryMultiselector.vue'
 
 const matchStore = useMatchStore()
 const tournamentStore = useTournamentStore()
@@ -64,7 +64,7 @@ watch(() => matchStore.selectedTournaments, (newVal) => {
         </div>
         
         <!-- Tournament Filter (Multi-Select with Arrow Icon) -->
-        <CustomMultiSelect 
+        <PrimaryMultiselector 
           v-model="matchStore.selectedTournaments"
           :options="tournamentStore.tournaments"
           label-key="name"

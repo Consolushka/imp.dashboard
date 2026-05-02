@@ -90,9 +90,10 @@ onUnmounted(() => {
           v-for="(option, index) in options" 
           :key="index"
           @click="selectOption(option)"
-          class="px-4 py-2 font-data-mono text-data-mono cursor-pointer hover:bg-ghost-gray transition-colors border-b last:border-b-0 border-border-dark"
+          class="px-4 py-2 font-data-mono text-data-mono cursor-pointer transition-colors border-b last:border-b-0 border-border-dark"
           :class="{ 
-            'bg-secondary-container text-white': (typeof option === 'object' ? option[valueKey] : option) === modelValue 
+            'bg-secondary-container text-white': (typeof option === 'object' ? option[valueKey] : option) === modelValue,
+            'hover:bg-ghost-gray': (typeof option === 'object' ? option[valueKey] : option) !== modelValue
           }"
         >
           {{ typeof option === 'object' ? option[labelKey] : option }}
