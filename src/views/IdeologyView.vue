@@ -68,7 +68,7 @@ import CardImportant from '../components/ui/CardImportant.vue'
           </p>
           <div class="bg-primary text-white p-lg neo-shadow border-l-[12px] border-secondary">
             <p class="font-label-caps text-secondary mb-base">THE CORE ALGORITHM</p>
-            <p class="font-h2 text-h2 font-data-mono tracking-tighter">
+            <p class="text-h3 md:text-h2 font-h3 md:font-h2 font-data-mono tracking-tighter">
               IMP = (P+/- - TFD) / MP
             </p>
             <div class="mt-base text-stone-400 font-data-mono text-xs flex gap-lg">
