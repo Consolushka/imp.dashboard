@@ -55,6 +55,10 @@ const getStatusColor = (status) => {
           <span class="font-label-caps text-xs text-on-surface-variant uppercase">Total Matches</span>
           <span class="font-data-mono text-data-mono font-bold">{{ tournament.matchesCount }}</span>
         </div>
+        <div v-if="tournament.nextUpdateAt" class="flex justify-between border-b border-outline-variant pb-micro">
+          <span class="font-label-caps text-xs text-on-surface-variant uppercase">Next Update</span>
+          <span class="font-data-mono text-data-mono font-bold">{{ tournament.nextUpdateAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}</span>
+        </div>
       </div>
     </div>
     

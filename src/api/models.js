@@ -32,6 +32,7 @@ export class TournamentModel {
     this.teamsCount = data.teams_count || 0
     this.topPlayer = data.top_player || 'N/A'
     this.matchesCount = data.matches_count || 0
+    this.nextUpdateAt = data.next_update_at ? new Date(data.next_update_at) : null
   }
 
   get status() {
