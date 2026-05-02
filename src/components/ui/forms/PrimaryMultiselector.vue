@@ -72,12 +72,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="relative inline-block" ref="selectRef">
+  <div class="relative inline-block w-full md:w-auto" ref="selectRef">
     <button 
       @click="toggleDropdown"
-      class="bg-surface-white border-2 border-primary px-4 sm:px-lg py-2 sm:py-sm flex items-center gap-2 sm:gap-md font-label-caps text-xs sm:text-sm font-bold shadow-[4px_4px_0px_0px_rgba(28,27,27,1)] transition-all active:translate-y-[2px] active:shadow-none uppercase cursor-pointer hover:bg-ghost-gray"
+      class="w-full bg-surface-white border-2 border-primary px-4 sm:px-lg py-2 sm:py-sm flex items-center justify-between md:justify-start gap-2 sm:gap-md font-label-caps text-xs sm:text-sm font-bold shadow-[4px_4px_0px_0px_rgba(28,27,27,1)] transition-all active:translate-y-[2px] active:shadow-none uppercase cursor-pointer hover:bg-ghost-gray"
     >
-      {{ label }}
+      <span class="truncate">{{ label }}</span>
       <span 
         class="material-symbols-outlined text-primary text-sm sm:text-base transition-transform duration-200"
         :class="{ 'rotate-180': isOpen }"
@@ -88,19 +88,19 @@ onUnmounted(() => {
 
     <div 
       v-if="isOpen"
-      class="absolute z-50 right-0 mt-2 bg-white min-w-[240px] border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-sm animate-in fade-in slide-in-from-top-2 duration-150"
+      class="absolute z-50 left-0 md:left-auto md:right-0 mt-2 bg-white w-full md:min-w-[240px] border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-sm animate-in fade-in slide-in-from-top-2 duration-150"
     >
       <div class="space-y-sm">
         <label 
           v-for="(option, index) in options" 
           :key="index"
-          class="flex items-center gap-sm cursor-pointer hover:bg-ghost-gray p-xs border border-transparent hover:border-primary transition-colors"
+          class="flex items-center gap-sm cursor-pointer hover:bg-ghost-gray p-xs border border-transparent hover:border-primary transition-colors group"
         >
           <input 
             type="checkbox" 
             :checked="isChecked(option)"
             @change="toggleOption(option)"
-            class="w-5 h-5 border-2 border-primary rounded-none checked:bg-secondary-container focus:ring-0 cursor-pointer"
+            class="w-5 h-5 border-2 border-primary rounded-none checked:bg-secondary-container focus:ring-0 focus:ring-offset-0 outline-none cursor-pointer transition-colors"
           />
           <span class="font-label-caps text-[10px] sm:text-xs uppercase">
             {{ typeof option === 'object' ? option[labelKey] : option }}
