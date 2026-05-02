@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { mockApi } from '../api/mock'
 import { useTournamentStore } from '../store/tournamentStore'
@@ -22,6 +22,8 @@ const gameMinMinutes = ref(route.query.minMins ? Number(route.query.minMins) : 2
 
 const isLoading = ref(false)
 const players = ref([])
+const totalPlayers = ref(482) // Mocked total
+const currentPage = ref(1)
 
 const performanceOptions = [
   { label: 'BEST', value: 'desc' },
@@ -51,6 +53,8 @@ const minMinutesOptions = [
   { label: '25 MINS', value: 25 }
 ]
 
+const totalPages = computed(() => Math.ceil(totalPlayers.value / resultsLimit.value))
+
 const fetchLeaderboardData = async () => {
   if (!metricStore.selectedTournamentId) {
     console.log('Leaderboard: No tournament selected, skipping fetch')
@@ -64,6 +68,7 @@ const fetchLeaderboardData = async () => {
       tournament_id: metricStore.selectedTournamentId,
       per: 'fullGame',
       limit: resultsLimit.value,
+      page: currentPage.value,
       order: performanceOrder.value,
       use_reliability: metricStore.globalReliabilityOn
     })
@@ -88,6 +93,7 @@ onMounted(async () => {
 watch(
   [avgMinutesRange, performanceOrder, resultsLimit, selectedTeam, gameMinMinutes],
   ([avgMins, order, limit, team, minMins]) => {
+    currentPage.value = 1 // Reset page on filter change
     router.replace({
       query: {
         ...route.query,
@@ -103,13 +109,13 @@ watch(
 )
 
 watch(
-  [() => metricStore.selectedTournamentId, avgMinutesRange, performanceOrder, resultsLimit, selectedTeam, gameMinMinutes, () => metricStore.globalReliabilityOn],
+  [() => metricStore.selectedTournamentId, () => metricStore.globalReliabilityOn, currentPage],
   fetchLeaderboardData
 )
 </script>
 
 <template>
-  <main class="max-w-[1280px] mx-auto p-lg lg:p-xl space-y-xl">
+  <main class="max-w-[1280px] mx-auto p-lg lg:p-xl space-y-xl text-primary">
     <!-- Header Section -->
     <header class="border-b-4 border-black pb-lg flex flex-col md:flex-row md:items-end justify-between gap-md">
       <div>
@@ -238,11 +244,25 @@ watch(
     <!-- Pagination / Footer Info -->
     <footer class="flex flex-col md:flex-row justify-between items-center gap-md border-t-2 border-black pt-lg">
       <div class="font-data-mono text-xs uppercase">
-        Showing 1-{{ players.length }} of 482 active players qualified by intensity metrics
+        Showing {{ (currentPage - 1) * resultsLimit + 1 }}-{{ Math.min(currentPage * resultsLimit, totalPlayers) }} of {{ totalPlayers }} active players
       </div>
-      <div class="flex gap-1">
-        <button class="bg-white border-2 border-black px-md py-sm font-label-caps hover:bg-black hover:text-white transition-colors">PREV</button>
-        <button class="bg-black text-white border-2 border-black px-md py-sm font-label-caps">NEXT</button>
+      <div class="flex gap-2">
+        <button 
+          @click="currentPage > 1 && currentPage--"
+          :disabled="currentPage === 1"
+          class="px-md py-sm font-label-caps border-2 border-black transition-all cursor-pointer disabled:bg-surface-container-highest disabled:text-neutral-medium disabled:border-neutral-medium disabled:cursor-not-allowed"
+          :class="currentPage === 1 ? '' : 'bg-white text-black hover:bg-black hover:text-white'"
+        >
+          PREV
+        </button>
+        <button 
+          @click="currentPage < totalPages && currentPage++"
+          :disabled="currentPage === totalPages"
+          class="px-md py-sm font-label-caps border-2 border-black transition-all cursor-pointer disabled:bg-surface-container-highest disabled:text-neutral-medium disabled:border-neutral-medium disabled:cursor-not-allowed"
+          :class="currentPage === totalPages ? '' : 'bg-white text-black hover:bg-black hover:text-white'"
+        >
+          NEXT
+        </button>
       </div>
     </footer>
   </main>
@@ -250,9 +270,8 @@ watch(
   <!-- Refresh FAB -->
   <button 
     @click="fetchLeaderboardData"
-    class="fixed bottom-8 right-8 w-16 h-16 bg-black text-white border-4 border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30"
+    class="fixed bottom-24 right-8 w-16 h-16 bg-black text-white border-4 border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30"
   >
     <span class="material-symbols-outlined text-3xl">refresh</span>
   </button>
 </template>
-
