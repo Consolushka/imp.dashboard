@@ -43,10 +43,6 @@ const viewTournaments = () => {
         <span class="font-data-mono">{{ league.tournamentsCount }}</span>
       </div>
       <div class="flex justify-between items-center">
-        <span class="font-label-caps text-xs text-on-surface">TOP PLAYER</span>
-        <span class="font-data-mono">{{ league.topPlayer }}</span>
-      </div>
-      <div class="flex justify-between items-center">
         <span class="font-label-caps text-xs text-on-surface">MATCHES</span>
         <span class="font-data-mono">{{ league.matchesCount }}</span>
       </div>
