@@ -6,11 +6,11 @@ export const useMatchStore = defineStore('match', () => {
   const matches = ref([])
   const weeklyLeaders = ref([])
   const isLoading = ref(true)
-  const selectedTournaments = ref([]) // Массив выбранных ID турниров
+  const selectedTournament = ref(null) // ID выбранного турнира
 
   const filteredMatches = computed(() => {
-    if (selectedTournaments.value.length === 0) return matches.value
-    return matches.value.filter(m => selectedTournaments.value.includes(m.tournamentId))
+    if (!selectedTournament.value) return matches.value
+    return matches.value.filter(m => m.tournamentId === selectedTournament.value)
   })
 
   async function fetchMatchesData() {
@@ -35,7 +35,7 @@ export const useMatchStore = defineStore('match', () => {
     matches,
     weeklyLeaders,
     isLoading,
-    selectedTournaments,
+    selectedTournament,
     filteredMatches,
     fetchMatchesData
   }

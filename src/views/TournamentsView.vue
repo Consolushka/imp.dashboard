@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useTournamentStore } from '../store/tournamentStore'
 import { useLeagueStore } from '../store/leagueStore'
 import TournamentCard from '../components/tournaments/TournamentCard.vue'
-import PrimaryMultiselector from '../components/ui/forms/PrimaryMultiselector.vue'
+import PrimarySelector from '../components/ui/forms/PrimarySelector.vue'
 import SummaryStatistics from '../components/leagues/SummaryStatistics.vue'
 
 const tournamentStore = useTournamentStore()
@@ -36,33 +36,29 @@ onMounted(async () => {
 })
 
 const initializeFilters = () => {
-  if (route.query.leagues) {
-    const ids = route.query.leagues.split(',').map(Number)
-    tournamentStore.selectedLeagues = ids
-  } else {
-    // Если параметра нет — показываем все (выделяем все чекбоксы)
-    tournamentStore.selectedLeagues = leagueStore.leagues.map(l => l.id)
+  if (route.query.league) {
+    tournamentStore.selectedLeague = Number(route.query.league)
+  } else if (leagueStore.leagues.length > 0) {
+    // По умолчанию выбрана первая лига
+    tournamentStore.selectedLeague = leagueStore.leagues[0].id
   }
 }
 
 // Следим за внешними изменениями URL (например, при переходе с другой страницы)
-watch(() => route.query.leagues, () => {
-  initializeFilters()
+watch(() => route.query.league, (newVal) => {
+  if (newVal) {
+    tournamentStore.selectedLeague = Number(newVal)
+  }
 })
 
 // Синхронизируем изменения фильтра с URL
-watch(() => tournamentStore.selectedLeagues, (newVal) => {
-  const allIds = leagueStore.leagues.map(l => l.id)
-  
-  // Если выбраны все лиги или список пуст (что тоже трактуем как "все"), убираем query параметр
-  const isAllSelected = allIds.length > 0 && newVal.length === allIds.length && allIds.every(id => newVal.includes(id))
-  
-  if (isAllSelected || newVal.length === 0) {
-    router.replace({ query: { ...route.query, leagues: undefined } })
+watch(() => tournamentStore.selectedLeague, (newVal) => {
+  if (newVal) {
+    router.replace({ query: { ...route.query, league: newVal } })
   } else {
-    router.replace({ query: { ...route.query, leagues: newVal.join(',') } })
+    router.replace({ query: { ...route.query, league: undefined } })
   }
-}, { deep: true })
+})
 </script>
 
 <template>
@@ -77,13 +73,13 @@ watch(() => tournamentStore.selectedLeagues, (newVal) => {
           </p>
         </div>
         
-        <!-- Leagues Filter (Multi-Select) -->
-        <PrimaryMultiselector 
-          v-model="tournamentStore.selectedLeagues"
+        <!-- Leagues Filter (Single-Select) -->
+        <PrimarySelector 
+          v-model="tournamentStore.selectedLeague"
           :options="leagueStore.leagues"
           label-key="name"
           value-key="id"
-          label="SELECT LEAGUES"
+          label="SELECT LEAGUE"
         />
       </div>
     </div>

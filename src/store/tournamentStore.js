@@ -6,11 +6,11 @@ export const useTournamentStore = defineStore('tournament', () => {
   const tournaments = ref([])
   const summaryStats = ref(null)
   const isLoading = ref(true)
-  const selectedLeagues = ref([]) // Массив выбранных ID лиг
+  const selectedLeague = ref(null) // ID выбранной лиги
 
   const filteredTournaments = computed(() => {
-    if (selectedLeagues.value.length === 0) return tournaments.value
-    return tournaments.value.filter(t => selectedLeagues.value.includes(t.leagueId))
+    if (!selectedLeague.value) return tournaments.value
+    return tournaments.value.filter(t => t.leagueId === selectedLeague.value)
   })
 
   async function fetchTournamentsData() {
@@ -29,22 +29,12 @@ export const useTournamentStore = defineStore('tournament', () => {
     }
   }
 
-  function toggleLeague(leagueId) {
-    const index = selectedLeagues.value.indexOf(leagueId)
-    if (index > -1) {
-      selectedLeagues.value.splice(index, 1)
-    } else {
-      selectedLeagues.value.push(leagueId)
-    }
-  }
-
   return {
     tournaments,
     summaryStats,
     isLoading,
-    selectedLeagues,
+    selectedLeague,
     filteredTournaments,
-    fetchTournamentsData,
-    toggleLeague
+    fetchTournamentsData
   }
 })

@@ -5,7 +5,7 @@ import { useMatchStore } from '../store/matchStore'
 import { useTournamentStore } from '../store/tournamentStore'
 import MatchCard from '../components/matches/MatchCard.vue'
 import WeeklyLeaders from '../components/matches/WeeklyLeaders.vue'
-import PrimaryMultiselector from '../components/ui/forms/PrimaryMultiselector.vue'
+import PrimarySelector from '../components/ui/forms/PrimarySelector.vue'
 
 const matchStore = useMatchStore()
 const tournamentStore = useTournamentStore()
@@ -13,7 +13,7 @@ const route = useRoute()
 const router = useRouter()
 
 onMounted(async () => {
-  // Загружаем турниры, если их еще нет (нужны для мультиселекта)
+  // Загружаем турниры, если их еще нет (нужны для селектора)
   if (tournamentStore.tournaments.length === 0) {
     await tournamentStore.fetchTournamentsData()
   }
@@ -26,29 +26,29 @@ onMounted(async () => {
 })
 
 const initializeFilters = () => {
-  if (route.query.tournaments) {
-    const ids = route.query.tournaments.split(',').map(Number)
-    matchStore.selectedTournaments = ids
-  } else {
-    // По умолчанию выбраны все турниры
-    matchStore.selectedTournaments = tournamentStore.tournaments.map(t => t.id)
+  if (route.query.tournament) {
+    matchStore.selectedTournament = Number(route.query.tournament)
+  } else if (tournamentStore.tournaments.length > 0) {
+    // По умолчанию выбран первый турнир
+    matchStore.selectedTournament = tournamentStore.tournaments[0].id
   }
 }
 
 // Следим за внешними изменениями URL
-watch(() => route.query.tournaments, initializeFilters)
+watch(() => route.query.tournament, (newVal) => {
+  if (newVal) {
+    matchStore.selectedTournament = Number(newVal)
+  }
+})
 
 // Синхронизируем изменения фильтра с URL
-watch(() => matchStore.selectedTournaments, (newVal) => {
-  const allIds = tournamentStore.tournaments.map(t => t.id)
-  const isAllSelected = allIds.length > 0 && newVal.length === allIds.length && allIds.every(id => newVal.includes(id))
-  
-  if (isAllSelected || newVal.length === 0) {
-    router.replace({ query: { ...route.query, tournaments: undefined } })
+watch(() => matchStore.selectedTournament, (newVal) => {
+  if (newVal) {
+    router.replace({ query: { ...route.query, tournament: newVal } })
   } else {
-    router.replace({ query: { ...route.query, tournaments: newVal.join(',') } })
+    router.replace({ query: { ...route.query, tournament: undefined } })
   }
-}, { deep: true })
+})
 </script>
 
 <template>
@@ -63,14 +63,13 @@ watch(() => matchStore.selectedTournaments, (newVal) => {
           </p>
         </div>
         
-        <!-- Tournament Filter (Multi-Select with Arrow Icon) -->
-        <PrimaryMultiselector 
-          v-model="matchStore.selectedTournaments"
+        <!-- Tournament Filter (Single-Select) -->
+        <PrimarySelector 
+          v-model="matchStore.selectedTournament"
           :options="tournamentStore.tournaments"
           label-key="name"
           value-key="id"
-          label="SELECT TOURNAMENTS"
-          icon="expand_more"
+          label="SELECT TOURNAMENT"
         />
       </div>
     </div>
