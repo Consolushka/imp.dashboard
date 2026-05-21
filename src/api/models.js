@@ -118,6 +118,7 @@ class TeamStatsModel {
     this.playerStats = (data.playerStats || []).map(ps => ({
       player: ps.player ? ps.player.full_name : 'Unknown',
       min: ps.played_seconds ? Math.floor(ps.played_seconds / 60) + ':' + String(ps.played_seconds % 60).padStart(2, '0') : '0:00',
+      minRaw: ps.played_seconds || 0,
       plusMinus: ps.plus_minus,
       pts: ps.points,
       reb: ps.rebounds,

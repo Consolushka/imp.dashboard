@@ -40,9 +40,13 @@ const handleSort = (columnKey) => {
 const sortedData = computed(() => {
   if (!sortColumn.value) return props.data
   
+  // Find column definition to check for custom sort key
+  const colDef = props.columns.find(c => c.key === sortColumn.value)
+  const effectiveSortKey = colDef?.sortKey || sortColumn.value
+
   return [...props.data].sort((a, b) => {
-    const valA = a[sortColumn.value]
-    const valB = b[sortColumn.value]
+    const valA = a[effectiveSortKey]
+    const valB = b[effectiveSortKey]
     
     if (valA === valB) return 0
     

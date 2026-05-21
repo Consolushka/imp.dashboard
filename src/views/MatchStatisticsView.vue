@@ -57,7 +57,7 @@ const prevPerformance = () => {
 
 const TRADITIONAL_COLUMNS = [
   { key: 'player', label: 'Player', align: 'left' },
-  { key: 'min', label: 'Min', align: 'right' },
+  { key: 'min', label: 'Min', align: 'right', sortKey: 'minRaw' },
   { key: 'plusMinus', label: '+/-', align: 'right' },
   { key: 'pts', label: 'Pts', align: 'right' },
   { key: 'reb', label: 'Reb', align: 'right' },
