@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { mockApi } from '../api/mock'
+import { api } from '../api/index'
 import { useTournamentStore } from '../store/tournamentStore'
 import { useMetricStore } from '../store/metricStore'
 import PrimarySelector from '../components/ui/forms/PrimarySelector.vue'
@@ -64,7 +64,7 @@ const fetchLeaderboardData = async () => {
   console.log('Leaderboard: Fetching data for tournament', metricStore.selectedTournamentId)
   isLoading.value = true
   try {
-    const response = await mockApi.getLeaderboard({
+    const response = await api.getLeaderboard({
       tournament_id: metricStore.selectedTournamentId,
       per: 'fullGame',
       limit: resultsLimit.value,

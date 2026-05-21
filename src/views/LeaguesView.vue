@@ -17,7 +17,7 @@ const summaryItems = computed(() => {
 })
 
 onMounted(() => {
-  leagueStore.fetchLeagues()
+  leagueStore.fetchLeaguesWithSummary()
 })
 </script>
 

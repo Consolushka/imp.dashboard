@@ -16,20 +16,23 @@ const summaryItems = computed(() => {
   if (!tournamentStore.summaryStats) return []
   return [
     { label: 'Total Data Points', value: tournamentStore.summaryStats.totalDataPoints },
-    { label: 'Active Tournaments', value: tournamentStore.summaryStats.activeTournaments },
+    { label: 'Active Tournaments', value: tournamentStore.summaryStats.activeTournaments || 'N/A' },
     { label: 'Tracked Players', value: tournamentStore.summaryStats.trackedPlayers },
     { label: 'Total Matches', value: tournamentStore.summaryStats.totalMatches }
   ]
 })
 
 onMounted(async () => {
-  // Загружаем лиги, если их еще нет в сторе
+  // Загружаем лиги (только список для селектора), если их еще нет
   if (leagueStore.leagues.length === 0) {
     await leagueStore.fetchLeagues()
   }
   
-  // Загружаем данные турниров
-  await tournamentStore.fetchTournamentsData()
+  // Загружаем данные турниров и общую стату параллельно (но без дублей)
+  await Promise.all([
+    tournamentStore.fetchTournamentsData(),
+    tournamentStore.fetchGlobalSummary()
+  ])
 
   // Инициализируем фильтр из query параметров
   initializeFilters()
@@ -87,12 +90,18 @@ watch(() => tournamentStore.selectedLeague, (newVal) => {
     <!-- Main Content State -->
     <template v-if="!tournamentStore.isLoading">
       <!-- Tournament Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+      <div v-if="tournamentStore.filteredTournaments.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
         <TournamentCard 
           v-for="tournament in tournamentStore.filteredTournaments" 
           :key="tournament.id" 
           :tournament="tournament" 
         />
+      </div>
+      
+      <!-- Empty State -->
+      <div v-else class="flex flex-col items-center justify-center min-h-[300px] border-2 border-dashed border-border-dark bg-ghost-gray">
+        <span class="material-symbols-outlined text-6xl text-neutral-medium mb-4">search_off</span>
+        <p class="font-h3 text-h3 uppercase text-neutral-medium">No tournaments found for this league</p>
       </div>
 
       <!-- Footer Statistics -->

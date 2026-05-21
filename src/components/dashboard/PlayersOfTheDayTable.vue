@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { mockApi } from '../../api/mock'
+import { api } from '../../api/index'
 import { useMetricStore } from '../../store/metricStore'
 
 const props = defineProps({
@@ -17,9 +17,9 @@ const isLoading = ref(true)
 const fetchPlayers = async () => {
   isLoading.value = true
   try {
-    const response = await mockApi.getPlayersOfTheDay(
+    const response = await api.getPlayersOfTheDay(
       props.tournamentId,
-      metricStore.globalReliabilityOn
+      { use_reliability: metricStore.globalReliabilityOn }
     )
     players.value = response.data
   } catch (error) {

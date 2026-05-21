@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { mockApi } from '../api/mock'
+import { api } from '../api/index'
 
 export const useTournamentStore = defineStore('tournament', () => {
   const tournaments = ref([])
   const summaryStats = ref(null)
-  const isLoading = ref(true)
+  const isLoading = ref(false)
   const selectedLeague = ref(null) // ID выбранной лиги
 
   const filteredTournaments = computed(() => {
@@ -13,19 +13,44 @@ export const useTournamentStore = defineStore('tournament', () => {
     return tournaments.value.filter(t => t.leagueId === selectedLeague.value)
   })
 
+  /**
+   * Загрузить простой список турниров (для селекторов)
+   */
+  async function fetchTournaments() {
+    isLoading.value = true
+    try {
+      const response = await api.getTournaments()
+      tournaments.value = response.data
+    } catch (error) {
+      console.error('Failed to fetch tournaments list:', error)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Загрузить турниры со статистикой (для Tournaments View)
+   */
   async function fetchTournamentsData() {
     isLoading.value = true
     try {
-      const [tournamentsRes, statsRes] = await Promise.all([
-        mockApi.getTournaments(),
-        mockApi.getTournamentSummaryStats()
-      ])
-      tournaments.value = tournamentsRes.data
-      summaryStats.value = statsRes
+      const response = await api.getTournamentsSummary()
+      tournaments.value = response.data
     } catch (error) {
-      console.error('Failed to fetch tournaments data:', error)
+      console.error('Failed to fetch tournaments summary:', error)
     } finally {
       isLoading.value = false
+    }
+  }
+
+  /**
+   * Загрузить глобальную статистику системы
+   */
+  async function fetchGlobalSummary() {
+    try {
+      summaryStats.value = await api.getGlobalSummary()
+    } catch (error) {
+      console.error('Failed to fetch global summary:', error)
     }
   }
 
@@ -35,6 +60,8 @@ export const useTournamentStore = defineStore('tournament', () => {
     isLoading,
     selectedLeague,
     filteredTournaments,
-    fetchTournamentsData
+    fetchTournaments,
+    fetchTournamentsData,
+    fetchGlobalSummary
   }
 })

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { mockApi } from '../../api/mock'
+import { api } from '../../api/index'
 
 const props = defineProps({
   tournamentId: {
@@ -24,7 +24,9 @@ const viewStats = (id) => {
 const fetchGames = async () => {
   isLoading.value = true
   try {
-    const response = await mockApi.getTournamentGames(props.tournamentId)
+    const response = await api.getGamesByTournament(props.tournamentId, { 
+      per_page: 5 // Limit to 5 for dashboard
+    })
     games.value = response.data
   } catch (error) {
     console.error('Failed to fetch games:', error)

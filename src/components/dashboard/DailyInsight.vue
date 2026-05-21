@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { mockApi } from '../../api/mock'
+import { api } from '../../api/index'
 import CardImportant from '../ui/CardImportant.vue'
 
 const props = defineProps({
@@ -16,7 +16,7 @@ const isLoading = ref(true)
 const fetchInsights = async () => {
   isLoading.value = true
   try {
-    const response = await mockApi.getDailyInsight(props.tournamentId)
+    const response = await api.getDailyInsight(props.tournamentId)
     insights.value = Array.isArray(response.data) ? response.data : [response.data]
   } catch (error) {
     console.error('Failed to fetch daily insights:', error)

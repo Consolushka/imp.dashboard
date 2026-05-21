@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { mockApi } from '../../api/mock'
+import { api } from '../../api/index'
 import { useMetricStore } from '../../store/metricStore'
 
 const props = defineProps({
@@ -17,10 +17,12 @@ const isLoading = ref(true)
 const fetchLeaders = async () => {
   isLoading.value = true
   try {
-    const response = await mockApi.getLeaderboard(
-      props.tournamentId, 
-      metricStore.globalReliabilityOn
-    )
+    const response = await api.getLeaderboard({
+      tournament_id: props.tournamentId, 
+      per: 'fullGame', // Required by API
+      use_reliability: metricStore.globalReliabilityOn,
+      limit: 5 // Default for dashboard
+    })
     leaders.value = response.data
   } catch (error) {
     console.error('Failed to fetch season leaders:', error)

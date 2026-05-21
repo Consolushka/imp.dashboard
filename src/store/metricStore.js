@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
-import { mockApi } from '../api/mock'
+import { api } from '../api/index'
 
 export const useMetricStore = defineStore('metric', () => {
   // Инициализируем из localStorage.
@@ -26,7 +26,7 @@ export const useMetricStore = defineStore('metric', () => {
   async function fetchTournaments() {
     isTournamentsLoading.value = true
     try {
-      const response = await mockApi.getTournaments()
+      const response = await api.getTournaments()
       tournaments.value = response.data
       
       // Проверяем, существует ли сохраненный ID в загруженном списке

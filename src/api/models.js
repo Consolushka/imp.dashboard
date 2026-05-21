@@ -8,11 +8,11 @@ export class LeagueModel {
     this.alias = data.alias
     this.order = data.order
     
-    // Дополнительные поля для UI (мокаем, так как в апи их нет)
+    // Поля из Summary или дефолты
     this.tier = data.tier || 1
-    this.tournamentsCount = data.tournaments_count || 1
+    this.tournamentsCount = parseInt(data.tournaments_count) || 0
     this.topPlayer = data.top_player || 'N/A'
-    this.matchesCount = data.matches_count || 0
+    this.matchesCount = parseInt(data.games_count) || 0
   }
 }
 
@@ -27,11 +27,11 @@ export class TournamentModel {
     this.startAt = data.start_at ? new Date(data.start_at) : null
     this.endAt = data.end_at ? new Date(data.end_at) : null
     
-    // Дополнительные поля для UI
+    // Поля из Summary или дефолты
     this.tier = data.tier || 1
-    this.teamsCount = data.teams_count || 0
-    this.topPlayer = data.top_player || 'N/A'
-    this.matchesCount = data.matches_count || 0
+    this.teamsCount = parseInt(data.teams_count) || 0
+    this.topPlayer = data.best_player_full_name || 'N/A'
+    this.matchesCount = parseInt(data.games_count) || 0
     this.nextUpdateAt = data.next_update_at ? new Date(data.next_update_at) : null
   }
 
@@ -51,11 +51,7 @@ export class TeamModel {
     this.id = data.id
     this.name = data.name
     this.homeTown = data.home_town
-    this.alias = data.alias || this.getAliasFromName(data.name)
-  }
-
-  getAliasFromName(name) {
-    return name.substring(0, 3).toUpperCase()
+    this.alias = data.alias
   }
 }
 
@@ -68,16 +64,45 @@ export class GameModel {
     this.scheduledAt = new Date(data.scheduled_at)
     this.tournamentId = data.tournament_id
     this.title = data.title
+    this.subtitle = data.subtitle || 'Regular Season' // API might not have this yet
     this.duration = data.duration
     
     // Парсим статистику команд
     const stats = data.game_team_stats || []
     
-    // Предполагаем, что в title формат "HOME - AWAY" или "AWAY @ HOME"
-    // Но лучше ориентироваться на final_differential (у домашней команды он обычно положительный при победе)
-    // В данном апи просто берем первую и вторую
-    this.homeTeamStats = stats[1] ? new TeamStatsModel(stats[1]) : null
+    // Мапим статистику команд. 
+    // В Laravel API обычно [0] - Away, [1] - Home
     this.awayTeamStats = stats[0] ? new TeamStatsModel(stats[0]) : null
+    this.homeTeamStats = stats[1] ? new TeamStatsModel(stats[1]) : null
+  }
+
+  // Геттеры для совместимости с существующими View (MatchStatisticsView.vue)
+  get homeTeam() {
+    if (!this.homeTeamStats) return null
+    return {
+      name: this.homeTeamStats.team?.name || 'Home',
+      alias: this.homeTeamStats.team?.alias || 'HOME',
+      score: this.homeTeamStats.score,
+      isWinner: this.homeTeamStats.finalDifferential > 0
+    }
+  }
+
+  get awayTeam() {
+    if (!this.awayTeamStats) return null
+    return {
+      name: this.awayTeamStats.team?.name || 'Away',
+      alias: this.awayTeamStats.team?.alias || 'AWAY',
+      score: this.awayTeamStats.score,
+      isWinner: this.awayTeamStats.finalDifferential > 0
+    }
+  }
+
+  get homeStats() {
+    return this.homeTeamStats?.playerStats || []
+  }
+
+  get awayStats() {
+    return this.awayTeamStats?.playerStats || []
   }
 }
 
@@ -88,6 +113,21 @@ class TeamStatsModel {
     this.score = data.score
     this.finalDifferential = data.final_differential
     this.team = data.team ? new TeamModel(data.team) : null
+    
+    // Статистика игроков в матче
+    this.playerStats = (data.playerStats || []).map(ps => ({
+      player: ps.player ? ps.player.full_name : 'Unknown',
+      min: ps.played_seconds ? Math.floor(ps.played_seconds / 60) + ':' + String(ps.played_seconds % 60).padStart(2, '0') : '0:00',
+      plusMinus: ps.plus_minus,
+      pts: ps.points,
+      reb: ps.rebounds,
+      ast: ps.assists,
+      fgPct: ps.field_goals_percentage,
+      to: ps.turnovers,
+      blk: ps.blocks,
+      stl: ps.steals,
+      imp: typeof ps.imp === 'number' ? Number(ps.imp.toFixed(1)) : ps.imp
+    }))
   }
 }
 
@@ -97,12 +137,12 @@ class TeamStatsModel {
 export class RankedPlayerModel {
   constructor(data) {
     this.position = data.position
-    this.id = data.player.id
-    this.fullName = data.player.full_name
-    this.teamAlias = data.player.team_alias || 'UNK'
+    this.id = data.player?.id
+    this.fullName = data.player?.full_name
+    this.teamAlias = data.team_alias || 'UNK'
     this.gamesCount = data.games_count
-    this.avgImp = data.avg_imp
-    this.avgMinutes = data.avg_minutes || 0
+    this.avgImp = typeof data.avg_imp === 'number' ? Number(data.avg_imp.toFixed(1)) : data.avg_imp
+    this.avgMinutes = typeof data.avg_minutes === 'number' ? Number(data.avg_minutes.toFixed(1)) : data.avg_minutes
   }
 }
 
@@ -114,10 +154,10 @@ export class PlayerOfTheDayModel {
     this.id = data.id
     this.fullName = data.full_name
     this.teamAlias = data.team_alias
-    this.min = data.min
+    this.min = typeof data.played_minutes === 'number' ? Number(data.played_minutes.toFixed(1)) : data.played_minutes
     this.pts = data.pts
     this.reb = data.reb
     this.ast = data.ast
-    this.imp = data.imp
+    this.imp = typeof data.imp === 'number' ? Number(data.imp.toFixed(1)) : data.imp
   }
 }

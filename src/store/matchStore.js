@@ -1,26 +1,28 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { mockApi } from '../api/mock'
+import { api } from '../api/index'
 
 export const useMatchStore = defineStore('match', () => {
   const matches = ref([])
   const weeklyLeaders = ref([])
-  const isLoading = ref(true)
+  const isLoading = ref(false)
   const selectedTournament = ref(null) // ID выбранного турнира
 
-  const filteredMatches = computed(() => {
-    if (!selectedTournament.value) return matches.value
-    return matches.value.filter(m => m.tournamentId === selectedTournament.value)
-  })
-
+  /**
+   * Загрузить матчи для выбранного турнира и еженедельных лидеров
+   */
   async function fetchMatchesData() {
+    if (!selectedTournament.value) {
+      matches.value = []
+      weeklyLeaders.value = []
+      return
+    }
+
     isLoading.value = true
     try {
       const [matchesRes, leadersRes] = await Promise.all([
-        // В реальном апи мы бы передавали сюда массив ID турниров
-        // Но пока мокаем все игры, которые есть, и фильтруем на фронте
-        mockApi.getTournamentGames(null), 
-        mockApi.getWeeklyLeaders()
+        api.getGamesByTournament(selectedTournament.value), 
+        api.getWeeklyLeaders(selectedTournament.value)
       ])
       matches.value = matchesRes.data
       weeklyLeaders.value = leadersRes
@@ -36,7 +38,6 @@ export const useMatchStore = defineStore('match', () => {
     weeklyLeaders,
     isLoading,
     selectedTournament,
-    filteredMatches,
     fetchMatchesData
   }
 })

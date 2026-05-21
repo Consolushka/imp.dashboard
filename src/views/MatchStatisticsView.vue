@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { mockApi } from '@/api/mock'
+import { api } from '@/api/index'
 import { useMetricStore } from '@/store/metricStore'
 import ToggleSwitch from '@/components/ui/forms/ToggleSwitch.vue'
 import DarkCard from '@/components/ui/DarkCard.vue'
@@ -83,8 +83,8 @@ onMounted(async () => {
   isLoading.value = true
   try {
     const [details, performances] = await Promise.all([
-      mockApi.getMatchDetails(route.params.id),
-      mockApi.getKeyPerformances(route.params.id)
+      api.getMatchDetails(route.params.id),
+      api.getKeyPerformances(route.params.id)
     ])
     
     if (!details) {
