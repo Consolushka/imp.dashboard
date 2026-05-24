@@ -15,18 +15,18 @@ defineProps({
     </div>
     
     <!-- Leaders Stats Block -->
-    <div class="md:col-span-3 bg-white border-4 border-primary p-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-wrap items-center justify-around gap-y-lg gap-x-md">
+    <div class="md:col-span-3 bg-white border-4 border-primary p-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-wrap md:flex-nowrap items-center justify-around gap-y-lg gap-x-md">
       <template v-for="(leader, index) in leaders" :key="index">
-        <div class="text-center min-w-[120px]">
-          <p class="font-label-caps text-label-caps text-neutral-medium uppercase text-xs mb-1">{{ leader.category }}</p>
-          <p class="font-h2 text-xl sm:text-2xl uppercase font-bold text-primary">{{ leader.player }}</p>
-          <p class="font-data-mono text-data-mono text-secondary-container font-black">{{ leader.value }}</p>
+        <div class="text-center min-w-[100px] flex-1">
+          <p class="font-label-caps text-label-caps text-neutral-medium uppercase text-[10px] mb-1 leading-none">{{ leader.category }}</p>
+          <p class="font-h3 text-sm sm:text-base uppercase font-bold text-primary leading-tight mb-1">{{ leader.player }}</p>
+          <p class="font-data-mono text-data-mono text-secondary-container font-black text-xs sm:text-sm">{{ leader.value }}</p>
         </div>
         
         <!-- Divider for desktop -->
         <div 
           v-if="index < leaders.length - 1" 
-          class="w-px h-16 bg-primary/20 hidden md:block"
+          class="w-px h-12 bg-primary/20 hidden md:block"
         ></div>
       </template>
     </div>
