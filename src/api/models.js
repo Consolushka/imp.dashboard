@@ -33,9 +33,13 @@ export class TournamentModel {
     this.topPlayer = data.best_player_full_name || 'N/A'
     this.matchesCount = parseInt(data.games_count) || 0
     this.nextUpdateAt = data.next_update_at ? new Date(data.next_update_at) : null
+    this._status = data.status
   }
 
   get status() {
+    // Если бэк прислал статус, используем его (приводим к верхнему регистру для UI)
+    if (this._status) return this._status.toUpperCase()
+
     const now = new Date()
     if (this.endAt && now > this.endAt) return 'COMPLETED'
     if (this.startAt && now >= this.startAt) return 'ONGOING'
