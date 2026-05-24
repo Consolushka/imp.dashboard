@@ -16,7 +16,7 @@ const summaryItems = computed(() => {
   if (!tournamentStore.summaryStats) return []
   return [
     { label: 'Total Data Points', value: tournamentStore.summaryStats.totalDataPoints },
-    { label: 'Active Tournaments', value: tournamentStore.summaryStats.activeTournaments || 'N/A' },
+    { label: 'Active Leagues', value: tournamentStore.summaryStats.activeLeagues || 'N/A' },
     { label: 'Tracked Players', value: tournamentStore.summaryStats.trackedPlayers },
     { label: 'Total Matches', value: tournamentStore.summaryStats.totalMatches }
   ]
