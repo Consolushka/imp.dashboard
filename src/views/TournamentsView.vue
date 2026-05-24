@@ -28,14 +28,14 @@ onMounted(async () => {
     await leagueStore.fetchLeagues()
   }
   
-  // Загружаем данные турниров и общую стату параллельно (но без дублей)
+  // Инициализируем фильтр из query параметров ПЕРЕД загрузкой данных
+  initializeFilters()
+
+  // Загружаем данные турниров и общую стату параллельно
   await Promise.all([
     tournamentStore.fetchTournamentsData(),
     tournamentStore.fetchGlobalSummary()
   ])
-
-  // Инициализируем фильтр из query параметров
-  initializeFilters()
 })
 
 const initializeFilters = () => {
@@ -54,12 +54,18 @@ watch(() => route.query.league, (newVal) => {
   }
 })
 
-// Синхронизируем изменения фильтра с URL
-watch(() => tournamentStore.selectedLeague, (newVal) => {
+// Синхронизируем изменения фильтра с URL и перезагружаем данные
+watch(() => tournamentStore.selectedLeague, (newVal, oldVal) => {
+  // Синхронизация с URL
   if (newVal) {
     router.replace({ query: { ...route.query, league: newVal } })
   } else {
     router.replace({ query: { ...route.query, league: undefined } })
+  }
+
+  // Перезагрузка данных, если значение реально изменилось (и это не первый запуск)
+  if (newVal !== oldVal && oldVal !== undefined) {
+    tournamentStore.fetchTournamentsData()
   }
 })
 </script>

@@ -9,8 +9,9 @@ export const useTournamentStore = defineStore('tournament', () => {
   const selectedLeague = ref(null) // ID выбранной лиги
 
   const filteredTournaments = computed(() => {
-    if (!selectedLeague.value) return tournaments.value
-    return tournaments.value.filter(t => t.leagueId === selectedLeague.value)
+    // Теперь фильтрация происходит на бэкенде, 
+    // поэтому просто возвращаем загруженные данные.
+    return tournaments.value
   })
 
   /**
@@ -34,7 +35,11 @@ export const useTournamentStore = defineStore('tournament', () => {
   async function fetchTournamentsData() {
     isLoading.value = true
     try {
-      const response = await api.getTournamentsSummary()
+      const params = {}
+      if (selectedLeague.value) {
+        params.league_id = selectedLeague.value
+      }
+      const response = await api.getTournamentsSummary(params)
       tournaments.value = response.data
     } catch (error) {
       console.error('Failed to fetch tournaments summary:', error)

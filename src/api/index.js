@@ -49,8 +49,8 @@ export const api = {
   /**
    * Получить список турниров со статистикой (для Tournaments View)
    */
-  async getTournamentsSummary() {
-    const response = await client.get('/tournaments/summary')
+  async getTournamentsSummary(params) {
+    const response = await client.get('/tournaments/summary', { params })
     return {
       data: (response.data || []).map(t => new TournamentModel(t))
     }
