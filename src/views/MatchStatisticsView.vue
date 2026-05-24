@@ -213,7 +213,7 @@ watch([selectedTab, isLocalReliability], ([newTab, newReliability]) => {
         </template>
         
         <div class="space-y-sm mt-md">
-          <div v-if="currentPerformance" class="flex items-center justify-between">
+          <div v-if="currentPerformance" class="flex items-center justify-between gap-md">
             <span class="font-h3 text-h3 uppercase tracking-tighter">{{ currentPerformance.player }}</span>
             <span class="bg-secondary-container text-white px-sm font-data-mono">{{ currentPerformance.imp }}</span>
           </div>
