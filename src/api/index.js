@@ -138,9 +138,9 @@ export const api = {
     const response = await client.get(`/games/${matchId}/key-performances`)
     return {
       data: (response.data || []).map(p => ({
-        player: p.player_name,
-        imp: p.imp,
-        description: p.narratives
+        player: p.player_full_name,
+        imp: p.narrative?.value || 'N/A',
+        description: p.narrative?.text || ''
       }))
     }
   },

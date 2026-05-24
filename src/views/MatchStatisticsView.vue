@@ -32,17 +32,6 @@ const selectedTab = ref(
 
 const tabOptions = ['IMP ONLY', 'TRADITIONAL']
 
-// Sync state to URL
-watch([selectedTab, isLocalReliability], ([newTab, newReliability]) => {
-  router.replace({
-    query: {
-      ...route.query,
-      tab: newTab === 'IMP ONLY' ? 'imp-only' : 'traditional',
-      reliability: String(newReliability)
-    }
-  })
-})
-
 const currentPerformance = computed(() => keyPerformances.value[currentPerformanceIndex.value] || null)
 
 const nextPerformance = () => {
@@ -79,11 +68,13 @@ const columns = computed(() => {
 
 const sortableColumns = ['min', 'plusMinus', 'pts', 'imp']
 
-onMounted(async () => {
+const fetchMatchData = async () => {
   isLoading.value = true
   try {
     const [details, performances] = await Promise.all([
-      api.getMatchDetails(route.params.id),
+      api.getMatchDetails(route.params.id, { 
+        reliability: isLocalReliability.value 
+      }),
       api.getKeyPerformances(route.params.id)
     ])
     
@@ -100,6 +91,22 @@ onMounted(async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+onMounted(fetchMatchData)
+
+// Re-fetch data when reliability changes
+watch(isLocalReliability, fetchMatchData)
+
+// Sync state to URL
+watch([selectedTab, isLocalReliability], ([newTab, newReliability]) => {
+  router.replace({
+    query: {
+      ...route.query,
+      tab: newTab === 'IMP ONLY' ? 'imp-only' : 'traditional',
+      reliability: String(newReliability)
+    }
+  })
 })
 </script>
 
