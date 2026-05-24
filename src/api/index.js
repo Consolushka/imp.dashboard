@@ -76,6 +76,19 @@ export const api = {
   },
 
   /**
+   * Поиск игр по тексту
+   */
+  async searchGames(text, limit = 5) {
+    if (!text || text.length < 2) return { data: [] }
+    const response = await client.get('/games/search', { 
+      params: { text, limit } 
+    })
+    return {
+      data: (response.data || []).map(g => new GameModel(g))
+    }
+  },
+
+  /**
    * Получить игры конкретного турнира (Recent Matches)
    */
   async getGamesByTournament(tournamentId, params) {
