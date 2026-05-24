@@ -244,7 +244,7 @@ watch([selectedTab, isLocalReliability], ([newTab, newReliability]) => {
     <!-- Stats Section: Home Team -->
     <section class="mb-jumbo">
       <div class="flex items-center gap-md mb-md">
-        <div class="h-8 w-2 bg-status-positive"></div>
+        <div class="h-8 w-2" :class="matchData.homeTeam.isWinner ? 'bg-status-positive' : 'bg-neutral-charcoal'"></div>
         <h2 class="font-h2 text-h2 uppercase">{{ matchData.homeTeam.name }} Statistics</h2>
       </div>
       <DataTable
@@ -267,7 +267,7 @@ watch([selectedTab, isLocalReliability], ([newTab, newReliability]) => {
     <!-- Stats Section: Away Team -->
     <section class="mb-jumbo">
       <div class="flex items-center gap-md mb-md">
-        <div class="h-8 w-2 bg-neutral-charcoal"></div>
+        <div class="h-8 w-2" :class="matchData.awayTeam.isWinner ? 'bg-status-positive' : 'bg-neutral-charcoal'"></div>
         <h2 class="font-h2 text-h2 uppercase">{{ matchData.awayTeam.name }} Statistics</h2>
       </div>
       <DataTable
