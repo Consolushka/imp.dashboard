@@ -4,7 +4,8 @@ import {
   RankedPlayerModel, 
   PlayerOfTheDayModel, 
   TournamentModel, 
-  LeagueModel 
+  LeagueModel,
+  TeamModel
 } from './models'
 
 export const api = {
