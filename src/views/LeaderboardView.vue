@@ -22,6 +22,7 @@ const gameMinMinutes = ref(route.query.minMins ? Number(route.query.minMins) : 2
 
 const isLoading = ref(false)
 const players = ref([])
+const teams = ref([])
 const totalPlayers = ref(482) // Mocked total
 const currentPage = ref(1)
 
@@ -37,14 +38,13 @@ const limitOptions = [
   { label: '25', value: 25 }
 ]
 
-const teamOptions = [
-  { label: 'ALL TEAMS', value: 'all' },
-  { label: 'CHICAGO', value: 'CHI' },
-  { label: 'HOUSTON', value: 'HOU' },
-  { label: 'PHOENIX', value: 'PHX' },
-  { label: 'GOLDEN STATE', value: 'GSW' },
-  { label: 'BOSTON', value: 'BOS' }
-]
+const teamOptions = computed(() => {
+  const options = [{ label: 'ALL TEAMS', value: 'all' }]
+  teams.value.forEach(team => {
+    options.push({ label: team.name, value: team.alias })
+  })
+  return options
+})
 
 const minMinutesOptions = [
   { label: '10 MINS', value: 10 },
@@ -54,6 +54,17 @@ const minMinutesOptions = [
 ]
 
 const totalPages = computed(() => Math.ceil(totalPlayers.value / resultsLimit.value))
+
+const fetchTeams = async () => {
+  if (!metricStore.selectedTournamentId) return
+  try {
+    const response = await api.getTeamsByTournament(metricStore.selectedTournamentId)
+    teams.value = response.data
+  } catch (error) {
+    console.error('Failed to fetch teams:', error)
+    teams.value = []
+  }
+}
 
 const fetchLeaderboardData = async () => {
   if (!metricStore.selectedTournamentId) {
@@ -87,6 +98,7 @@ onMounted(async () => {
     await metricStore.fetchTournaments()
   }
   
+  fetchTeams()
   fetchLeaderboardData()
 })
 
@@ -106,6 +118,13 @@ watch(
     })
   },
   { deep: true }
+)
+
+watch(
+  () => metricStore.selectedTournamentId,
+  () => {
+    fetchTeams()
+  }
 )
 
 watch(

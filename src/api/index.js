@@ -89,6 +89,16 @@ export const api = {
   },
 
   /**
+   * Получить список команд турнира
+   */
+  async getTeamsByTournament(tournamentId) {
+    const response = await client.get(`/tournaments/${tournamentId}/teams`)
+    return {
+      data: (response.data || []).map(t => new TeamModel(t))
+    }
+  },
+
+  /**
    * Получить игры конкретного турнира (Recent Matches)
    */
   async getGamesByTournament(tournamentId, params) {
