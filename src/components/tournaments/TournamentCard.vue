@@ -31,7 +31,7 @@ const getStatusColor = (status) => {
   <article class="bg-surface-white border-2 border-primary shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col">
     <div class="p-lg border-b-2 border-primary flex justify-between items-start bg-ghost-gray">
       <span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">grid_view</span>
-      <span class="font-label-caps text-xs px-2 py-1 bg-primary text-white">TIER {{ tournament.tier }}</span>
+      <span class="font-label-caps text-xs px-2 py-1 bg-primary text-white">TIER {{ tournament.tier ?? '?' }}</span>
     </div>
     
     <div class="p-lg flex-grow">

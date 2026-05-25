@@ -28,7 +28,7 @@ export class TournamentModel {
     this.endAt = data.end_at ? new Date(data.end_at) : null
     
     // Поля из Summary или дефолты
-    this.tier = data.tier || 1
+    this.tier = data.tier
     this.teamsCount = parseInt(data.teams_count) || 0
     this.topPlayer = data.best_player_full_name || 'N/A'
     this.matchesCount = parseInt(data.games_count) || 0
