@@ -131,7 +131,7 @@ watch([selectedTab, isLocalReliability], ([newTab, newReliability]) => {
       </div>
     </header>
 
-    <!-- Scoreboard & Key Performances -->
+    <!-- Scoreboard & Insights -->
     <section class="grid grid-cols-1 lg:grid-cols-12 gap-lg mb-jumbo">
       <div class="lg:col-span-8 bg-surface-white border-4 border-primary shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-lg relative overflow-hidden">
         <!-- Desktop Scoreboard (Horizontal) -->
@@ -193,8 +193,8 @@ watch([selectedTab, isLocalReliability], ([newTab, newReliability]) => {
         </div>
       </div>
 
-      <!-- Key Performances (Using slot for logic) -->
-      <DarkCard title="Key Performances" class="lg:col-span-4">
+      <!-- Insights (Using slot for logic) -->
+      <DarkCard title="Insights" class="lg:col-span-4">
         <template #header-actions>
           <button 
             @click="prevPerformance"
@@ -221,7 +221,7 @@ watch([selectedTab, isLocalReliability], ([newTab, newReliability]) => {
             <p v-if="currentPerformance" class="font-body-reg text-body-reg text-neutral-medium">
               {{ currentPerformance.description }}
             </p>
-            <p v-else class="text-neutral-medium italic text-center">No key performances available for this match.</p>
+            <p v-else class="text-neutral-medium italic text-center">No insights available for this match.</p>
           </div>
         </div>
 

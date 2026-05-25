@@ -159,7 +159,7 @@ export const api = {
    * Получить инсайты дня (Key Performances - Match level)
    */
   async getKeyPerformances(matchId) {
-    const response = await client.get(`/games/${matchId}/key-performances`)
+    const response = await client.get(`/games/${matchId}/insights`)
     return {
       data: (response.data || []).map(p => ({
         player: p.player_full_name,
