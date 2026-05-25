@@ -26,8 +26,25 @@ export const useMetricStore = defineStore('metric', () => {
   async function fetchTournaments() {
     isTournamentsLoading.value = true
     try {
-      const response = await api.getTournaments()
-      tournaments.value = response.data
+      // Загружаем основные данные (с regulation_duration) и саммари (с teams_count/games_count) параллельно
+      const [basicRes, summaryRes] = await Promise.all([
+        api.getTournaments(),
+        api.getTournamentsSummary()
+      ])
+
+      const basicMap = new Map(basicRes.data.map(t => [t.id, t]))
+      
+      // Мержим данные из basic в объекты из summary
+      tournaments.value = summaryRes.data.map(summaryTournament => {
+        const basic = basicMap.get(Number(summaryTournament.id))
+        if (basic) {
+          summaryTournament.regulationDuration = basic.regulationDuration
+          summaryTournament.startAt = basic.startAt
+          summaryTournament.endAt = basic.endAt
+          summaryTournament.leagueId = basic.leagueId
+        }
+        return summaryTournament
+      })
       
       // Проверяем, существует ли сохраненный ID в загруженном списке
       const exists = tournaments.value.some(t => t.id === selectedTournamentId.value)

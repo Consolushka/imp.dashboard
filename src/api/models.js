@@ -32,6 +32,7 @@ export class TournamentModel {
     this.teamsCount = parseInt(data.teams_count) || 0
     this.topPlayer = data.best_player_full_name || 'N/A'
     this.matchesCount = parseInt(data.games_count) || 0
+    this.regulationDuration = parseInt(data.regulation_duration) || 0
     this.nextUpdateAt = data.next_update_at ? new Date(data.next_update_at) : null
     this._status = data.status
   }

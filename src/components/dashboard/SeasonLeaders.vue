@@ -19,12 +19,31 @@ const isLoading = ref(true)
 const fetchLeaders = async () => {
   isLoading.value = true
   try {
-    const response = await api.getLeaderboard({
+    // Находим текущий турнир в сторе, чтобы получить его параметры (teams_count, regulation_duration и т.д.)
+    const tournament = metricStore.tournaments.find(t => t.id === props.tournamentId)
+    
+    const params = {
       tournament_id: props.tournamentId, 
-      per: 'fullGame', // Required by API
+      per: 'fullGame',
       use_reliability: metricStore.globalReliabilityOn,
-      limit: 5 // Default for dashboard
-    })
+      limit: 5
+    }
+
+    if (tournament) {
+      // 1. Лимит игр - половина потенциальных матчей для одной команды
+      // (кол-во матчей на кол-во команд) / 2
+      if (tournament.teamsCount > 0) {
+        const potentialMatchesPerTeam = tournament.matchesCount / tournament.teamsCount
+        params.min_games = Math.max(1, Math.floor(potentialMatchesPerTeam / 2))
+      }
+
+      // 2. avg_minutes >= половины regulation_duration
+      if (tournament.regulationDuration > 0) {
+        params.avg_minutes = Math.floor(tournament.regulationDuration / 2)
+      }
+    }
+
+    const response = await api.getLeaderboard(params)
     leaders.value = response.data
   } catch (error) {
     console.error('Failed to fetch season leaders:', error)
