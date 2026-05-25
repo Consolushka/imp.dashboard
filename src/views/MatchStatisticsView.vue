@@ -212,15 +212,17 @@ watch([selectedTab, isLocalReliability], ([newTab, newReliability]) => {
           </button>
         </template>
         
-        <div class="space-y-sm mt-md">
-          <div v-if="currentPerformance" class="flex items-center justify-between gap-md">
+        <div class="space-y-sm mt-md h-[200px] flex flex-col">
+          <div v-if="currentPerformance" class="flex items-center justify-between gap-md shrink-0">
             <span class="font-h3 text-h3 uppercase tracking-tighter">{{ currentPerformance.player }}</span>
             <span class="bg-secondary-container text-white px-sm font-data-mono">{{ currentPerformance.imp }}</span>
           </div>
-          <p v-if="currentPerformance" class="font-body-reg text-body-reg text-neutral-medium">
-            {{ currentPerformance.description }}
-          </p>
-          <p v-else class="text-neutral-medium italic text-center">No key performances available for this match.</p>
+          <div class="flex-grow overflow-y-auto pr-2 custom-scrollbar">
+            <p v-if="currentPerformance" class="font-body-reg text-body-reg text-neutral-medium">
+              {{ currentPerformance.description }}
+            </p>
+            <p v-else class="text-neutral-medium italic text-center">No key performances available for this match.</p>
+          </div>
         </div>
 
         <template #footer>
