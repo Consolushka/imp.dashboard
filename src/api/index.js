@@ -129,7 +129,8 @@ export const api = {
   async getLeaderboard(params) {
     const response = await client.get('/leaderboard', { params })
     return {
-      data: (response.data || []).map(p => new RankedPlayerModel(p))
+      data: (response.data || []).map(p => new RankedPlayerModel(p)),
+      meta: response.meta
     }
   },
 

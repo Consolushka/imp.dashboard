@@ -19,11 +19,12 @@ const performanceOrder = ref(route.query.order || 'desc') // API expects 'asc' o
 const resultsLimit = ref(route.query.limit ? Number(route.query.limit) : 10)
 const selectedTeam = ref(route.query.team || 'all')
 const gameMinMinutes = ref(route.query.minMins ? Number(route.query.minMins) : 20)
+const minGames = ref(route.query.minGames ? Number(route.query.minGames) : 1)
 
 const isLoading = ref(false)
 const players = ref([])
 const teams = ref([])
-const totalPlayers = ref(482) // Mocked total
+const totalPlayers = ref(0)
 const currentPage = ref(1)
 
 const performanceOptions = [
@@ -41,7 +42,7 @@ const limitOptions = [
 const teamOptions = computed(() => {
   const options = [{ label: 'ALL TEAMS', value: 'all' }]
   teams.value.forEach(team => {
-    options.push({ label: team.name, value: team.alias })
+    options.push({ label: team.name, value: team.id })
   })
   return options
 })
@@ -51,6 +52,14 @@ const minMinutesOptions = [
   { label: '15 MINS', value: 15 },
   { label: '20 MINS', value: 20 },
   { label: '25 MINS', value: 25 }
+]
+
+const minGamesOptions = [
+  { label: '1 GAME', value: 1 },
+  { label: '5 GAMES', value: 5 },
+  { label: '10 GAMES', value: 10 },
+  { label: '15 GAMES', value: 15 },
+  { label: '20 GAMES', value: 20 }
 ]
 
 const totalPages = computed(() => Math.ceil(totalPlayers.value / resultsLimit.value))
@@ -68,11 +77,9 @@ const fetchTeams = async () => {
 
 const fetchLeaderboardData = async () => {
   if (!metricStore.selectedTournamentId) {
-    console.log('Leaderboard: No tournament selected, skipping fetch')
     return
   }
   
-  console.log('Leaderboard: Fetching data for tournament', metricStore.selectedTournamentId)
   isLoading.value = true
   try {
     const response = await api.getLeaderboard({
@@ -81,14 +88,17 @@ const fetchLeaderboardData = async () => {
       limit: resultsLimit.value,
       page: currentPage.value,
       order: performanceOrder.value,
+      team_id: selectedTeam.value === 'all' ? undefined : selectedTeam.value,
+      avg_minutes: avgMinutesRange.value,
+      min_minutes: gameMinMinutes.value,
+      min_games: minGames.value,
       use_reliability: metricStore.globalReliabilityOn
     })
-    console.log('Leaderboard: Data received', response.data)
     players.value = response.data
+    totalPlayers.value = response.meta?.total || response.data.length
   } catch (error) {
     console.error('Failed to fetch leaderboard:', error)
   } finally {
-    console.log('Leaderboard: Fetch finished, setting isLoading to false')
     isLoading.value = false
   }
 }
@@ -103,9 +113,11 @@ onMounted(async () => {
 })
 
 watch(
-  [avgMinutesRange, performanceOrder, resultsLimit, selectedTeam, gameMinMinutes],
-  ([avgMins, order, limit, team, minMins]) => {
+  [avgMinutesRange, performanceOrder, resultsLimit, selectedTeam, gameMinMinutes, minGames],
+  ([avgMins, order, limit, team, minMins, mGames]) => {
+    const wasPageOne = currentPage.value === 1
     currentPage.value = 1 // Reset page on filter change
+    
     router.replace({
       query: {
         ...route.query,
@@ -114,8 +126,15 @@ watch(
         limit: limit === 10 ? undefined : limit,
         team: team === 'all' ? undefined : team,
         minMins: minMins === 20 ? undefined : minMins,
+        minGames: mGames === 1 ? undefined : mGames
       }
     })
+
+    // If we were already on page 1, the watch on currentPage won't fire,
+    // so we need to trigger fetch manually.
+    if (wasPageOne) {
+      fetchLeaderboardData()
+    }
   },
   { deep: true }
 )
@@ -153,45 +172,52 @@ watch(
     </header>
 
     <!-- Controls Grid -->
-    <section class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-md items-end">
-      <!-- Avg Minutes Range -->
-      <RangeSlider 
-        v-model="avgMinutesRange" 
-        :min="0" 
-        :max="48" 
-        label="Avg Minutes Range"
-      />
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-xl">
+      <!-- Group 1: Thresholds -->
+      <div class="space-y-md">
+        <RangeSlider 
+          v-model="avgMinutesRange" 
+          :min="0" 
+          :max="48" 
+          label="Avg Minutes Range"
+        />
+        <SecondarySelector 
+          v-model="minGames"
+          :options="minGamesOptions"
+          label="Min Games Played"
+        />
+      </div>
 
-      <!-- Direction Toggle -->
-      <SegmentedControl 
-        v-model="performanceOrder"
-        :options="performanceOptions"
-        label="Order"
-        activeColorClass="bg-secondary text-white"
-      />
+      <!-- Group 2: Context -->
+      <div class="space-y-md">
+        <SecondarySelector 
+          v-model="selectedTeam"
+          :options="teamOptions"
+          label="Team Selection"
+          icon="filter_list"
+        />
+        <SecondarySelector 
+          v-model="gameMinMinutes"
+          :options="minMinutesOptions"
+          label="Game Min. Mins"
+        />
+      </div>
 
-      <!-- Player Count Selector -->
-      <SegmentedControl 
-        v-model="resultsLimit"
-        :options="limitOptions"
-        label="Show Results"
-        activeColorClass="bg-secondary text-white"
-      />
-
-      <!-- Team Selection -->
-      <SecondarySelector 
-        v-model="selectedTeam"
-        :options="teamOptions"
-        label="Team Selection"
-        icon="filter_list"
-      />
-
-      <!-- Single Game Min -->
-      <SecondarySelector 
-        v-model="gameMinMinutes"
-        :options="minMinutesOptions"
-        label="Game Min. Mins"
-      />
+      <!-- Group 3: Sorting & Display -->
+      <div class="space-y-md flex flex-col justify-between">
+        <SegmentedControl 
+          v-model="performanceOrder"
+          :options="performanceOptions"
+          label="Performance Order"
+          activeColorClass="bg-secondary text-white"
+        />
+        <SegmentedControl 
+          v-model="resultsLimit"
+          :options="limitOptions"
+          label="Show Results"
+          activeColorClass="bg-secondary text-white"
+        />
+      </div>
     </section>
 
     <!-- Main Content: Data Table -->
