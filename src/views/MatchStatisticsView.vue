@@ -95,8 +95,8 @@ const fetchMatchData = async () => {
 
 onMounted(fetchMatchData)
 
-// Re-fetch data when reliability changes
-watch(isLocalReliability, fetchMatchData)
+// Re-fetch data when reliability changes or when navigating to a different match
+watch([isLocalReliability, () => route.params.id], fetchMatchData)
 
 // Sync state to URL
 watch([selectedTab, isLocalReliability], ([newTab, newReliability]) => {

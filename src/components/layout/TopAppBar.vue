@@ -46,16 +46,15 @@ watch(searchQuery, (newVal) => {
 })
 
 const selectGame = (gameId) => {
+  console.log('Search: Selecting game', gameId)
   searchQuery.value = ''
   showResults.value = false
   router.push({ name: 'match-statistics', params: { id: gameId } })
 }
 
 const closeResults = () => {
-  // Delay closing to allow click event to register
-  setTimeout(() => {
-    showResults.value = false
-  }, 200)
+  console.log('Search: Blur triggered')
+  showResults.value = false
 }
 
 onUnmounted(() => {
@@ -99,6 +98,7 @@ onUnmounted(() => {
             <div 
               v-for="game in searchResults" 
               :key="game.id"
+              @mousedown.prevent
               @click="selectGame(game.id)"
               class="p-3 border-b-2 border-ghost-gray hover:bg-secondary-container hover:text-white cursor-pointer transition-colors group"
             >
