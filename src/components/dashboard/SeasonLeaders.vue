@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { api } from '../../api/index'
 import { useMetricStore } from '../../store/metricStore'
 
@@ -10,6 +11,7 @@ const props = defineProps({
   }
 })
 
+const router = useRouter()
 const metricStore = useMetricStore()
 const leaders = ref([])
 const isLoading = ref(true)
@@ -29,6 +31,10 @@ const fetchLeaders = async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+const goToLeaderboard = () => {
+  router.push({ name: 'leaderboard' })
 }
 
 onMounted(fetchLeaders)
@@ -63,7 +69,10 @@ watch([() => props.tournamentId, () => metricStore.globalReliabilityOn], fetchLe
         </span>
       </div>
       
-      <button class="w-full bg-transparent border-2 border-border-dark text-primary font-label-caps text-label-caps py-2 mt-2 hover:bg-primary hover:text-white transition-colors uppercase hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+      <button 
+        @click="goToLeaderboard"
+        class="w-full bg-transparent border-2 border-border-dark text-primary font-label-caps text-label-caps py-2 mt-2 hover:bg-primary hover:text-white transition-colors uppercase hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+      >
         FULL RANKINGS
       </button>
     </div>
