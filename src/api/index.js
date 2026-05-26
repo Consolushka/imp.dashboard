@@ -147,9 +147,9 @@ export const api = {
   /**
    * Получить инсайты дня (Tournament level)
    */
-  async getDailyInsight(tournamentId) {
+  async getDailyInsight(tournamentId, params) {
     try {
-      const response = await client.get(`/tournaments/${tournamentId}/daily-insights`)
+      const response = await client.get(`/tournaments/${tournamentId}/daily-insights`, { params })
       const rawData = response.data || response || []
       
       const data = Array.isArray(rawData) 

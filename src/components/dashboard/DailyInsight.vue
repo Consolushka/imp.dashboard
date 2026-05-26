@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { api } from '../../api/index'
+import { useMetricStore } from '../../store/metricStore'
 import CardImportant from '../ui/CardImportant.vue'
 
 const props = defineProps({
@@ -10,13 +11,17 @@ const props = defineProps({
   }
 })
 
+const metricStore = useMetricStore()
 const insights = ref([])
 const isLoading = ref(true)
 
 const fetchInsights = async () => {
   isLoading.value = true
   try {
-    const response = await api.getDailyInsight(props.tournamentId)
+    const response = await api.getDailyInsight(
+      props.tournamentId,
+      { use_reliability: metricStore.globalReliabilityOn }
+    )
     insights.value = Array.isArray(response.data) ? response.data : [response.data]
   } catch (error) {
     console.error('Failed to fetch daily insights:', error)
@@ -26,7 +31,7 @@ const fetchInsights = async () => {
 }
 
 onMounted(fetchInsights)
-watch(() => props.tournamentId, fetchInsights)
+watch([() => props.tournamentId, () => metricStore.globalReliabilityOn], fetchInsights)
 </script>
 
 <template>
