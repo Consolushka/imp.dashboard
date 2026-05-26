@@ -149,8 +149,18 @@ export const api = {
    */
   async getDailyInsight(tournamentId) {
     try {
-      const response = await client.get(`/tournaments/${tournamentId}/insights`)
-      return response
+      const response = await client.get(`/tournaments/${tournamentId}/daily-insights`)
+      const rawData = response.data || response || []
+      
+      const data = Array.isArray(rawData) 
+        ? rawData.map(item => {
+            if (typeof item === 'object' && item.text) {
+              return item.text
+            }
+            return item
+          })
+        : []
+      return { data }
     } catch (e) {
       return { data: ["Statistical analysis for this tournament is being updated."] }
     }
