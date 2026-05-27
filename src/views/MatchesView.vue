@@ -87,6 +87,18 @@ watch(() => route.query.tournament, (newVal) => {
         />
       </div>
 
+      <!-- Load More Button -->
+      <div v-if="matchStore.hasMoreMatches" class="flex justify-center mt-xl">
+        <button 
+          @click="matchStore.fetchMoreMatches"
+          :disabled="matchStore.isLoadMoreLoading"
+          class="px-jumbo py-md bg-white border-4 border-primary shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] font-h3 text-h3 uppercase hover:translate-x-[-4px] hover:translate-y-[-4px] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0 active:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-4"
+        >
+          <span v-if="matchStore.isLoadMoreLoading" class="w-6 h-6 border-4 border-primary border-t-secondary-container rounded-full animate-spin"></span>
+          {{ matchStore.isLoadMoreLoading ? 'SYNCING...' : 'LOAD MORE FIXTURES' }}
+        </button>
+      </div>
+
       <!-- Empty State -->
       <div v-else class="flex flex-col items-center justify-center min-h-[300px] border-2 border-dashed border-border-dark bg-ghost-gray">
         <span class="material-symbols-outlined text-6xl text-neutral-medium mb-4">sports_basketball</span>
