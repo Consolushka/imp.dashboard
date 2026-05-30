@@ -10,6 +10,48 @@
     }
   ],
   "paths": {
+    "/webhooks/aggregator/game-imported": {
+      "post": {
+        "operationId": "aggregatorWebhook.gameImported",
+        "tags": [
+          "AggregatorWebhook"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AggregatorWebhookRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "const": "Accepted"
+                    }
+                  },
+                  "required": [
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      }
+    },
     "/games/{id}/stats": {
       "get": {
         "operationId": "games.stats.index",
@@ -44,6 +86,95 @@
                           "type": "null"
                         }
                       ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/games/search": {
+      "get": {
+        "operationId": "games.search",
+        "tags": [
+          "Games"
+        ],
+        "parameters": [
+          {
+            "name": "text",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/games/{id}/insights": {
+      "get": {
+        "operationId": "games.insights",
+        "tags": [
+          "Games"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of `PlayerKeyPerformanceResource`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PlayerKeyPerformanceResource"
+                      }
                     }
                   },
                   "required": [
@@ -92,11 +223,140 @@
         ],
         "responses": {
           "200": {
-            "description": "`LengthAwarePaginator`",
+            "description": "Paginated set of `GameResource`",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LengthAwarePaginator"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/GameResource"
+                      }
+                    },
+                    "links": {
+                      "type": "object",
+                      "properties": {
+                        "first": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "last": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "prev": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "next": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "first",
+                        "last",
+                        "prev",
+                        "next"
+                      ]
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "current_page": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "from": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "minimum": 1
+                        },
+                        "last_page": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "links": {
+                          "type": "array",
+                          "description": "Generated paginator links.",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "url": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "active": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "url",
+                              "label",
+                              "active"
+                            ]
+                          }
+                        },
+                        "path": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "description": "Base path for paginator generated URLs."
+                        },
+                        "per_page": {
+                          "type": "integer",
+                          "description": "Number of items shown per page.",
+                          "minimum": 0
+                        },
+                        "to": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "description": "Number of the last item in the slice.",
+                          "minimum": 1
+                        },
+                        "total": {
+                          "type": "integer",
+                          "description": "Total number of items being paginated.",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "current_page",
+                        "from",
+                        "last_page",
+                        "links",
+                        "path",
+                        "per_page",
+                        "to",
+                        "total"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "links",
+                    "meta"
+                  ]
                 }
               }
             }
@@ -122,25 +382,33 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "per",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reliability",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": true
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "`GameResource`",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "data": {
-                      "anyOf": [
-                        {
-                          "$ref": "#/components/schemas/Game"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
+                      "$ref": "#/components/schemas/GameResource"
                     }
                   },
                   "required": [
@@ -345,7 +613,7 @@
             }
           },
           {
-            "name": "max_minutes",
+            "name": "avg_minutes",
             "in": "query",
             "schema": {
               "type": "integer",
@@ -362,7 +630,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "Array of `RankedPlayerResource`",
             "content": {
               "application/json": {
                 "schema": {
@@ -377,24 +645,6 @@
                   },
                   "required": [
                     "data"
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
                   ]
                 }
               }
@@ -504,6 +754,37 @@
         }
       }
     },
+    "/leagues/summary": {
+      "get": {
+        "operationId": "leagues.summary",
+        "tags": [
+          "Leagues"
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of `LeagueSummaryResource`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LeagueSummaryResource"
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/leagues": {
       "get": {
         "operationId": "leagues.index",
@@ -513,7 +794,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "Array of `LeagueResource`",
             "content": {
               "application/json": {
                 "schema": {
@@ -522,7 +803,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/League"
+                        "$ref": "#/components/schemas/LeagueResource"
                       }
                     }
                   },
@@ -554,7 +835,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
+            "description": "Array of `PlayersRecentImpResource`",
             "content": {
               "application/json": {
                 "schema": {
@@ -565,22 +846,10 @@
                       "items": {
                         "$ref": "#/components/schemas/PlayersRecentImpResource"
                       }
-                    },
-                    "meta": {
-                      "type": "object",
-                      "properties": {
-                        "per": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "per"
-                      ]
                     }
                   },
                   "required": [
-                    "data",
-                    "meta"
+                    "data"
                   ]
                 }
               }
@@ -588,6 +857,34 @@
           },
           "422": {
             "$ref": "#/components/responses/ValidationException"
+          }
+        }
+      }
+    },
+    "/summary": {
+      "get": {
+        "operationId": "summary.index",
+        "tags": [
+          "Summary"
+        ],
+        "responses": {
+          "200": {
+            "description": "`SummaryResource`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/SummaryResource"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -635,11 +932,22 @@
         ],
         "responses": {
           "200": {
-            "description": "`LengthAwarePaginator`",
+            "description": "Array of `GameResource`",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LengthAwarePaginator"
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/GameResource"
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
                 }
               }
             }
@@ -668,7 +976,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
+            "description": "Array of `TeamResource`",
             "content": {
               "application/json": {
                 "schema": {
@@ -677,13 +985,194 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/Team"
+                        "$ref": "#/components/schemas/TeamResource"
                       }
                     }
                   },
                   "required": [
                     "data"
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tournaments/summary": {
+      "get": {
+        "operationId": "tournaments.summary",
+        "tags": [
+          "Tournaments"
+        ],
+        "parameters": [
+          {
+            "name": "league_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of `TournamentSummaryResource`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TournamentSummaryResource"
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tournaments/{id}/weekly-leaders": {
+      "get": {
+        "operationId": "tournaments.weeklyLeaders",
+        "tags": [
+          "Tournaments"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tournaments/{id}/players-of-the-day": {
+      "get": {
+        "operationId": "tournaments.playersOfTheDay",
+        "tags": [
+          "Tournaments"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "use_reliability",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": true
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of `PlayerOfTheDayResource`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PlayerOfTheDayResource"
+                      }
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tournaments/{id}/daily-insights": {
+      "get": {
+        "operationId": "tournaments.dailyInsights",
+        "tags": [
+          "Tournaments"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -769,6 +1258,18 @@
   },
   "components": {
     "schemas": {
+      "AggregatorWebhookRequest": {
+        "type": "object",
+        "properties": {
+          "tournament_id": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tournament_id"
+        ],
+        "title": "AggregatorWebhookRequest"
+      },
       "Game": {
         "type": "object",
         "properties": {
@@ -810,6 +1311,181 @@
           "duration"
         ],
         "title": "Game"
+      },
+      "GameResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "scheduled_at": {
+            "type": "string"
+          },
+          "tournament_id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "duration": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "game_team_stats": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GameTeamStatResource"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "scheduled_at",
+          "tournament_id",
+          "title",
+          "duration",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "GameResource"
+      },
+      "GameTeamPlayerStatResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "game_id": {
+            "type": "integer"
+          },
+          "team_id": {
+            "type": "integer"
+          },
+          "player_id": {
+            "type": "integer"
+          },
+          "plus_minus": {
+            "type": "integer"
+          },
+          "played_seconds": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "points": {
+            "type": "integer"
+          },
+          "assists": {
+            "type": "integer"
+          },
+          "rebounds": {
+            "type": "integer"
+          },
+          "steals": {
+            "type": "integer"
+          },
+          "blocks": {
+            "type": "integer"
+          },
+          "field_goals_percentage": {
+            "type": "string"
+          },
+          "turnovers": {
+            "type": "integer"
+          },
+          "imp": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "player": {
+            "$ref": "#/components/schemas/PlayerResource"
+          }
+        },
+        "required": [
+          "id",
+          "game_id",
+          "team_id",
+          "player_id",
+          "plus_minus",
+          "played_seconds",
+          "points",
+          "assists",
+          "rebounds",
+          "steals",
+          "blocks",
+          "field_goals_percentage",
+          "turnovers",
+          "imp",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "GameTeamPlayerStatResource"
+      },
+      "GameTeamStatResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "game_id": {
+            "type": "integer"
+          },
+          "team_id": {
+            "type": "integer"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "final_differential": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "team": {
+            "$ref": "#/components/schemas/TeamResource"
+          },
+          "playerStats": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GameTeamPlayerStatResource"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "game_id",
+          "team_id",
+          "score",
+          "final_differential",
+          "created_at",
+          "updated_at",
+          "playerStats"
+        ],
+        "title": "GameTeamStatResource"
       },
       "ImpCalculateRawRequest": {
         "type": "object",
@@ -853,7 +1529,7 @@
         ],
         "title": "ImpCalculateRawRequest"
       },
-      "League": {
+      "LeagueResource": {
         "type": "object",
         "properties": {
           "id": {
@@ -865,100 +1541,149 @@
           "alias": {
             "type": "string"
           },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          },
           "order": {
             "type": "integer"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
           }
         },
         "required": [
           "id",
           "name",
           "alias",
+          "order",
           "created_at",
-          "updated_at",
-          "order"
+          "updated_at"
         ],
-        "title": "League"
+        "title": "LeagueResource"
       },
-      "LengthAwarePaginator": {
+      "LeagueSummaryResource": {
         "type": "object",
         "properties": {
-          "current_page": {
-            "type": "integer"
-          },
-          "data": {
+          "id": {
             "type": "string"
           },
-          "first_page_url": {
+          "name": {
             "type": "string"
           },
-          "from": {
-            "type": [
-              "integer",
-              "null"
-            ]
-          },
-          "last_page": {
-            "type": "integer"
-          },
-          "last_page_url": {
+          "alias": {
             "type": "string"
           },
-          "links": {
-            "type": "object",
-            "additionalProperties": {}
-          },
-          "next_page_url": {
+          "tier": {
             "type": "string"
           },
-          "path": {
-            "type": [
-              "string",
-              "null"
-            ]
+          "tournaments_count": {
+            "type": "string"
           },
-          "per_page": {
-            "type": "integer"
-          },
-          "prev_page_url": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "to": {
-            "type": [
-              "integer",
-              "null"
-            ]
-          },
-          "total": {
-            "type": "integer"
+          "games_count": {
+            "type": "string"
           }
         },
         "required": [
-          "current_page",
-          "data",
-          "first_page_url",
-          "from",
-          "last_page",
-          "last_page_url",
-          "links",
-          "next_page_url",
-          "path",
-          "per_page",
-          "prev_page_url",
-          "to",
-          "total"
+          "id",
+          "name",
+          "alias",
+          "tier",
+          "tournaments_count",
+          "games_count"
         ],
-        "title": "LengthAwarePaginator"
+        "title": "LeagueSummaryResource"
+      },
+      "PlayerKeyPerformanceResource": {
+        "type": "object",
+        "properties": {
+          "player_id": {
+            "type": "string"
+          },
+          "player_full_name": {
+            "type": "string"
+          },
+          "team_id": {
+            "type": "string"
+          },
+          "narrative": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "player_id",
+          "player_full_name",
+          "team_id",
+          "narrative"
+        ],
+        "title": "PlayerKeyPerformanceResource"
+      },
+      "PlayerOfTheDayResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "team_alias": {
+            "type": "string"
+          },
+          "played_minutes": {
+            "type": "number"
+          },
+          "pts": {
+            "type": "integer"
+          },
+          "reb": {
+            "type": "integer"
+          },
+          "ast": {
+            "type": "integer"
+          },
+          "imp": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "full_name",
+          "team_alias",
+          "played_minutes",
+          "pts",
+          "reb",
+          "ast",
+          "imp"
+        ],
+        "title": "PlayerOfTheDayResource"
+      },
+      "PlayerResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "birth_date_at": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "full_name",
+          "birth_date_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PlayerResource"
       },
       "PlayersRecentImpGameResource": {
         "type": "object",
@@ -1054,41 +1779,56 @@
             "type": "integer"
           },
           "player": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer"
-              },
-              "full_name": {
-                "type": "string"
-              },
-              "birth_date_at": {
-                "type": "string",
-                "format": "date-time"
-              }
-            },
-            "required": [
-              "id",
-              "full_name",
-              "birth_date_at"
-            ]
+            "$ref": "#/components/schemas/PlayerResource"
+          },
+          "team_alias": {
+            "type": "string"
           },
           "games_count": {
             "type": "integer"
           },
           "avg_imp": {
             "type": "number"
+          },
+          "avg_minutes": {
+            "type": "number"
           }
         },
         "required": [
           "position",
           "player",
+          "team_alias",
           "games_count",
-          "avg_imp"
+          "avg_imp",
+          "avg_minutes"
         ],
         "title": "RankedPlayerResource"
       },
-      "Team": {
+      "SummaryResource": {
+        "type": "object",
+        "properties": {
+          "totalDataPoints": {
+            "type": "string"
+          },
+          "activeLeagues": {
+            "type": "string"
+          },
+          "trackedPlayers": {
+            "type": "string"
+          },
+          "totalMatches": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "totalDataPoints",
+          "activeLeagues",
+          "trackedPlayers",
+          "totalMatches"
+        ],
+        "title": "SummaryResource"
+      },
+      "TeamResource": {
         "type": "object",
         "properties": {
           "id": {
@@ -1097,26 +1837,28 @@
           "name": {
             "type": "string"
           },
+          "alias": {
+            "type": "string"
+          },
           "home_town": {
             "type": "string"
           },
           "created_at": {
-            "type": "string",
-            "format": "date-time"
+            "type": "string"
           },
           "updated_at": {
-            "type": "string",
-            "format": "date-time"
+            "type": "string"
           }
         },
         "required": [
           "id",
           "name",
+          "alias",
           "home_town",
           "created_at",
           "updated_at"
         ],
-        "title": "Team"
+        "title": "TeamResource"
       },
       "TournamentResource": {
         "type": "object",
@@ -1129,6 +1871,12 @@
           },
           "name": {
             "type": "string"
+          },
+          "tier": {
+            "type": [
+              "integer",
+              "null"
+            ]
           },
           "start_at": {
             "type": "string"
@@ -1153,6 +1901,7 @@
           "id",
           "league_id",
           "name",
+          "tier",
           "start_at",
           "end_at",
           "regulation_duration",
@@ -1160,28 +1909,71 @@
           "updated_at"
         ],
         "title": "TournamentResource"
+      },
+      "TournamentSummaryResource": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "games_count": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer",
+                "enum": [
+                  0
+                ]
+              }
+            ]
+          },
+          "teams_count": {
+            "type": "integer"
+          },
+          "best_player_full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "John Doe"
+                ]
+              }
+            ]
+          },
+          "next_update_at": {
+            "type": "string",
+            "description": "Placeholder"
+          },
+          "status": {
+            "type": "string",
+            "const": "completed"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "tier",
+          "games_count",
+          "teams_count",
+          "best_player_full_name",
+          "next_update_at",
+          "status"
+        ],
+        "title": "TournamentSummaryResource"
       }
     },
     "responses": {
-      "ModelNotFoundException": {
-        "description": "Not found",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "message": {
-                  "type": "string",
-                  "description": "Error overview."
-                }
-              },
-              "required": [
-                "message"
-              ]
-            }
-          }
-        }
-      },
       "ValidationException": {
         "description": "Validation error",
         "content": {
@@ -1207,6 +1999,25 @@
               "required": [
                 "message",
                 "errors"
+              ]
+            }
+          }
+        }
+      },
+      "ModelNotFoundException": {
+        "description": "Not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "description": "Error overview."
+                }
+              },
+              "required": [
+                "message"
               ]
             }
           }

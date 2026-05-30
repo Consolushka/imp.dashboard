@@ -13,7 +13,7 @@ const router = useRouter()
 const viewTournaments = () => {
   router.push({ 
     name: 'tournaments', 
-    query: { leagues: props.league.id } 
+    query: { league: props.league.id } 
   })
 }
 </script>
@@ -52,7 +52,7 @@ const viewTournaments = () => {
       @click="viewTournaments"
       class="w-full bg-secondary-container text-white py-2 font-label-caps border-2 border-border-dark active:translate-y-1 active:shadow-none transition-all text-xs uppercase cursor-pointer hover:bg-secondary"
     >
-      VIEW MATCHES
+      VIEW TOURNAMENTS
     </button>
   </div>
 </template>

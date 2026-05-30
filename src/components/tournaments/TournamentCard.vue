@@ -13,7 +13,7 @@ const router = useRouter()
 const viewMatches = () => {
   router.push({ 
     name: 'matches', 
-    query: { tournaments: props.tournament.id } 
+    query: { tournament: props.tournament.id } 
   })
 }
 

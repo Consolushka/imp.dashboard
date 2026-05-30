@@ -13,10 +13,9 @@ const route = useRoute()
 const router = useRouter()
 
 onMounted(async () => {
-  // Загружаем турниры (только список для селектора), если их еще нет
-  if (tournamentStore.tournaments.length === 0) {
-    await tournamentStore.fetchTournaments()
-  }
+  // Всегда загружаем ПОЛНЫЙ список турниров для селектора,
+  // сбрасывая возможные фильтры по лиге, оставшиеся от других страниц
+  await tournamentStore.fetchTournaments()
   
   // Инициализируем фильтр из URL
   initializeFilters()
