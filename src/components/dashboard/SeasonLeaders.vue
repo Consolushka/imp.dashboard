@@ -56,8 +56,15 @@ const goToLeaderboard = () => {
   router.push({ name: 'leaderboard' })
 }
 
-onMounted(fetchLeaders)
-watch([() => props.tournamentId, () => metricStore.globalReliabilityOn], fetchLeaders)
+watch(
+  [() => props.tournamentId, () => metricStore.globalReliabilityOn, () => metricStore.isTournamentsLoading], 
+  ([tId, rel, loading]) => {
+    if (!loading && tId) {
+      fetchLeaders()
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

@@ -43,6 +43,10 @@ watch([() => props.tournamentId, () => metricStore.globalReliabilityOn], fetchPl
       <div v-for="i in 4" :key="i" class="h-12 bg-ghost-gray animate-pulse border-b border-border-light"></div>
     </div>
     
+    <div v-else-if="players.length === 0" class="p-xl text-center">
+      <p class="font-body-reg text-secondary italic">No matches were played today, so there are no heroes yet. Check back tomorrow!</p>
+    </div>
+    
     <div v-else class="overflow-x-auto w-full">
       <table class="w-full text-left border-collapse">
         <thead>

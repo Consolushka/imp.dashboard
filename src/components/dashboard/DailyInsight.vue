@@ -46,5 +46,6 @@ watch([() => props.tournamentId, () => metricStore.globalReliabilityOn], fetchIn
     title="Daily Insight" 
     :items="insights" 
     icon="insights"
+    empty-message="Sorry, we'd love to give you some food for thought, but there were no matches today."
   />
 </template>

@@ -14,6 +14,10 @@ const props = defineProps({
   icon: {
     type: String,
     default: 'insights'
+  },
+  emptyMessage: {
+    type: String,
+    default: 'No items available'
   }
 })
 
@@ -62,7 +66,7 @@ const prevItem = () => {
         <p v-if="items.length > 0" class="font-body-reg text-body-reg transition-all duration-300">
           {{ items[currentIndex] }}
         </p>
-        <p v-else class="italic opacity-50">No items available</p>
+        <p v-else class="italic opacity-50">{{ emptyMessage }}</p>
       </div>
 
       <!-- Pagination Indicator -->

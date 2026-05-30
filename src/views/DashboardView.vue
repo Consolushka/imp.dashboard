@@ -49,7 +49,7 @@ onMounted(() => {
     </div>
 
     <!-- Dashboard Grid -->
-    <div v-if="metricStore.selectedTournamentId" class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+    <div v-if="!metricStore.isTournamentsLoading && metricStore.selectedTournamentId" class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
       <!-- Left Column (Wider) -->
       <div class="lg:col-span-2 flex flex-col gap-lg">
         <RecentMatches :tournamentId="metricStore.selectedTournamentId" />
