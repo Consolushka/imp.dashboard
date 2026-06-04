@@ -1,10 +1,12 @@
 import axios from 'axios'
 
+const apiHost = import.meta.env.VITE_API_HOST || 'http://localhost'
+
 /**
  * Создаем экземпляр axios для работы с Laravel API
  */
 const client = axios.create({
-  baseURL: 'http://localhost/api',
+  baseURL: `${apiHost}/api`,
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json'
