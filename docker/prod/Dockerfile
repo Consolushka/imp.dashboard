@@ -3,6 +3,10 @@ FROM node:20-alpine AS build-stage
 
 WORKDIR /app
 
+# Add build-time environment variables
+ARG VITE_API_HOST
+ENV VITE_API_HOST=$VITE_API_HOST
+
 # Install dependencies
 COPY package*.json ./
 RUN npm install
