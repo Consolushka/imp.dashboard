@@ -30,8 +30,9 @@ const initializeFilters = () => {
   if (route.query.tournament) {
     matchStore.selectedTournament = Number(route.query.tournament)
   } else if (tournamentStore.tournaments.length > 0) {
-    // По умолчанию выбран первый турнир
-    matchStore.selectedTournament = tournamentStore.tournaments[0].id
+    // Выбираем турнир с лучшим тиром (наименьшее число)
+    const bestTournament = [...tournamentStore.tournaments].sort((a, b) => (a.tier || 99) - (b.tier || 99))[0]
+    matchStore.selectedTournament = bestTournament.id
   }
 }
 

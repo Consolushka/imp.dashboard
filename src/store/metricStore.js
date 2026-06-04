@@ -49,7 +49,9 @@ export const useMetricStore = defineStore('metric', () => {
       // Проверяем, существует ли сохраненный ID в загруженном списке
       const exists = tournaments.value.some(t => t.id === selectedTournamentId.value)
       if (!exists && tournaments.value.length > 0) {
-        selectedTournamentId.value = tournaments.value[0].id
+        // Выбираем турнир с лучшим тиром (наименьшее число)
+        const bestTournament = [...tournaments.value].sort((a, b) => (a.tier || 99) - (b.tier || 99))[0]
+        selectedTournamentId.value = bestTournament.id
       }
     } catch (error) {
       console.error('Failed to fetch tournaments:', error)
