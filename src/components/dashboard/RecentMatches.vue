@@ -69,16 +69,16 @@ watch(() => props.tournamentId, fetchGames)
         
         <!-- Desktop Layout (sm and up) -->
         <div class="hidden sm:flex justify-between items-center">
-          <!-- Away Team -->
+          <!-- Home Team -->
           <div class="flex items-center gap-3 w-1/3">
             <div class="w-10 h-10 bg-primary-fixed rounded-full border border-border-dark flex items-center justify-center">
               <span class="material-symbols-outlined text-tertiary">sports_basketball</span>
             </div>
             <span 
               class="font-h3 text-h3"
-              :class="game.awayTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
+              :class="game.homeTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
             >
-              {{ game.awayTeamStats.team.alias }}
+              {{ game.homeTeamStats.team.alias }}
             </span>
           </div>
           
@@ -87,27 +87,27 @@ watch(() => props.tournamentId, fetchGames)
             <div class="flex items-center gap-4">
               <span 
                 class="font-display-hero text-display-hero"
-                :class="game.awayTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
-              >
-                {{ game.awayTeamStats.score }}
-              </span>
-              <span class="font-h2 text-h2 text-outline">-</span>
-              <span 
-                class="font-display-hero text-display-hero"
                 :class="game.homeTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
               >
                 {{ game.homeTeamStats.score }}
               </span>
+              <span class="font-h2 text-h2 text-outline">-</span>
+              <span 
+                class="font-display-hero text-display-hero"
+                :class="game.awayTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
+              >
+                {{ game.awayTeamStats.score }}
+              </span>
             </div>
           </div>
           
-          <!-- Home Team -->
+          <!-- Away Team -->
           <div class="flex items-center justify-end gap-3 w-1/3">
             <span 
               class="font-h3 text-h3"
-              :class="game.homeTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
+              :class="game.awayTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
             >
-              {{ game.homeTeamStats.team.alias }}
+              {{ game.awayTeamStats.team.alias }}
             </span>
             <div class="w-10 h-10 bg-primary-fixed rounded-full border border-border-dark flex items-center justify-center">
               <span class="material-symbols-outlined text-tertiary">sports_basketball</span>
@@ -119,29 +119,29 @@ watch(() => props.tournamentId, fetchGames)
         <div class="flex flex-col sm:hidden gap-4">
           <!-- Row 2: Teams (Logos and Aliases) -->
           <div class="flex justify-between items-center">
-            <!-- Away -->
+            <!-- Home -->
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 bg-primary-fixed rounded-full border border-border-dark flex items-center justify-center">
                 <span class="material-symbols-outlined text-tertiary">sports_basketball</span>
               </div>
               <span 
                 class="font-h3 text-h3"
-                :class="game.awayTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
+                :class="game.homeTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
               >
-                {{ game.awayTeamStats.team.alias }}
+                {{ game.homeTeamStats.team.alias }}
               </span>
             </div>
 
             <!-- VS Divider (optional, but looks good for structure) -->
             <span class="font-label-caps text-label-caps text-outline">VS</span>
 
-            <!-- Home -->
+            <!-- Away -->
             <div class="flex items-center gap-3">
               <span 
                 class="font-h3 text-h3"
-                :class="game.homeTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
+                :class="game.awayTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
               >
-                {{ game.homeTeamStats.team.alias }}
+                {{ game.awayTeamStats.team.alias }}
               </span>
               <div class="w-10 h-10 bg-primary-fixed rounded-full border border-border-dark flex items-center justify-center">
                 <span class="material-symbols-outlined text-tertiary">sports_basketball</span>
@@ -153,16 +153,16 @@ watch(() => props.tournamentId, fetchGames)
           <div class="flex justify-center items-center gap-6 bg-ghost-gray py-2 border border-border-dark">
             <span 
               class="font-display-hero text-display-hero leading-none"
-              :class="game.awayTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
+              :class="game.homeTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
             >
-              {{ game.awayTeamStats.score }}
+              {{ game.homeTeamStats.score }}
             </span>
             <span class="font-h2 text-h2 text-outline leading-none">-</span>
             <span 
               class="font-display-hero text-display-hero leading-none"
-              :class="game.homeTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
+              :class="game.awayTeamStats.finalDifferential > 0 ? 'text-status-positive' : 'text-on-surface'"
             >
-              {{ game.homeTeamStats.score }}
+              {{ game.awayTeamStats.score }}
             </span>
           </div>
         </div>

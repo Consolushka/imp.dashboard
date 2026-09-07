@@ -38,30 +38,6 @@ const formatMatchDate = (date) => {
     
     <!-- Unified Layout for all screens -->
     <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2">
-      <!-- Away Team Column -->
-      <div class="flex flex-col items-center gap-2 min-w-0">
-        <!-- Icon -->
-        <div class="w-12 h-12 lg:w-14 lg:h-14 bg-ghost-gray border-2 border-primary flex items-center justify-center shrink-0">
-          <span class="material-symbols-outlined text-2xl lg:text-3xl">sports_basketball</span>
-        </div>
-        <!-- Score -->
-        <div 
-          class="font-display-hero text-2xl lg:text-3xl tabular-nums leading-none"
-          :class="{ 'text-status-positive font-black': match.awayTeamStats.finalDifferential > 0, 'font-bold': match.awayTeamStats.finalDifferential <= 0 }"
-        >
-          {{ match.awayTeamStats.score }}
-        </div>
-        <!-- Alias -->
-        <div class="font-h3 text-sm lg:text-base uppercase truncate w-full text-center">
-          {{ match.awayTeamStats.team.alias }}
-        </div>
-      </div>
-      
-      <!-- Separator -->
-      <div class="flex flex-col items-center justify-center px-2">
-        <span class="font-label-caps text-outline text-lg">VS</span>
-      </div>
-      
       <!-- Home Team Column -->
       <div class="flex flex-col items-center gap-2 min-w-0">
         <!-- Icon -->
@@ -78,6 +54,30 @@ const formatMatchDate = (date) => {
         <!-- Alias -->
         <div class="font-h3 text-sm lg:text-base uppercase truncate w-full text-center">
           {{ match.homeTeamStats.team.alias }}
+        </div>
+      </div>
+      
+      <!-- Separator -->
+      <div class="flex flex-col items-center justify-center px-2">
+        <span class="font-label-caps text-outline text-lg">VS</span>
+      </div>
+      
+      <!-- Away Team Column -->
+      <div class="flex flex-col items-center gap-2 min-w-0">
+        <!-- Icon -->
+        <div class="w-12 h-12 lg:w-14 lg:h-14 bg-ghost-gray border-2 border-primary flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-2xl lg:text-3xl">sports_basketball</span>
+        </div>
+        <!-- Score -->
+        <div 
+          class="font-display-hero text-2xl lg:text-3xl tabular-nums leading-none"
+          :class="{ 'text-status-positive font-black': match.awayTeamStats.finalDifferential > 0, 'font-bold': match.awayTeamStats.finalDifferential <= 0 }"
+        >
+          {{ match.awayTeamStats.score }}
+        </div>
+        <!-- Alias -->
+        <div class="font-h3 text-sm lg:text-base uppercase truncate w-full text-center">
+          {{ match.awayTeamStats.team.alias }}
         </div>
       </div>
     </div>

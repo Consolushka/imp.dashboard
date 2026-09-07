@@ -75,10 +75,12 @@ export class GameModel {
     // Парсим статистику команд
     const stats = data.game_team_stats || []
     
-    // Мапим статистику команд. 
-    // В Laravel API обычно [0] - Away, [1] - Home
-    this.awayTeamStats = stats[0] ? new TeamStatsModel(stats[0]) : null
-    this.homeTeamStats = stats[1] ? new TeamStatsModel(stats[1]) : null
+    // Старые записи могут прийти без флага is_home, тогда считаем хозяевами первую команду
+    const hasFlag = stats.some(s => typeof s.is_home === 'boolean')
+    const home = hasFlag ? stats.find(s => s.is_home) : stats[0]
+    const away = hasFlag ? stats.find(s => !s.is_home) : stats[1]
+    this.homeTeamStats = home ? new TeamStatsModel(home) : null
+    this.awayTeamStats = away ? new TeamStatsModel(away) : null
   }
 
   // Геттеры для совместимости с существующими View (MatchStatisticsView.vue)
