@@ -1,11 +1,16 @@
 <script setup>
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../../api/index'
 import { APP_VERSION } from '../../config'
 
+const props = defineProps({ collapsed: Boolean })
+
 const router = useRouter()
 const searchQuery = ref('')
+const searchFocused = ref(false)
+// Пока пользователь печатает, поиск не прячем: клавиатура на мобилке меняет вьюпорт и порождает scroll-события
+const compact = computed(() => props.collapsed && !searchFocused.value)
 const searchResults = ref([])
 const isSearching = ref(false)
 const showResults = ref(false)
@@ -54,7 +59,13 @@ const selectGame = (gameId) => {
 
 const closeResults = () => {
   console.log('Search: Blur triggered')
+  searchFocused.value = false
   showResults.value = false
+}
+
+const onFocus = () => {
+  searchFocused.value = true
+  showResults.value = searchQuery.value.length >= 2
 }
 
 onUnmounted(() => {
@@ -63,20 +74,20 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <header class="bg-white dark:bg-black font-sans uppercase tracking-tighter font-black border-b-4 border-black dark:border-orange-600 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row items-center w-full px-4 md:px-6 py-3 md:py-0 md:h-16 z-50 shrink-0 justify-center gap-3 md:gap-4 relative">
+  <header class="bg-white dark:bg-black font-sans uppercase tracking-tighter font-black border-b-4 border-black dark:border-orange-600 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row items-center w-full px-4 md:px-6 md:py-0 md:h-16 z-50 shrink-0 justify-center gap-3 md:gap-4 relative transition-all duration-200" :class="compact ? 'py-1' : 'py-3'">
 
     <!-- Заголовок IMP для мобильных (на десктопе он в SideNavBar) -->
     <div class="md:hidden flex flex-col items-center w-full">
       <h1 class="font-h2 text-h2 text-black dark:text-white uppercase leading-none mb-1">IMP</h1>
-      <p class="font-data-mono text-data-mono text-secondary-container text-[10px] uppercase">{{ APP_VERSION }}</p>
+      <p class="font-data-mono text-data-mono text-secondary-container text-[10px] uppercase" :class="{ hidden: compact }">{{ APP_VERSION }}</p>
     </div>
 
     <!-- Поисковая строка -->
-    <div class="flex items-center gap-4 w-full md:w-auto">
+    <div class="items-center gap-4 w-full md:w-auto" :class="compact ? 'hidden md:flex' : 'flex'">
       <div class="relative w-full md:w-80">
         <input
           v-model="searchQuery"
-          @focus="showResults = searchQuery.length >= 2"
+          @focus="onFocus"
           @blur="closeResults"
           class="w-full bg-ghost-gray border-2 border-border-dark text-data-mono font-data-mono px-4 py-2 focus:outline-none focus:border-secondary-container focus:ring-0 placeholder-neutral-medium rounded-none"
           placeholder="SEARCH GAMES..."
