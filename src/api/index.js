@@ -196,5 +196,3 @@ export const api = {
     return response.data
   }
 }
-
-export const mockApi = api
