@@ -17,10 +17,10 @@ const navLinks = [
     
     <!-- Заголовок -->
     <div class="mb-4 hidden md:block">
-      <div class="flex items-center gap-3 mb-1">
+      <RouterLink to="/" class="flex items-center gap-3 mb-1">
         <img src="/favicon.svg" alt="" class="w-10 h-10" />
         <h1 class="font-h2 text-h2 text-black dark:text-white uppercase">IMP</h1>
-      </div>
+      </RouterLink>
       <p class="font-data-mono text-data-mono text-secondary-container">{{ APP_VERSION }}</p>
     </div>
     
