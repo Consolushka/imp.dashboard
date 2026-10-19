@@ -65,9 +65,9 @@ const minGamesOptions = [
 const totalPages = computed(() => Math.ceil(totalPlayers.value / resultsLimit.value))
 
 const fetchTeams = async () => {
-  if (!metricStore.selectedTournamentId) return
+  if (!tournamentStore.selectedTournamentId) return
   try {
-    const response = await api.getTeamsByTournament(metricStore.selectedTournamentId)
+    const response = await api.getTeamsByTournament(tournamentStore.selectedTournamentId)
     teams.value = response.data
   } catch (error) {
     console.error('Failed to fetch teams:', error)
@@ -76,14 +76,14 @@ const fetchTeams = async () => {
 }
 
 const fetchLeaderboardData = async () => {
-  if (!metricStore.selectedTournamentId) {
+  if (!tournamentStore.selectedTournamentId) {
     return
   }
   
   isLoading.value = true
   try {
     const response = await api.getLeaderboard({
-      tournament_id: metricStore.selectedTournamentId,
+      tournament_id: tournamentStore.selectedTournamentId,
       per: 'fullGame',
       limit: resultsLimit.value,
       page: currentPage.value,
@@ -104,9 +104,7 @@ const fetchLeaderboardData = async () => {
 }
 
 onMounted(async () => {
-  if (metricStore.tournaments.length === 0) {
-    await metricStore.fetchTournaments()
-  }
+  await tournamentStore.fetchTournaments()
   
   fetchTeams()
   fetchLeaderboardData()
@@ -140,14 +138,14 @@ watch(
 )
 
 watch(
-  () => metricStore.selectedTournamentId,
+  () => tournamentStore.selectedTournamentId,
   () => {
     fetchTeams()
   }
 )
 
 watch(
-  [() => metricStore.selectedTournamentId, () => metricStore.globalReliabilityOn, currentPage],
+  [() => tournamentStore.selectedTournamentId, () => metricStore.globalReliabilityOn, currentPage],
   fetchLeaderboardData
 )
 </script>
@@ -162,8 +160,9 @@ watch(
       <!-- Large Primary Filter -->
       <div class="w-full md:w-80">
         <PrimarySelector 
-          v-model="metricStore.selectedTournamentId" 
-          :options="metricStore.tournaments" 
+          v-model="tournamentStore.selectedTournamentId" 
+          :options="tournamentStore.tournaments"
+          :groups="tournamentStore.selectorGroups"
           value-key="id"
           label-key="name"
           label="SELECT TOURNAMENT"

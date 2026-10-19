@@ -21,6 +21,11 @@ const props = defineProps({
   labelKey: {
     type: String,
     default: 'label'
+  },
+  // [{ label: String|null, options: Array }] — если задан, выпадашка рисуется группами вместо options
+  groups: {
+    type: Array,
+    default: null
   }
 })
 
@@ -33,17 +38,17 @@ const toggleDropdown = () => {
   isOpen.value = !isOpen.value
 }
 
+const optionGroups = computed(() => props.groups ?? [{ label: null, options: props.options }])
+
+const optionValue = (option) => typeof option === 'object' ? option[props.valueKey] : option
+
 const selectOption = (option) => {
-  const value = typeof option === 'object' ? option[props.valueKey] : option
-  emit('update:modelValue', value)
+  emit('update:modelValue', optionValue(option))
   isOpen.value = false
 }
 
 const selectedLabel = computed(() => {
-  const found = props.options.find(opt => {
-    const val = typeof opt === 'object' ? opt[props.valueKey] : opt
-    return val === props.modelValue
-  })
+  const found = optionGroups.value.flatMap(g => g.options).find(opt => optionValue(opt) === props.modelValue)
   if (!found) return props.modelValue
   return typeof found === 'object' ? found[props.labelKey] : found
 })
@@ -86,17 +91,25 @@ onUnmounted(() => {
         v-if="isOpen"
         class="absolute z-50 left-0 right-0 mt-2 bg-surface-white border-2 border-border-dark shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
       >
-        <div 
-          v-for="(option, index) in options" 
-          :key="index"
-          @click="selectOption(option)"
-          class="px-4 py-2 font-data-mono text-data-mono cursor-pointer transition-colors border-b last:border-b-0 border-border-dark"
-          :class="{ 
-            'bg-secondary-container text-white': (typeof option === 'object' ? option[valueKey] : option) === modelValue,
-            'hover:bg-ghost-gray': (typeof option === 'object' ? option[valueKey] : option) !== modelValue
-          }"
-        >
-          {{ typeof option === 'object' ? option[labelKey] : option }}
+        <div v-for="(group, groupIndex) in optionGroups" :key="groupIndex">
+          <div
+            v-if="group.label"
+            class="px-4 py-1 font-label-caps text-label-caps uppercase bg-ghost-gray border-y border-border-dark cursor-default select-none"
+          >
+            {{ group.label }}
+          </div>
+          <div
+            v-for="(option, index) in group.options"
+            :key="index"
+            @click="selectOption(option)"
+            class="px-4 py-2 font-data-mono text-data-mono cursor-pointer transition-colors border-b last:border-b-0 border-border-dark"
+            :class="{
+              'bg-secondary-container text-white': optionValue(option) === modelValue,
+              'hover:bg-ghost-gray': optionValue(option) !== modelValue
+            }"
+          >
+            {{ typeof option === 'object' ? option[labelKey] : option }}
+          </div>
         </div>
       </div>
     </div>

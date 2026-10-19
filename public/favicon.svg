@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="t">
+  <title id="t">IMP</title>
+  <g id="symbol">
+    <rect x="16" y="16" width="224" height="224" fill="#fe6a34"/>
+    <path fill="#000" fill-rule="evenodd" d="M0 0H256V256H0Z M16 16V240H240V16Z"/>
+    <g id="inner" fill="#000">
+      <rect x="48" y="128" width="16" height="16"/><rect x="64" y="144" width="16" height="16"/><rect x="80" y="160" width="16" height="16"/><rect x="96" y="144" width="16" height="16"/><rect x="112" y="128" width="16" height="16"/><rect x="128" y="144" width="16" height="16"/><rect x="144" y="160" width="16" height="16"/><rect x="160" y="176" width="16" height="16"/>
+      <rect x="144" y="64" width="32" height="128"/>
+      <rect x="112" y="48" width="96" height="16"/>
+      <rect x="112" y="192" width="96" height="16"/>
+    </g>
+  </g>
+</svg>

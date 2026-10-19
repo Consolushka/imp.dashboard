@@ -41,7 +41,8 @@ export const api = {
    * Получить список турниров
    */
   async getTournaments() {
-    const response = await client.get('/tournaments')
+    // Без all=true API отдаёт только активные турниры, а экранам нужны и завершённые
+    const response = await client.get('/tournaments', { params: { all: true } })
     return {
       data: (response.data || []).map(t => new TournamentModel(t))
     }
@@ -196,5 +197,3 @@ export const api = {
     return response.data
   }
 }
-
-export const mockApi = api

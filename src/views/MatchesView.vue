@@ -12,44 +12,31 @@ const tournamentStore = useTournamentStore()
 const route = useRoute()
 const router = useRouter()
 
-onMounted(async () => {
-  // Всегда загружаем ПОЛНЫЙ список турниров для селектора,
-  // сбрасывая возможные фильтры по лиге, оставшиеся от других страниц
-  await tournamentStore.fetchTournaments()
-  
-  // Инициализируем фильтр из URL
-  initializeFilters()
-
-  // Загружаем матчи для выбранного турнира
-  if (matchStore.selectedTournament) {
-    await matchStore.fetchMatchesData()
-  }
-})
-
-const initializeFilters = () => {
-  if (route.query.tournament) {
-    matchStore.selectedTournament = Number(route.query.tournament)
-  } else if (tournamentStore.tournaments.length > 0) {
-    // Выбираем турнир с лучшим тиром (наименьшее число)
-    const bestTournament = [...tournamentStore.tournaments].sort((a, b) => (a.tier || 99) - (b.tier || 99))[0]
-    matchStore.selectedTournament = bestTournament.id
-  }
+// Ссылка с ?tournament= важнее ранее выбранного турнира
+if (route.query.tournament) {
+  tournamentStore.setTournament(Number(route.query.tournament))
 }
 
-// При смене турнира в селекторе — перезагружаем данные
-watch(() => matchStore.selectedTournament, async (newVal) => {
-  if (newVal) {
+onMounted(() => {
+  tournamentStore.fetchTournaments()
+})
+
+// Пока список грузится, сохранённый выбор может быть заменён на турнир по умолчанию —
+// ждём окончания загрузки, чтобы не запрашивать матчи дважды
+watch(
+  () => tournamentStore.isTournamentsLoading ? null : tournamentStore.selectedTournamentId,
+  async (newVal) => {
+    if (!newVal) return
     router.replace({ query: { ...route.query, tournament: newVal } })
     await matchStore.fetchMatchesData()
-  } else {
-    router.replace({ query: { ...route.query, tournament: undefined } })
-  }
-})
+  },
+  { immediate: true }
+)
 
 // Следим за внешними изменениями URL
 watch(() => route.query.tournament, (newVal) => {
-  if (newVal && Number(newVal) !== matchStore.selectedTournament) {
-    matchStore.selectedTournament = Number(newVal)
+  if (newVal && Number(newVal) !== tournamentStore.selectedTournamentId) {
+    tournamentStore.setTournament(Number(newVal))
   }
 })
 </script>
@@ -68,8 +55,9 @@ watch(() => route.query.tournament, (newVal) => {
         
         <!-- Tournament Filter (Single-Select) -->
         <PrimarySelector 
-          v-model="matchStore.selectedTournament"
+          v-model="tournamentStore.selectedTournamentId"
           :options="tournamentStore.tournaments"
+          :groups="tournamentStore.selectorGroups"
           label-key="name"
           value-key="id"
           label="SELECT TOURNAMENT"

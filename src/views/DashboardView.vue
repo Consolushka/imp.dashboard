@@ -1,6 +1,8 @@
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useMetricStore } from '../store/metricStore'
+import { useTournamentStore } from '../store/tournamentStore'
+import { pickDashboardTournament } from '../utils/dashboardTournament'
 import RecentMatches from '../components/dashboard/RecentMatches.vue'
 import PlayersOfTheDayTable from '../components/dashboard/PlayersOfTheDayTable.vue'
 import SeasonLeaders from '../components/dashboard/SeasonLeaders.vue'
@@ -9,9 +11,21 @@ import PrimarySelector from '../components/ui/forms/PrimarySelector.vue'
 import ToggleSwitch from '../components/ui/forms/ToggleSwitch.vue'
 
 const metricStore = useMetricStore()
+const tournamentStore = useTournamentStore()
+
+// Dashboard только читает общий выбор: завершённый турнир с Leaderboard здесь не сбрасываем
+const dashboardPick = computed(() =>
+  pickDashboardTournament(tournamentStore.tournaments, tournamentStore.selectedTournamentId, new Date())
+)
+
+const dashboardTournamentId = computed({
+  // Пустая строка вместо undefined, пока список грузится: селектор требует значение
+  get: () => dashboardPick.value.tournament?.id ?? '',
+  set: (id) => tournamentStore.setTournament(id)
+})
 
 onMounted(() => {
-  metricStore.fetchTournaments()
+  tournamentStore.fetchTournaments()
 })
 </script>
 
@@ -31,15 +45,22 @@ onMounted(() => {
       <!-- Right: Tournament Selector & Reliability Toggle -->
       <div class="flex flex-col items-start sm:items-end gap-md shrink-0 w-full sm:w-auto">
         <!-- Tournament Selector -->
-        <PrimarySelector 
-          v-model="metricStore.selectedTournamentId" 
-          :options="metricStore.tournaments" 
+        <PrimarySelector
+          v-model="dashboardTournamentId"
+          :options="dashboardPick.options"
           value-key="id"
           label-key="name"
           label="Select Tournament"
           class="w-full"
         />
-        
+
+        <span
+          v-if="dashboardPick.seasonFinished"
+          class="bg-ghost-gray border-2 border-border-dark px-3 py-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-label-caps text-label-caps uppercase text-primary text-xs"
+        >
+          Season finished
+        </span>
+
         <!-- Reliability Toggle -->
         <div class="flex flex-row items-center justify-between gap-3 bg-surface-white border-2 border-border-dark p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] w-full sm:w-auto">
           <span class="font-label-caps text-label-caps uppercase text-primary text-xs">GLOBAL RELIABILITY MODE</span>
@@ -49,17 +70,17 @@ onMounted(() => {
     </div>
 
     <!-- Dashboard Grid -->
-    <div v-if="!metricStore.isTournamentsLoading && metricStore.selectedTournamentId" class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+    <div v-if="!tournamentStore.isTournamentsLoading && dashboardPick.tournament" class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
       <!-- Left Column (Wider) -->
       <div class="lg:col-span-2 flex flex-col gap-lg">
-        <RecentMatches :tournamentId="metricStore.selectedTournamentId" />
-        <PlayersOfTheDayTable :tournamentId="metricStore.selectedTournamentId" />
+        <RecentMatches :tournamentId="dashboardPick.tournament.id" />
+        <PlayersOfTheDayTable :tournamentId="dashboardPick.tournament.id" />
       </div>
 
       <!-- Right Column (Narrower) -->
       <div class="flex flex-col gap-lg">
-        <SeasonLeaders :tournamentId="metricStore.selectedTournamentId" />
-        <DailyInsight :tournamentId="metricStore.selectedTournamentId" />
+        <SeasonLeaders :tournamentId="dashboardPick.tournament.id" />
+        <DailyInsight :tournamentId="dashboardPick.tournament.id" />
       </div>
     </div>
 

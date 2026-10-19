@@ -73,7 +73,7 @@ const fetchMatchData = async () => {
   try {
     const [details, performances] = await Promise.all([
       api.getMatchDetails(route.params.id, { 
-        reliability: isLocalReliability.value 
+        use_reliability: isLocalReliability.value
       }),
       api.getKeyPerformances(route.params.id)
     ])
