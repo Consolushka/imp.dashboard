@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '../api/index'
+import { useTournamentStore } from './tournamentStore'
 
 export const useMatchStore = defineStore('match', () => {
   const matches = ref([])
   const weeklyLeaders = ref([])
   const isLoading = ref(false)
   const isLoadMoreLoading = ref(false)
-  const selectedTournament = ref(null) // ID выбранного турнира
   
   const currentPage = ref(1)
   const lastPage = ref(1)
@@ -18,7 +18,8 @@ export const useMatchStore = defineStore('match', () => {
    * Загрузить матчи для выбранного турнира и еженедельных лидеров (первая страница)
    */
   async function fetchMatchesData() {
-    if (!selectedTournament.value) {
+    const tournamentId = useTournamentStore().selectedTournamentId
+    if (!tournamentId) {
       matches.value = []
       weeklyLeaders.value = []
       return
@@ -28,8 +29,8 @@ export const useMatchStore = defineStore('match', () => {
     currentPage.value = 1
     try {
       const [matchesRes, leadersRes] = await Promise.all([
-        api.getGamesByTournament(selectedTournament.value, { page: 1 }), 
-        api.getWeeklyLeaders(selectedTournament.value)
+        api.getGamesByTournament(tournamentId, { page: 1 }), 
+        api.getWeeklyLeaders(tournamentId)
       ])
       matches.value = matchesRes.data
       weeklyLeaders.value = leadersRes
@@ -48,13 +49,14 @@ export const useMatchStore = defineStore('match', () => {
    * Подгрузить следующую страницу матчей
    */
   async function fetchMoreMatches() {
-    if (!selectedTournament.value || !hasMoreMatches.value || isLoadMoreLoading.value) return
+    const tournamentId = useTournamentStore().selectedTournamentId
+    if (!tournamentId || !hasMoreMatches.value || isLoadMoreLoading.value) return
 
     isLoadMoreLoading.value = true
     const nextPage = currentPage.value + 1
     
     try {
-      const response = await api.getGamesByTournament(selectedTournament.value, { page: nextPage })
+      const response = await api.getGamesByTournament(tournamentId, { page: nextPage })
       matches.value = [...matches.value, ...response.data]
       currentPage.value = nextPage
       
@@ -73,7 +75,6 @@ export const useMatchStore = defineStore('match', () => {
     weeklyLeaders,
     isLoading,
     isLoadMoreLoading,
-    selectedTournament,
     currentPage,
     lastPage,
     hasMoreMatches,

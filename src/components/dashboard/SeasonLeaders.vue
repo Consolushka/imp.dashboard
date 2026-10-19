@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../../api/index'
 import { useMetricStore } from '../../store/metricStore'
+import { useTournamentStore } from '../../store/tournamentStore'
 
 const props = defineProps({
   tournamentId: {
@@ -13,6 +14,7 @@ const props = defineProps({
 
 const router = useRouter()
 const metricStore = useMetricStore()
+const tournamentStore = useTournamentStore()
 const leaders = ref([])
 const isLoading = ref(true)
 
@@ -20,7 +22,7 @@ const fetchLeaders = async () => {
   isLoading.value = true
   try {
     // Находим текущий турнир в сторе, чтобы получить его параметры (teams_count, regulation_duration и т.д.)
-    const tournament = metricStore.tournaments.find(t => t.id === props.tournamentId)
+    const tournament = tournamentStore.tournaments.find(t => t.id === props.tournamentId)
     
     const params = {
       tournament_id: props.tournamentId, 
@@ -57,7 +59,7 @@ const goToLeaderboard = () => {
 }
 
 watch(
-  [() => props.tournamentId, () => metricStore.globalReliabilityOn, () => metricStore.isTournamentsLoading], 
+  [() => props.tournamentId, () => metricStore.globalReliabilityOn, () => tournamentStore.isTournamentsLoading], 
   ([tId, rel, loading]) => {
     if (!loading && tId) {
       fetchLeaders()

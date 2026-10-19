@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useMetricStore } from '../store/metricStore'
+import { useTournamentStore } from '../store/tournamentStore'
 import RecentMatches from '../components/dashboard/RecentMatches.vue'
 import PlayersOfTheDayTable from '../components/dashboard/PlayersOfTheDayTable.vue'
 import SeasonLeaders from '../components/dashboard/SeasonLeaders.vue'
@@ -9,9 +10,10 @@ import PrimarySelector from '../components/ui/forms/PrimarySelector.vue'
 import ToggleSwitch from '../components/ui/forms/ToggleSwitch.vue'
 
 const metricStore = useMetricStore()
+const tournamentStore = useTournamentStore()
 
 onMounted(() => {
-  metricStore.fetchTournaments()
+  tournamentStore.fetchTournaments()
 })
 </script>
 
@@ -32,8 +34,8 @@ onMounted(() => {
       <div class="flex flex-col items-start sm:items-end gap-md shrink-0 w-full sm:w-auto">
         <!-- Tournament Selector -->
         <PrimarySelector 
-          v-model="metricStore.selectedTournamentId" 
-          :options="metricStore.tournaments" 
+          v-model="tournamentStore.selectedTournamentId" 
+          :options="tournamentStore.tournaments" 
           value-key="id"
           label-key="name"
           label="Select Tournament"
@@ -49,17 +51,17 @@ onMounted(() => {
     </div>
 
     <!-- Dashboard Grid -->
-    <div v-if="!metricStore.isTournamentsLoading && metricStore.selectedTournamentId" class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+    <div v-if="!tournamentStore.isTournamentsLoading && tournamentStore.selectedTournamentId" class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
       <!-- Left Column (Wider) -->
       <div class="lg:col-span-2 flex flex-col gap-lg">
-        <RecentMatches :tournamentId="metricStore.selectedTournamentId" />
-        <PlayersOfTheDayTable :tournamentId="metricStore.selectedTournamentId" />
+        <RecentMatches :tournamentId="tournamentStore.selectedTournamentId" />
+        <PlayersOfTheDayTable :tournamentId="tournamentStore.selectedTournamentId" />
       </div>
 
       <!-- Right Column (Narrower) -->
       <div class="flex flex-col gap-lg">
-        <SeasonLeaders :tournamentId="metricStore.selectedTournamentId" />
-        <DailyInsight :tournamentId="metricStore.selectedTournamentId" />
+        <SeasonLeaders :tournamentId="tournamentStore.selectedTournamentId" />
+        <DailyInsight :tournamentId="tournamentStore.selectedTournamentId" />
       </div>
     </div>
 
