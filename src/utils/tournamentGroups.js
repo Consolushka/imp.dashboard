@@ -9,3 +9,8 @@ export function groupTournaments(tournaments, now) {
     finished: tournaments.filter(t => isFinished(t, now))
   }
 }
+
+// Турнир с лучшим тиром (наименьшее число); без тира — в конец
+export function bestByTier(list) {
+  return [...list].sort((a, b) => (a.tier || 99) - (b.tier || 99))[0]
+}

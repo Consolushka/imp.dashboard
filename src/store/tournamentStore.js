@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { api } from '../api/index'
-import { groupTournaments } from '../utils/tournamentGroups'
+import { groupTournaments, bestByTier } from '../utils/tournamentGroups'
 
 export const useTournamentStore = defineStore('tournament', () => {
   // Список для селекторов: summary, дополненный полями из basic
@@ -36,12 +36,10 @@ export const useTournamentStore = defineStore('tournament', () => {
     return groups
   })
 
-  // Турнир с лучшим тиром (наименьшее число); без тира — в конец.
   // Завершённые берём только если активных нет, иначе выбор остался бы пустым
   function pickDefaultTournament(list) {
     const { active } = groupTournaments(list, new Date())
-    const pool = active.length ? active : list
-    return [...pool].sort((a, b) => (a.tier || 99) - (b.tier || 99))[0]
+    return bestByTier(active.length ? active : list)
   }
 
   /**
