@@ -24,6 +24,8 @@ const fetchPlayers = async () => {
     players.value = response.data
   } catch (error) {
     console.error('Failed to fetch players of the day:', error)
+    // Иначе при смене турнира остались бы игроки предыдущего
+    players.value = []
   } finally {
     isLoading.value = false
   }
