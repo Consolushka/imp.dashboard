@@ -78,7 +78,10 @@ onUnmounted(() => {
 
     <!-- Заголовок IMP для мобильных (на десктопе он в SideNavBar) -->
     <div class="md:hidden flex flex-col items-center w-full">
-      <h1 class="font-h2 text-h2 text-black dark:text-white uppercase leading-none mb-1">IMP</h1>
+      <div class="flex items-center gap-2 mb-1">
+        <img src="/favicon.svg" alt="" class="w-8 h-8" />
+        <h1 class="font-h2 text-h2 text-black dark:text-white uppercase leading-none">IMP</h1>
+      </div>
       <p class="font-data-mono text-data-mono text-secondary-container text-[10px] uppercase" :class="{ hidden: compact }">{{ APP_VERSION }}</p>
     </div>
 
