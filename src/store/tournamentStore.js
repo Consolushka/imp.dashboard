@@ -1,32 +1,78 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { api } from '../api/index'
 
 export const useTournamentStore = defineStore('tournament', () => {
+  // Список для селекторов: summary, дополненный полями из basic
   const tournaments = ref([])
+  const isTournamentsLoading = ref(true)
+  // Выбор общий для всех страниц и переживает перезагрузку
+  const selectedTournamentId = ref(Number(localStorage.getItem('selectedTournamentId')) || null)
+
+  // Турниры одной лиги для страницы Tournaments
+  const leagueTournaments = ref([])
   const summaryStats = ref(null)
   const isLoading = ref(false)
   const selectedLeague = ref(null) // ID выбранной лиги
 
   const filteredTournaments = computed(() => {
-    // Теперь фильтрация происходит на бэкенде, 
-    // поэтому просто возвращаем загруженные данные.
-    return tournaments.value
+    // Фильтрация по лиге происходит на бэкенде
+    return leagueTournaments.value
   })
 
+  watch(selectedTournamentId, (newValue) => {
+    if (newValue) {
+      localStorage.setItem('selectedTournamentId', newValue.toString())
+    }
+  })
+
+  // Турнир с лучшим тиром (наименьшее число); без тира — в конец
+  function pickDefaultTournament(list) {
+    return [...list].sort((a, b) => (a.tier || 99) - (b.tier || 99))[0]
+  }
+
   /**
-   * Загрузить простой список турниров (для селекторов)
+   * Загрузить список турниров для селекторов и выбрать турнир по умолчанию
    */
   async function fetchTournaments() {
-    isLoading.value = true
+    // Список общий для всех страниц — второй раз не грузим
+    if (tournaments.value.length > 0) return
+
+    isTournamentsLoading.value = true
     try {
-      const response = await api.getTournaments()
-      tournaments.value = response.data
+      // regulation_duration есть только в basic, teams_count/games_count — только в summary
+      const [basicRes, summaryRes] = await Promise.all([
+        api.getTournaments(),
+        api.getTournamentsSummary()
+      ])
+
+      const basicMap = new Map(basicRes.data.map(t => [t.id, t]))
+
+      tournaments.value = summaryRes.data.map(summaryTournament => {
+        const basic = basicMap.get(Number(summaryTournament.id))
+        if (basic) {
+          summaryTournament.regulationDuration = basic.regulationDuration
+          summaryTournament.startAt = basic.startAt
+          summaryTournament.endAt = basic.endAt
+          summaryTournament.leagueId = basic.leagueId
+        }
+        return summaryTournament
+      })
+
+      // Сохранённый турнир мог пропасть из списка
+      const exists = tournaments.value.some(t => t.id === selectedTournamentId.value)
+      if (!exists && tournaments.value.length > 0) {
+        selectedTournamentId.value = pickDefaultTournament(tournaments.value).id
+      }
     } catch (error) {
-      console.error('Failed to fetch tournaments list:', error)
+      console.error('Failed to fetch tournaments:', error)
     } finally {
-      isLoading.value = false
+      isTournamentsLoading.value = false
     }
+  }
+
+  function setTournament(id) {
+    selectedTournamentId.value = id
   }
 
   /**
@@ -40,7 +86,7 @@ export const useTournamentStore = defineStore('tournament', () => {
         params.league_id = selectedLeague.value
       }
       const response = await api.getTournamentsSummary(params)
-      tournaments.value = response.data
+      leagueTournaments.value = response.data
     } catch (error) {
       console.error('Failed to fetch tournaments summary:', error)
     } finally {
@@ -61,11 +107,15 @@ export const useTournamentStore = defineStore('tournament', () => {
 
   return {
     tournaments,
+    isTournamentsLoading,
+    selectedTournamentId,
+    fetchTournaments,
+    setTournament,
+    leagueTournaments,
     summaryStats,
     isLoading,
     selectedLeague,
     filteredTournaments,
-    fetchTournaments,
     fetchTournamentsData,
     fetchGlobalSummary
   }
