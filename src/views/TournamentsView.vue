@@ -22,6 +22,17 @@ const summaryItems = computed(() => {
   ]
 })
 
+// Бэк сейчас присылает только "completed" (api-spec.json), остальное считаем активным
+const sections = computed(() => {
+  const all = tournamentStore.filteredTournaments
+  const finished = all.filter(t => t.status === 'COMPLETED')
+  const active = all.filter(t => t.status !== 'COMPLETED')
+  return [
+    { key: 'active', title: 'Active', items: active },
+    { key: 'finished', title: 'Finished', items: finished }
+  ].filter(s => s.items.length > 0)
+})
+
 onMounted(async () => {
   // Загружаем лиги (только список для селектора), если их еще нет
   if (leagueStore.leagues.length === 0) {
@@ -95,17 +106,20 @@ watch(() => tournamentStore.selectedLeague, (newVal, oldVal) => {
 
     <!-- Main Content State -->
     <template v-if="!tournamentStore.isLoading">
-      <!-- Tournament Grid -->
-      <div v-if="tournamentStore.filteredTournaments.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
-        <TournamentCard 
-          v-for="tournament in tournamentStore.filteredTournaments" 
-          :key="tournament.id" 
-          :tournament="tournament" 
-        />
-      </div>
-      
+      <!-- Tournament Sections -->
+      <section v-for="section in sections" :key="section.key" class="flex flex-col gap-lg">
+        <h3 class="font-h3 text-h3 uppercase border-b-2 border-border-dark pb-xs">{{ section.title }}</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+          <TournamentCard
+            v-for="tournament in section.items"
+            :key="tournament.id"
+            :tournament="tournament"
+          />
+        </div>
+      </section>
+
       <!-- Empty State -->
-      <div v-else class="flex flex-col items-center justify-center min-h-[300px] border-2 border-dashed border-border-dark bg-ghost-gray">
+      <div v-if="sections.length === 0" class="flex flex-col items-center justify-center min-h-[300px] border-2 border-dashed border-border-dark bg-ghost-gray">
         <span class="material-symbols-outlined text-6xl text-neutral-medium mb-4">search_off</span>
         <p class="font-h3 text-h3 uppercase text-neutral-medium">No tournaments found for this league</p>
       </div>
