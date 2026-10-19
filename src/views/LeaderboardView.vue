@@ -161,7 +161,8 @@ watch(
       <div class="w-full md:w-80">
         <PrimarySelector 
           v-model="tournamentStore.selectedTournamentId" 
-          :options="tournamentStore.tournaments" 
+          :options="tournamentStore.tournaments"
+          :groups="tournamentStore.selectorGroups"
           value-key="id"
           label-key="name"
           label="SELECT TOURNAMENT"

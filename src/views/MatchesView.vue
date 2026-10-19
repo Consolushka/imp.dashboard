@@ -57,6 +57,7 @@ watch(() => route.query.tournament, (newVal) => {
         <PrimarySelector 
           v-model="tournamentStore.selectedTournamentId"
           :options="tournamentStore.tournaments"
+          :groups="tournamentStore.selectorGroups"
           label-key="name"
           value-key="id"
           label="SELECT TOURNAMENT"
