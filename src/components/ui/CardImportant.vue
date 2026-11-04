@@ -6,6 +6,10 @@ const props = defineProps({
     type: String,
     required: true
   },
+  subtitle: {
+    type: String,
+    default: ''
+  },
   items: {
     type: Array,
     required: true,
@@ -42,8 +46,11 @@ const prevItem = () => {
     </span>
     
     <div class="flex justify-between items-center z-10">
-      <h3 class="font-h3 text-h3 uppercase">{{ title }}</h3>
-      
+      <div>
+        <h3 class="font-h3 text-h3 uppercase">{{ title }}</h3>
+        <p v-if="subtitle" class="font-data-mono text-xs opacity-70">{{ subtitle }}</p>
+      </div>
+
       <!-- Pagination Controls -->
       <div v-if="items.length > 1" class="flex gap-2">
         <button 

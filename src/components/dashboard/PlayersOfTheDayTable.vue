@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { api } from '../../api/index'
 import { useMetricStore } from '../../store/metricStore'
+import { formatBlockDate } from '../../utils/blockDate'
 
 const props = defineProps({
   tournamentId: {
@@ -12,6 +13,7 @@ const props = defineProps({
 
 const metricStore = useMetricStore()
 const players = ref([])
+const date = ref(null)
 const isLoading = ref(true)
 
 const fetchPlayers = async () => {
@@ -22,10 +24,12 @@ const fetchPlayers = async () => {
       { use_reliability: metricStore.globalReliabilityOn }
     )
     players.value = response.data
+    date.value = response.date
   } catch (error) {
     console.error('Failed to fetch players of the day:', error)
-    // Иначе при смене турнира остались бы игроки предыдущего
+    // Иначе при смене турнира остались бы игроки и дата предыдущего
     players.value = []
+    date.value = null
   } finally {
     isLoading.value = false
   }
@@ -38,7 +42,11 @@ watch([() => props.tournamentId, () => metricStore.globalReliabilityOn], fetchPl
 <template>
   <section class="bg-surface-white border-2 border-border-dark shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
     <div class="bg-tertiary p-md flex justify-between items-center">
-      <h3 class="font-h3 text-h3 text-on-tertiary uppercase">PLAYERS OF THE DAY</h3>
+      <div>
+        <h3 class="font-h3 text-h3 text-on-tertiary uppercase">PLAYERS OF THE DAY</h3>
+        <!-- Шапка видна и во время загрузки: не показываем дату предыдущего турнира над новыми данными -->
+        <p v-if="date && !isLoading" class="font-data-mono text-xs text-on-tertiary opacity-70">{{ formatBlockDate(date) }}</p>
+      </div>
     </div>
     
     <div v-if="isLoading" class="p-md space-y-4">
@@ -46,7 +54,7 @@ watch([() => props.tournamentId, () => metricStore.globalReliabilityOn], fetchPl
     </div>
     
     <div v-else-if="players.length === 0" class="p-xl text-center">
-      <p class="font-body-reg text-secondary italic">No matches were played today, so there are no heroes yet. Check back tomorrow!</p>
+      <p class="font-body-reg text-secondary italic">No player stats yet, so there are no heroes to show. Check back later!</p>
     </div>
     
     <div v-else class="overflow-x-auto w-full">

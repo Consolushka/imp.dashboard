@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { api } from '../../api/index'
 import { useMetricStore } from '../../store/metricStore'
+import { formatBlockDate } from '../../utils/blockDate'
 import CardImportant from '../ui/CardImportant.vue'
 
 const props = defineProps({
@@ -13,6 +14,7 @@ const props = defineProps({
 
 const metricStore = useMetricStore()
 const insights = ref([])
+const date = ref(null)
 const isLoading = ref(true)
 
 const fetchInsights = async () => {
@@ -22,7 +24,8 @@ const fetchInsights = async () => {
       props.tournamentId,
       { use_reliability: metricStore.globalReliabilityOn }
     )
-    insights.value = Array.isArray(response.data) ? response.data : [response.data]
+    insights.value = response.data
+    date.value = response.date
   } catch (error) {
     console.error('Failed to fetch daily insights:', error)
   } finally {
@@ -43,9 +46,10 @@ watch([() => props.tournamentId, () => metricStore.globalReliabilityOn], fetchIn
   </div>
   <CardImportant 
     v-else
-    title="Daily Insight" 
-    :items="insights" 
+    title="Daily Insight"
+    :subtitle="date ? formatBlockDate(date) : ''"
+    :items="insights"
     icon="insights"
-    empty-message="Sorry, we'd love to give you some food for thought, but there were no matches today."
+    empty-message="Sorry, we'd love to give you some food for thought, but there's nothing to share yet."
   />
 </template>
