@@ -22,7 +22,7 @@ const summaryItems = computed(() => {
   ]
 })
 
-// Бэк сейчас присылает только "completed" (api-spec.json), остальное считаем активным
+// Бэк сейчас присылает только "completed", остальное считаем активным
 const sections = computed(() => {
   const all = tournamentStore.filteredTournaments
   const finished = all.filter(t => t.status === 'COMPLETED')
