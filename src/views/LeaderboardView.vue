@@ -103,6 +103,15 @@ const fetchLeaderboardData = async () => {
   }
 }
 
+// Смена номера страницы сама запускает загрузку, а на первой странице номер не изменится
+const reloadFromFirstPage = () => {
+  if (currentPage.value === 1) {
+    fetchLeaderboardData()
+  } else {
+    currentPage.value = 1
+  }
+}
+
 onMounted(async () => {
   await tournamentStore.fetchTournaments()
   
@@ -113,9 +122,6 @@ onMounted(async () => {
 watch(
   [avgMinutesRange, performanceOrder, resultsLimit, selectedTeam, gameMinMinutes, minGames],
   ([avgMins, order, limit, team, minMins, mGames]) => {
-    const wasPageOne = currentPage.value === 1
-    currentPage.value = 1 // Reset page on filter change
-    
     router.replace({
       query: {
         ...route.query,
@@ -128,11 +134,7 @@ watch(
       }
     })
 
-    // If we were already on page 1, the watch on currentPage won't fire,
-    // so we need to trigger fetch manually.
-    if (wasPageOne) {
-      fetchLeaderboardData()
-    }
+    reloadFromFirstPage()
   },
   { deep: true }
 )
@@ -145,9 +147,11 @@ watch(
 )
 
 watch(
-  [() => tournamentStore.selectedTournamentId, () => metricStore.globalReliabilityOn, currentPage],
-  fetchLeaderboardData
+  [() => tournamentStore.selectedTournamentId, () => metricStore.globalReliabilityOn],
+  reloadFromFirstPage
 )
+
+watch(currentPage, fetchLeaderboardData)
 </script>
 
 <template>
@@ -301,9 +305,9 @@ watch(
         </button>
         <button 
           @click="currentPage < totalPages && currentPage++"
-          :disabled="currentPage === totalPages"
+          :disabled="currentPage >= totalPages"
           class="px-md py-sm font-label-caps border-2 border-black transition-all cursor-pointer disabled:bg-surface-container-highest disabled:text-neutral-medium disabled:border-neutral-medium disabled:cursor-not-allowed"
-          :class="currentPage === totalPages ? '' : 'bg-white text-black hover:bg-black hover:text-white'"
+          :class="currentPage >= totalPages ? '' : 'bg-white text-black hover:bg-black hover:text-white'"
         >
           NEXT
         </button>
