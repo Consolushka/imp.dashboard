@@ -67,7 +67,7 @@ watch([() => props.tournamentId, () => metricStore.globalReliabilityOn], fetchPl
             <th class="font-label-caps text-label-caps text-primary p-sm border-r border-border-light text-right">PTS</th>
             <th class="font-label-caps text-label-caps text-primary p-sm border-r border-border-light text-right">REB</th>
             <th class="font-label-caps text-label-caps text-primary p-sm border-r border-border-light text-right">AST</th>
-            <!-- На телефоне колонка закреплена и должна быть непрозрачной, иначе при прокрутке сквозь неё видны соседние: берём цвет строки, а оттенок кладём поверх -->
+            <!-- На телефоне колонка закреплена и должна быть непрозрачной, иначе при прокрутке сквозь неё видны соседние: берём цвет строки, а оттенок кладём поверх. Разделитель сделан тенью, потому что обычная граница в этой таблице при прокрутке осталась бы на месте -->
             <th class="font-label-caps text-label-caps text-secondary-container p-sm text-right bg-secondary-fixed/30 max-sm:sticky max-sm:right-0 max-sm:bg-inherit max-sm:bg-gradient-to-r max-sm:from-secondary-fixed/30 max-sm:to-secondary-fixed/30 max-sm:shadow-[inset_2px_0_0_0_rgba(0,0,0,1)]">IMP</th>
           </tr>
         </thead>
