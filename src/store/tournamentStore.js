@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { api } from '../api/index'
 import { groupTournaments, bestByTier } from '../utils/tournamentGroups'
+import { latestOnly } from '../utils/latestOnly'
 
 export const useTournamentStore = defineStore('tournament', () => {
   // Список для селекторов: summary, дополненный полями из basic
@@ -86,10 +87,13 @@ export const useTournamentStore = defineStore('tournament', () => {
     selectedTournamentId.value = id
   }
 
+  const startLeagueRequest = latestOnly()
+
   /**
    * Загрузить турниры со статистикой (для Tournaments View)
    */
   async function fetchTournamentsData() {
+    const isLatest = startLeagueRequest()
     isLoading.value = true
     try {
       const params = {}
@@ -97,11 +101,15 @@ export const useTournamentStore = defineStore('tournament', () => {
         params.league_id = selectedLeague.value
       }
       const response = await api.getTournamentsSummary(params)
+      if (!isLatest()) return
       leagueTournaments.value = response.data
     } catch (error) {
+      if (!isLatest()) return
       console.error('Failed to fetch tournaments summary:', error)
+      // Иначе при смене лиги остались бы турниры предыдущей
+      leagueTournaments.value = []
     } finally {
-      isLoading.value = false
+      if (isLatest()) isLoading.value = false
     }
   }
 
