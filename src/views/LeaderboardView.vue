@@ -18,7 +18,8 @@ const router = useRouter()
 const avgMinutesRange = ref(route.query.avgMins ? Number(route.query.avgMins) : 20)
 const performanceOrder = ref(route.query.order || 'desc') // API expects 'asc' or 'desc'
 const resultsLimit = ref(route.query.limit ? Number(route.query.limit) : 10)
-const selectedTeam = ref(route.query.team || 'all')
+// id команд в списке — числа, а из адреса приходит строка: без приведения селектор не найдёт команду
+const selectedTeam = ref(route.query.team ? Number(route.query.team) : 'all')
 const gameMinMinutes = ref(route.query.minMins ? Number(route.query.minMins) : 20)
 const minGames = ref(route.query.minGames ? Number(route.query.minGames) : 1)
 
@@ -125,6 +126,13 @@ const reloadFromFirstPage = () => {
   }
 }
 
+// Команда другого турнира в фильтре бессмысленна. Сбрасываем только по выбору пользователя:
+// пока догружается список, стор сам подставляет турнир, и команда из ссылки должна уцелеть
+const selectTournament = (id) => {
+  selectedTeam.value = 'all'
+  tournamentStore.selectedTournamentId = id
+}
+
 onMounted(async () => {
   await tournamentStore.fetchTournaments()
   
@@ -132,25 +140,21 @@ onMounted(async () => {
   fetchLeaderboardData()
 })
 
-watch(
-  [avgMinutesRange, performanceOrder, resultsLimit, selectedTeam, gameMinMinutes, minGames],
-  ([avgMins, order, limit, team, minMins, mGames]) => {
-    router.replace({
-      query: {
-        ...route.query,
-        avgMins: avgMins === 20 ? undefined : avgMins,
-        order: order === 'desc' ? undefined : order,
-        limit: limit === 10 ? undefined : limit,
-        team: team === 'all' ? undefined : team,
-        minMins: minMins === 20 ? undefined : minMins,
-        minGames: mGames === 1 ? undefined : mGames
-      }
-    })
+const filters = [avgMinutesRange, performanceOrder, resultsLimit, selectedTeam, gameMinMinutes, minGames]
 
-    reloadFromFirstPage()
-  },
-  { deep: true }
-)
+watch(filters, ([avgMins, order, limit, team, minMins, mGames]) => {
+  router.replace({
+    query: {
+      ...route.query,
+      avgMins: avgMins === 20 ? undefined : avgMins,
+      order: order === 'desc' ? undefined : order,
+      limit: limit === 10 ? undefined : limit,
+      team: team === 'all' ? undefined : team,
+      minMins: minMins === 20 ? undefined : minMins,
+      minGames: mGames === 1 ? undefined : mGames
+    }
+  })
+})
 
 watch(
   () => tournamentStore.selectedTournamentId,
@@ -159,8 +163,9 @@ watch(
   }
 )
 
+// Один наблюдатель на всё, что меняет таблицу: турнир и сброшенная вместе с ним команда дают одну загрузку
 watch(
-  [() => tournamentStore.selectedTournamentId, () => metricStore.globalReliabilityOn],
+  [...filters, () => tournamentStore.selectedTournamentId, () => metricStore.globalReliabilityOn],
   reloadFromFirstPage
 )
 
@@ -177,7 +182,8 @@ watch(currentPage, fetchLeaderboardData)
       <!-- Large Primary Filter -->
       <div class="w-full md:w-80">
         <PrimarySelector 
-          v-model="tournamentStore.selectedTournamentId" 
+          :model-value="tournamentStore.selectedTournamentId"
+          @update:model-value="selectTournament"
           :options="tournamentStore.tournaments"
           :groups="tournamentStore.selectorGroups"
           value-key="id"
