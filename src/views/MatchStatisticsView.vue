@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/api/index'
 import { useMetricStore } from '@/store/metricStore'
+import { latestOnly } from '@/utils/latestOnly'
 import ToggleSwitch from '@/components/ui/forms/ToggleSwitch.vue'
 import DarkCard from '@/components/ui/DarkCard.vue'
 import DataTable from '@/components/ui/DataTable.vue'
@@ -68,16 +69,20 @@ const columns = computed(() => {
 
 const sortableColumns = ['min', 'plusMinus', 'pts', 'imp']
 
+const startRequest = latestOnly()
+
 const fetchMatchData = async () => {
+  const isLatest = startRequest()
   isLoading.value = true
   try {
     const [details, performances] = await Promise.all([
-      api.getMatchDetails(route.params.id, { 
+      api.getMatchDetails(route.params.id, {
         use_reliability: isLocalReliability.value
       }),
       api.getKeyPerformances(route.params.id)
     ])
-    
+    if (!isLatest()) return
+
     if (!details) {
       router.push({ name: 'not-found' })
       return
@@ -86,14 +91,17 @@ const fetchMatchData = async () => {
     matchData.value = details
     keyPerformances.value = performances?.data || []
   } catch (error) {
+    if (!isLatest()) return
     console.error('Failed to fetch match details:', error)
     router.push({ name: 'not-found' })
   } finally {
-    isLoading.value = false
+    if (isLatest()) isLoading.value = false
   }
 }
 
 onMounted(fetchMatchData)
+// Ответ, пришедший после ухода со страницы, не должен перебросить пользователя на «не найдено»
+onUnmounted(startRequest)
 
 // Re-fetch data when reliability changes or when navigating to a different match
 watch([isLocalReliability, () => route.params.id], fetchMatchData)

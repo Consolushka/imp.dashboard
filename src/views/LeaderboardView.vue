@@ -8,6 +8,7 @@ import PrimarySelector from '../components/ui/forms/PrimarySelector.vue'
 import SecondarySelector from '../components/ui/forms/SecondarySelector.vue'
 import SegmentedControl from '../components/ui/forms/SegmentedControl.vue'
 import RangeSlider from '../components/ui/forms/RangeSlider.vue'
+import { latestOnly } from '../utils/latestOnly'
 
 const tournamentStore = useTournamentStore()
 const metricStore = useMetricStore()
@@ -64,12 +65,18 @@ const minGamesOptions = [
 
 const totalPages = computed(() => Math.ceil(totalPlayers.value / resultsLimit.value))
 
+const startTeamsRequest = latestOnly()
+const startLeaderboardRequest = latestOnly()
+
 const fetchTeams = async () => {
   if (!tournamentStore.selectedTournamentId) return
+  const isLatest = startTeamsRequest()
   try {
     const response = await api.getTeamsByTournament(tournamentStore.selectedTournamentId)
+    if (!isLatest()) return
     teams.value = response.data
   } catch (error) {
+    if (!isLatest()) return
     console.error('Failed to fetch teams:', error)
     teams.value = []
   }
@@ -79,7 +86,8 @@ const fetchLeaderboardData = async () => {
   if (!tournamentStore.selectedTournamentId) {
     return
   }
-  
+
+  const isLatest = startLeaderboardRequest()
   isLoading.value = true
   try {
     const response = await api.getLeaderboard({
@@ -94,12 +102,17 @@ const fetchLeaderboardData = async () => {
       min_games: minGames.value,
       use_reliability: metricStore.globalReliabilityOn
     })
+    if (!isLatest()) return
     players.value = response.data
     totalPlayers.value = response.meta?.total || response.data.length
   } catch (error) {
+    if (!isLatest()) return
     console.error('Failed to fetch leaderboard:', error)
+    // Иначе под новыми фильтрами осталась бы таблица, посчитанная по старым
+    players.value = []
+    totalPlayers.value = 0
   } finally {
-    isLoading.value = false
+    if (isLatest()) isLoading.value = false
   }
 }
 
