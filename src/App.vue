@@ -34,7 +34,6 @@ const onScroll = (e) => {
 </template>
 
 <style>
-/* Мы убираем старые стили, так как теперь используем Tailwind из index.html */
 body {
   margin: 0;
   overflow: hidden;
