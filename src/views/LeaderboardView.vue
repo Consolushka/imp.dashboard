@@ -18,8 +18,9 @@ const router = useRouter()
 const avgMinutesRange = ref(route.query.avgMins ? Number(route.query.avgMins) : 20)
 const performanceOrder = ref(route.query.order || 'desc') // API expects 'asc' or 'desc'
 const resultsLimit = ref(route.query.limit ? Number(route.query.limit) : 10)
-// id команд в списке — числа, а из адреса приходит строка: без приведения селектор не найдёт команду
-const selectedTeam = ref(route.query.team ? Number(route.query.team) : 'all')
+// id команд в списке — числа, а из адреса приходит строка: без приведения селектор не найдёт команду.
+// Мусор в адресе (?team=abc) даёт NaN — тогда показываем все команды
+const selectedTeam = ref(Number(route.query.team) || 'all')
 const gameMinMinutes = ref(route.query.minMins ? Number(route.query.minMins) : 20)
 const minGames = ref(route.query.minGames ? Number(route.query.minGames) : 1)
 
@@ -129,8 +130,10 @@ const reloadFromFirstPage = () => {
 // Команда другого турнира в фильтре бессмысленна. Сбрасываем только по выбору пользователя:
 // пока догружается список, стор сам подставляет турнир, и команда из ссылки должна уцелеть
 const selectTournament = (id) => {
+  // Селектор сообщает и о повторном выборе того же турнира — это не смена
+  if (id === tournamentStore.selectedTournamentId) return
   selectedTeam.value = 'all'
-  tournamentStore.selectedTournamentId = id
+  tournamentStore.setTournament(id)
 }
 
 onMounted(async () => {
