@@ -15,7 +15,8 @@ const metricStore = useMetricStore()
 const route = useRoute()
 const router = useRouter()
 
-const avgMinutesRange = ref(route.query.avgMins ? Number(route.query.avgMins) : 20)
+// API принимает avg_minutes от 1: старая ссылка с ?avgMins=0 иначе получила бы 422
+const avgMinutesRange = ref(route.query.avgMins ? Math.max(1, Number(route.query.avgMins)) : 20)
 const performanceOrder = ref(route.query.order || 'desc') // API expects 'asc' or 'desc'
 const resultsLimit = ref(route.query.limit ? Number(route.query.limit) : 10)
 const selectedTeam = ref(route.query.team || 'all')
@@ -193,8 +194,8 @@ watch(currentPage, fetchLeaderboardData)
       <div class="space-y-md">
         <RangeSlider 
           v-model="avgMinutesRange" 
-          :min="0" 
-          :max="48" 
+          :min="1"
+          :max="48"
           label="Avg Minutes Range"
         />
         <SecondarySelector 

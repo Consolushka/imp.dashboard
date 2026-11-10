@@ -1,4 +1,13 @@
 import axios from 'axios'
+import { ref } from 'vue'
+
+// Окно лимита частоты в API (throttle:60,1 в routes/api.php). Повторяем его здесь, потому что
+// заголовок Retry-After браузер от нас прячет: API не разрешает его читать с другого домена.
+// Поменяли лимит в API — поменяй и здесь.
+const RATE_LIMIT_WINDOW_SECONDS = 60
+
+// Момент, до которого API отказывает из-за лимита частоты; null — лимит не превышен
+export const rateLimitedUntil = ref(null)
 
 const apiHost = import.meta.env.VITE_API_HOST || 'http://localhost'
 
@@ -28,6 +37,10 @@ client.interceptors.response.use(
   (error) => {
     // Глобальная обработка ошибок (можно добавить уведомления)
     console.error('API Error:', error.response?.data || error.message)
+    if (error.response?.status === 429) {
+      const seconds = Number(error.response.headers['retry-after']) || RATE_LIMIT_WINDOW_SECONDS
+      rateLimitedUntil.value = Date.now() + seconds * 1000
+    }
     return Promise.reject(error)
   }
 )
