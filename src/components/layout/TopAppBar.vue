@@ -46,13 +46,7 @@ const performSearch = async () => {
 watch(searchQuery, (newVal) => {
   if (debounceTimeout) clearTimeout(debounceTimeout)
 
-  if (!newVal) {
-    startSearch()
-    isSearching.value = false
-    searchResults.value = []
-    showResults.value = false
-    return
-  }
+  if (newVal.length < 2) return performSearch()
 
   debounceTimeout = setTimeout(() => {
     performSearch()

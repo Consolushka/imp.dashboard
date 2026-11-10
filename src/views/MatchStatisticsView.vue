@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/api/index'
 import { useMetricStore } from '@/store/metricStore'
@@ -100,6 +100,8 @@ const fetchMatchData = async () => {
 }
 
 onMounted(fetchMatchData)
+// Ответ, пришедший после ухода со страницы, не должен перебросить пользователя на «не найдено»
+onUnmounted(startRequest)
 
 // Re-fetch data when reliability changes or when navigating to a different match
 watch([isLocalReliability, () => route.params.id], fetchMatchData)

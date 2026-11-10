@@ -29,6 +29,8 @@ export const useMatchStore = defineStore('match', () => {
     if (!tournamentId) {
       matches.value = []
       weeklyLeaders.value = []
+      lastPage.value = 1
+      isLoading.value = false
       return
     }
 
