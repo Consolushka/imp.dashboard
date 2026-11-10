@@ -15,7 +15,10 @@ const metricStore = useMetricStore()
 const route = useRoute()
 const router = useRouter()
 
-const avgMinutesRange = ref(route.query.avgMins ? Number(route.query.avgMins) : 20)
+// API принимает avg_minutes целым от 1 до 48: значение из старой или правленой руками ссылки иначе дало бы 422
+const avgMinutesRange = ref(
+  route.query.avgMins ? Math.min(48, Math.max(1, Math.round(Number(route.query.avgMins)) || 20)) : 20
+)
 const performanceOrder = ref(route.query.order || 'desc') // API expects 'asc' or 'desc'
 const resultsLimit = ref(route.query.limit ? Number(route.query.limit) : 10)
 // id команд в списке — числа, а из адреса приходит строка: без приведения селектор не найдёт команду.
@@ -202,8 +205,8 @@ watch(currentPage, fetchLeaderboardData)
       <div class="space-y-md">
         <RangeSlider 
           v-model="avgMinutesRange" 
-          :min="0" 
-          :max="48" 
+          :min="1"
+          :max="48"
           label="Avg Minutes Range"
         />
         <SecondarySelector 
