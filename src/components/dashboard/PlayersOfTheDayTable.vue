@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { api } from '../../api/index'
 import { useMetricStore } from '../../store/metricStore'
 import { formatBlockDate } from '../../utils/blockDate'
+import { latestOnly } from '../../utils/latestOnly'
 
 const props = defineProps({
   tournamentId: {
@@ -15,23 +16,27 @@ const metricStore = useMetricStore()
 const players = ref([])
 const date = ref(null)
 const isLoading = ref(true)
+const startRequest = latestOnly()
 
 const fetchPlayers = async () => {
+  const isLatest = startRequest()
   isLoading.value = true
   try {
     const response = await api.getPlayersOfTheDay(
       props.tournamentId,
       { use_reliability: metricStore.globalReliabilityOn }
     )
+    if (!isLatest()) return
     players.value = response.data
     date.value = response.date
   } catch (error) {
+    if (!isLatest()) return
     console.error('Failed to fetch players of the day:', error)
     // Иначе при смене турнира остались бы игроки и дата предыдущего
     players.value = []
     date.value = null
   } finally {
-    isLoading.value = false
+    if (isLatest()) isLoading.value = false
   }
 }
 
