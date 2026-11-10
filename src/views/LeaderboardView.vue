@@ -15,8 +15,10 @@ const metricStore = useMetricStore()
 const route = useRoute()
 const router = useRouter()
 
-// API принимает avg_minutes от 1: старая ссылка с ?avgMins=0 иначе получила бы 422
-const avgMinutesRange = ref(route.query.avgMins ? Math.max(1, Number(route.query.avgMins)) : 20)
+// API принимает avg_minutes целым от 1 до 48: значение из старой или правленой руками ссылки иначе дало бы 422
+const avgMinutesRange = ref(
+  route.query.avgMins ? Math.min(48, Math.max(1, Math.round(Number(route.query.avgMins)) || 20)) : 20
+)
 const performanceOrder = ref(route.query.order || 'desc') // API expects 'asc' or 'desc'
 const resultsLimit = ref(route.query.limit ? Number(route.query.limit) : 10)
 const selectedTeam = ref(route.query.team || 'all')
