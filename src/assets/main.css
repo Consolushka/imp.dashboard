@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Базовые сбросы и шрифты */
 :root {
   --primary-color: #1c1b1b;

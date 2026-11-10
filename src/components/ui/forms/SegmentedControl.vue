@@ -25,8 +25,8 @@ defineEmits(['update:modelValue'])
   <div class="flex flex-col gap-1">
     <label v-if="label" class="font-label-caps text-xs uppercase text-on-background">{{ label }}</label>
     <div 
-      class="flex h-14 border-2 border-black bg-white overflow-hidden"
-      :class="`grid grid-cols-${options.length}`"
+      class="grid h-14 border-2 border-black bg-white overflow-hidden"
+      :style="{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }"
     >
       <button 
         v-for="option in options" 
