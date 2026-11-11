@@ -8,6 +8,7 @@ import PrimarySelector from '../components/ui/forms/PrimarySelector.vue'
 import SecondarySelector from '../components/ui/forms/SecondarySelector.vue'
 import SegmentedControl from '../components/ui/forms/SegmentedControl.vue'
 import RangeSlider from '../components/ui/forms/RangeSlider.vue'
+import ToggleSwitch from '../components/ui/forms/ToggleSwitch.vue'
 import { latestOnly } from '../utils/latestOnly'
 
 const tournamentStore = useTournamentStore()
@@ -183,13 +184,14 @@ watch(currentPage, fetchLeaderboardData)
 <template>
   <main class="max-w-[1280px] mx-auto p-lg lg:p-xl space-y-xl text-primary">
     <!-- Header Section -->
-    <header class="border-b-4 border-black pb-lg flex flex-col md:flex-row md:items-end justify-between gap-md">
+    <header class="border-b-4 border-black pb-lg flex flex-col lg:flex-row lg:items-end justify-between gap-md">
       <div>
         <h1 class="font-h1 text-h1 uppercase tracking-tighter">IMP LEADERBOARD</h1>
       </div>
-      <!-- Large Primary Filter -->
-      <div class="w-full md:w-80">
-        <PrimarySelector 
+      <!-- В строку с заголовком встаём только с lg: на меньшей ширине боковая панель оставляет мало места и селектор с тумблером уезжали за край -->
+      <div class="w-full lg:w-80 flex flex-col gap-md">
+        <!-- Large Primary Filter -->
+        <PrimarySelector
           :model-value="tournamentStore.selectedTournamentId"
           @update:model-value="selectTournament"
           :options="tournamentStore.tournaments"
@@ -198,6 +200,10 @@ watch(currentPage, fetchLeaderboardData)
           label-key="name"
           label="SELECT TOURNAMENT"
         />
+        <div class="flex flex-row items-center justify-between gap-3 bg-surface-white border-2 border-border-dark p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+          <span class="font-label-caps text-label-caps uppercase text-primary text-xs">GLOBAL RELIABILITY MODE</span>
+          <ToggleSwitch v-model="metricStore.globalReliabilityOn" />
+        </div>
       </div>
     </header>
 
