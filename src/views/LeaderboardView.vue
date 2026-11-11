@@ -74,10 +74,11 @@ const startTeamsRequest = latestOnly()
 const startLeaderboardRequest = latestOnly()
 
 const fetchTeams = async () => {
-  if (!tournamentStore.selectedTournamentId) return
+  const tournamentId = tournamentStore.readyTournamentId
+  if (!tournamentId) return
   const isLatest = startTeamsRequest()
   try {
-    const response = await api.getTeamsByTournament(tournamentStore.selectedTournamentId)
+    const response = await api.getTeamsByTournament(tournamentId)
     if (!isLatest()) return
     teams.value = response.data
   } catch (error) {
@@ -88,15 +89,14 @@ const fetchTeams = async () => {
 }
 
 const fetchLeaderboardData = async () => {
-  if (!tournamentStore.selectedTournamentId) {
-    return
-  }
+  const tournamentId = tournamentStore.readyTournamentId
+  if (!tournamentId) return
 
   const isLatest = startLeaderboardRequest()
   isLoading.value = true
   try {
     const response = await api.getLeaderboard({
-      tournament_id: tournamentStore.selectedTournamentId,
+      tournament_id: tournamentId,
       per: 'fullGame',
       limit: resultsLimit.value,
       page: currentPage.value,
@@ -139,11 +139,8 @@ const selectTournament = (id) => {
   tournamentStore.setTournament(id)
 }
 
-onMounted(async () => {
-  await tournamentStore.fetchTournaments()
-  
-  fetchTeams()
-  fetchLeaderboardData()
+onMounted(() => {
+  tournamentStore.fetchTournaments()
 })
 
 const filters = [avgMinutesRange, performanceOrder, resultsLimit, selectedTeam, gameMinMinutes, minGames]
@@ -162,17 +159,15 @@ watch(filters, ([avgMins, order, limit, team, minMins, mGames]) => {
   })
 })
 
-watch(
-  () => tournamentStore.selectedTournamentId,
-  () => {
-    fetchTeams()
-  }
-)
+// Загрузку запускают только наблюдатели: сразу, если список турниров уже загружен другой страницей,
+// иначе — когда он загрузится
+watch(() => tournamentStore.readyTournamentId, fetchTeams, { immediate: true })
 
 // Один наблюдатель на всё, что меняет таблицу: турнир и сброшенная вместе с ним команда дают одну загрузку
 watch(
-  [...filters, () => tournamentStore.selectedTournamentId, () => metricStore.globalReliabilityOn],
-  reloadFromFirstPage
+  [...filters, () => tournamentStore.readyTournamentId, () => metricStore.globalReliabilityOn],
+  reloadFromFirstPage,
+  { immediate: true }
 )
 
 watch(currentPage, fetchLeaderboardData)

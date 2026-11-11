@@ -21,10 +21,8 @@ onMounted(() => {
   tournamentStore.fetchTournaments()
 })
 
-// Пока список грузится, сохранённый выбор может быть заменён на турнир по умолчанию —
-// ждём окончания загрузки, чтобы не запрашивать матчи дважды
 watch(
-  () => tournamentStore.isTournamentsLoading ? null : tournamentStore.selectedTournamentId,
+  () => tournamentStore.readyTournamentId,
   async (newVal) => {
     if (!newVal) return
     router.replace({ query: { ...route.query, tournament: newVal } })
