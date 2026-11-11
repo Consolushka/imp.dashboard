@@ -8,6 +8,7 @@ import PrimarySelector from '../components/ui/forms/PrimarySelector.vue'
 import SecondarySelector from '../components/ui/forms/SecondarySelector.vue'
 import SegmentedControl from '../components/ui/forms/SegmentedControl.vue'
 import RangeSlider from '../components/ui/forms/RangeSlider.vue'
+import ToggleSwitch from '../components/ui/forms/ToggleSwitch.vue'
 import { latestOnly } from '../utils/latestOnly'
 
 const tournamentStore = useTournamentStore()
@@ -196,6 +197,10 @@ watch(currentPage, fetchLeaderboardData)
           label-key="name"
           label="SELECT TOURNAMENT"
         />
+      </div>
+      <div class="flex flex-row items-center justify-between gap-3 bg-surface-white border-2 border-border-dark p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] w-full md:w-auto">
+        <span class="font-label-caps text-label-caps uppercase text-primary text-xs">GLOBAL RELIABILITY MODE</span>
+        <ToggleSwitch v-model="metricStore.globalReliabilityOn" />
       </div>
     </header>
 

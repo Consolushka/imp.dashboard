@@ -11,17 +11,7 @@ export const useMetricStore = defineStore('metric', () => {
     localStorage.setItem('globalReliabilityOn', newValue.toString())
   })
 
-  function toggleReliability() {
-    globalReliabilityOn.value = !globalReliabilityOn.value
-  }
-
-  function setReliability(value) {
-    globalReliabilityOn.value = !!value
-  }
-
   return {
-    globalReliabilityOn,
-    toggleReliability,
-    setReliability
+    globalReliabilityOn
   }
 })
