@@ -10,9 +10,9 @@ export const useTournamentStore = defineStore('tournament', () => {
   const isTournamentsLoading = ref(true)
   // Выбор общий для всех страниц и переживает перезагрузку
   const selectedTournamentId = ref(Number(localStorage.getItem('selectedTournamentId')) || null)
-  // Пока список грузится, сохранённый выбор может смениться на турнир по умолчанию.
-  // Страницы грузят данные по этому полю, чтобы не запрашивать их дважды
-  const readyTournamentId = computed(() => isTournamentsLoading.value ? null : selectedTournamentId.value)
+  // Выбор окончателен, только когда список загружен: до этого сохранённый турнир может смениться
+  // на турнир по умолчанию. Страницы грузят данные по этому полю, чтобы не запрашивать их дважды
+  const readyTournamentId = computed(() => tournaments.value.length ? selectedTournamentId.value : null)
 
   // Турниры одной лиги для страницы Tournaments
   const leagueTournaments = ref([])
