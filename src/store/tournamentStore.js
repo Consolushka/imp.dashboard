@@ -46,13 +46,21 @@ export const useTournamentStore = defineStore('tournament', () => {
     return bestByTier(active.length ? active : list)
   }
 
+  // Страницу могут открыть, пока список ещё грузится: второй вызов ждёт идущую загрузку, а не запускает новую
+  let tournamentsRequest = null
+
   /**
    * Загрузить список турниров для селекторов и выбрать турнир по умолчанию
    */
-  async function fetchTournaments() {
+  function fetchTournaments() {
     // Список общий для всех страниц — второй раз не грузим
-    if (tournaments.value.length > 0) return
+    if (tournaments.value.length > 0) return Promise.resolve()
+    // После ошибки запрос сбрасывается, и следующий вызов грузит список заново
+    tournamentsRequest ??= loadTournaments().finally(() => { tournamentsRequest = null })
+    return tournamentsRequest
+  }
 
+  async function loadTournaments() {
     isTournamentsLoading.value = true
     try {
       // regulation_duration есть только в basic, teams_count/games_count — только в summary
