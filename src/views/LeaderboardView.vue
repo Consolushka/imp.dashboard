@@ -16,6 +16,11 @@ const metricStore = useMetricStore()
 const route = useRoute()
 const router = useRouter()
 
+// Ссылка с ?tournament= важнее ранее выбранного турнира, иначе команда из ссылки окажется в чужом турнире.
+// Мусор в адресе (?tournament=abc) пропускаем
+const linkedTournament = Number(route.query.tournament)
+if (linkedTournament) tournamentStore.setTournament(linkedTournament)
+
 // API принимает avg_minutes целым от 1 до 48: значение из старой или правленой руками ссылки иначе дало бы 422
 const avgMinutesRange = ref(
   route.query.avgMins ? Math.min(48, Math.max(1, Math.round(Number(route.query.avgMins)) || 20)) : 20
@@ -153,10 +158,13 @@ onMounted(() => {
 
 const filters = [avgMinutesRange, performanceOrder, resultsLimit, selectedTeam, gameMinMinutes, minGames]
 
-watch(filters, ([avgMins, order, limit, team, minMins, mGames]) => {
+// Турнир пишем в адрес тем же наблюдателем, что и фильтры: смена турнира сбрасывает команду, и две замены
+// адреса подряд прочитали бы ещё старый адрес — вторая затёрла бы первую
+watch([...filters, () => tournamentStore.selectedTournamentId], ([avgMins, order, limit, team, minMins, mGames, tournament]) => {
   router.replace({
     query: {
       ...route.query,
+      tournament: tournament || undefined,
       avgMins: avgMins === 20 ? undefined : avgMins,
       order: order === 'desc' ? undefined : order,
       limit: limit === 10 ? undefined : limit,
@@ -165,7 +173,7 @@ watch(filters, ([avgMins, order, limit, team, minMins, mGames]) => {
       minGames: mGames === 1 ? undefined : mGames
     }
   })
-})
+}, { immediate: true })
 
 // Загрузку запускают только наблюдатели: сразу, если список турниров уже загружен другой страницей,
 // иначе — когда он загрузится
