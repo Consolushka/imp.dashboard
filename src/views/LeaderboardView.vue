@@ -130,6 +130,13 @@ const reloadFromFirstPage = () => {
   }
 }
 
+// Если список турниров не загрузился, таблицу грузить не с чем — сначала повторяем его,
+// таблицу после загрузки запросят наблюдатели
+const refresh = () => {
+  if (tournamentStore.readyTournamentId) fetchLeaderboardData()
+  else tournamentStore.fetchTournaments()
+}
+
 // Команда другого турнира в фильтре бессмысленна. Сбрасываем только по выбору пользователя:
 // пока догружается список, стор сам подставляет турнир, и команда из ссылки должна уцелеть
 const selectTournament = (id) => {
@@ -337,7 +344,7 @@ watch(currentPage, fetchLeaderboardData)
 
   <!-- Refresh FAB -->
   <button 
-    @click="fetchLeaderboardData"
+    @click="refresh"
     class="fixed bottom-24 right-8 w-16 h-16 bg-black text-white border-4 border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30"
   >
     <span class="material-symbols-outlined text-3xl">refresh</span>
