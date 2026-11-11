@@ -19,8 +19,7 @@ const dashboardPick = computed(() =>
 )
 
 const dashboardTournamentId = computed({
-  // Пустая строка вместо undefined, пока список грузится: селектор требует значение
-  get: () => dashboardPick.value.tournament?.id ?? '',
+  get: () => dashboardPick.value.tournament?.id,
   set: (id) => tournamentStore.setTournament(id)
 })
 
