@@ -74,10 +74,11 @@ const startTeamsRequest = latestOnly()
 const startLeaderboardRequest = latestOnly()
 
 const fetchTeams = async () => {
-  if (!tournamentStore.selectedTournamentId) return
+  const tournamentId = tournamentStore.readyTournamentId
+  if (!tournamentId) return
   const isLatest = startTeamsRequest()
   try {
-    const response = await api.getTeamsByTournament(tournamentStore.selectedTournamentId)
+    const response = await api.getTeamsByTournament(tournamentId)
     if (!isLatest()) return
     teams.value = response.data
   } catch (error) {
@@ -88,15 +89,14 @@ const fetchTeams = async () => {
 }
 
 const fetchLeaderboardData = async () => {
-  if (!tournamentStore.selectedTournamentId) {
-    return
-  }
+  const tournamentId = tournamentStore.readyTournamentId
+  if (!tournamentId) return
 
   const isLatest = startLeaderboardRequest()
   isLoading.value = true
   try {
     const response = await api.getLeaderboard({
-      tournament_id: tournamentStore.selectedTournamentId,
+      tournament_id: tournamentId,
       per: 'fullGame',
       limit: resultsLimit.value,
       page: currentPage.value,
@@ -130,6 +130,13 @@ const reloadFromFirstPage = () => {
   }
 }
 
+// Если список турниров не загрузился, таблицу грузить не с чем — сначала повторяем его,
+// таблицу после загрузки запросят наблюдатели
+const refresh = () => {
+  if (tournamentStore.readyTournamentId) fetchLeaderboardData()
+  else tournamentStore.fetchTournaments()
+}
+
 // Команда другого турнира в фильтре бессмысленна. Сбрасываем только по выбору пользователя:
 // пока догружается список, стор сам подставляет турнир, и команда из ссылки должна уцелеть
 const selectTournament = (id) => {
@@ -139,11 +146,8 @@ const selectTournament = (id) => {
   tournamentStore.setTournament(id)
 }
 
-onMounted(async () => {
-  await tournamentStore.fetchTournaments()
-  
-  fetchTeams()
-  fetchLeaderboardData()
+onMounted(() => {
+  tournamentStore.fetchTournaments()
 })
 
 const filters = [avgMinutesRange, performanceOrder, resultsLimit, selectedTeam, gameMinMinutes, minGames]
@@ -162,17 +166,15 @@ watch(filters, ([avgMins, order, limit, team, minMins, mGames]) => {
   })
 })
 
-watch(
-  () => tournamentStore.selectedTournamentId,
-  () => {
-    fetchTeams()
-  }
-)
+// Загрузку запускают только наблюдатели: сразу, если список турниров уже загружен другой страницей,
+// иначе — когда он загрузится
+watch(() => tournamentStore.readyTournamentId, fetchTeams, { immediate: true })
 
 // Один наблюдатель на всё, что меняет таблицу: турнир и сброшенная вместе с ним команда дают одну загрузку
 watch(
-  [...filters, () => tournamentStore.selectedTournamentId, () => metricStore.globalReliabilityOn],
-  reloadFromFirstPage
+  [...filters, () => tournamentStore.readyTournamentId, () => metricStore.globalReliabilityOn],
+  reloadFromFirstPage,
+  { immediate: true }
 )
 
 watch(currentPage, fetchLeaderboardData)
@@ -342,7 +344,7 @@ watch(currentPage, fetchLeaderboardData)
 
   <!-- Refresh FAB -->
   <button 
-    @click="fetchLeaderboardData"
+    @click="refresh"
     class="fixed bottom-24 right-8 w-16 h-16 bg-black text-white border-4 border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30"
   >
     <span class="material-symbols-outlined text-3xl">refresh</span>
