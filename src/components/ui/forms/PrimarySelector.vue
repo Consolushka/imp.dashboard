@@ -2,9 +2,9 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 
 const props = defineProps({
+  // Пусто, пока выбор ещё не сделан или список не загрузился
   modelValue: {
-    type: [String, Number],
-    required: true
+    type: [String, Number]
   },
   options: {
     type: Array,
@@ -48,8 +48,10 @@ const selectOption = (option) => {
 }
 
 const selectedLabel = computed(() => {
-  const found = optionGroups.value.flatMap(g => g.options).find(opt => optionValue(opt) === props.modelValue)
-  if (!found) return props.modelValue
+  const allOptions = optionGroups.value.flatMap(g => g.options)
+  const found = allOptions.find(opt => optionValue(opt) === props.modelValue)
+  // Сохранённый id без названия ничего не говорит пользователю. Пустой список — значит, варианты ещё грузятся
+  if (!found) return allOptions.length ? '' : 'LOADING…'
   return typeof found === 'object' ? found[props.labelKey] : found
 })
 
