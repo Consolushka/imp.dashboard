@@ -53,6 +53,10 @@ const limitOptions = [
 
 const teamOptions = computed(() => {
   const options = [{ label: 'ALL TEAMS', value: 'all' }]
+  // Пока команды грузятся, у команды из ссылки нет названия — иначе селектор покажет голый id
+  if (!teams.value.length && selectedTeam.value !== 'all') {
+    options.push({ label: 'LOADING...', value: selectedTeam.value })
+  }
   teams.value.forEach(team => {
     options.push({ label: team.name, value: team.id })
   })
