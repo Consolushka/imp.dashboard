@@ -75,10 +75,8 @@ export class GameModel {
     // Парсим статистику команд
     const stats = data.game_team_stats || []
     
-    // Старые записи могут прийти без флага is_home, тогда считаем хозяевами первую команду
-    const hasFlag = stats.some(s => typeof s.is_home === 'boolean')
-    const home = hasFlag ? stats.find(s => s.is_home) : stats[0]
-    const away = hasFlag ? stats.find(s => !s.is_home) : stats[1]
+    const home = stats.find(s => s.is_home)
+    const away = stats.find(s => !s.is_home)
     this.homeTeamStats = home ? new TeamStatsModel(home) : null
     this.awayTeamStats = away ? new TeamStatsModel(away) : null
   }
