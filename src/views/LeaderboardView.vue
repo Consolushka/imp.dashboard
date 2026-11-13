@@ -91,6 +91,10 @@ const fetchTeams = async () => {
     const response = await api.getTeamsByTournament(tournamentId)
     if (!isLatest()) return
     teams.value = response.data
+    // Команда из ссылки могла остаться от другого или удалённого турнира: с ней таблица была бы пустой
+    if (selectedTeam.value !== 'all' && !teams.value.some(t => t.id === selectedTeam.value)) {
+      selectedTeam.value = 'all'
+    }
   } catch (error) {
     if (!isLatest()) return
     console.error('Failed to fetch teams:', error)

@@ -83,8 +83,7 @@ export const useTournamentStore = defineStore('tournament', () => {
       })
 
       // Сохранённый турнир мог пропасть из списка
-      const exists = tournaments.value.some(t => t.id === selectedTournamentId.value)
-      if (!exists && tournaments.value.length > 0) {
+      if (!hasTournament(selectedTournamentId.value) && tournaments.value.length > 0) {
         selectedTournamentId.value = pickDefaultTournament(tournaments.value).id
       }
     } catch (error) {
@@ -94,8 +93,14 @@ export const useTournamentStore = defineStore('tournament', () => {
     }
   }
 
+  const hasTournament = (id) => tournaments.value.some(t => t.id === id)
+
   function setTournament(id) {
-    selectedTournamentId.value = id
+    // Пока список грузится, проверить id не по чему — это сделает загрузка. Если список уже есть,
+    // турнир из старой ссылки мог быть удалён: тогда выбираем турнир по умолчанию, а не грузим данные по пустому месту
+    selectedTournamentId.value = tournaments.value.length && !hasTournament(id)
+      ? pickDefaultTournament(tournaments.value).id
+      : id
   }
 
   const startLeagueRequest = latestOnly()
