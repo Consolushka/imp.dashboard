@@ -21,10 +21,8 @@ onMounted(() => {
   tournamentStore.fetchTournaments()
 })
 
-// Пока список грузится, сохранённый выбор может быть заменён на турнир по умолчанию —
-// ждём окончания загрузки, чтобы не запрашивать матчи дважды
 watch(
-  () => tournamentStore.isTournamentsLoading ? null : tournamentStore.selectedTournamentId,
+  () => tournamentStore.readyTournamentId,
   async (newVal) => {
     if (!newVal) return
     router.replace({ query: { ...route.query, tournament: newVal } })
@@ -37,6 +35,11 @@ watch(
 watch(() => route.query.tournament, (newVal) => {
   if (newVal && Number(newVal) !== tournamentStore.selectedTournamentId) {
     tournamentStore.setTournament(Number(newVal))
+    // Удалённый турнир стор заменяет турниром по умолчанию. Если тот уже выбран, выбор не меняется
+    // и адрес сам не обновится — в нём остался бы несуществующий id
+    if (tournamentStore.selectedTournamentId !== Number(newVal)) {
+      router.replace({ query: { ...route.query, tournament: tournamentStore.selectedTournamentId } })
+    }
   }
 })
 </script>

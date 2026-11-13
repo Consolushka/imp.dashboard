@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { api } from '../api/index'
 import { groupTournaments, bestByTier } from '../utils/tournamentGroups'
+import { latestOnly } from '../utils/latestOnly'
 
 export const useTournamentStore = defineStore('tournament', () => {
   // Список для селекторов: summary, дополненный полями из basic
@@ -9,6 +10,9 @@ export const useTournamentStore = defineStore('tournament', () => {
   const isTournamentsLoading = ref(true)
   // Выбор общий для всех страниц и переживает перезагрузку
   const selectedTournamentId = ref(Number(localStorage.getItem('selectedTournamentId')) || null)
+  // Выбор окончателен, только когда список загружен: до этого сохранённый турнир может смениться
+  // на турнир по умолчанию. Страницы грузят данные по этому полю, чтобы не запрашивать их дважды
+  const readyTournamentId = computed(() => tournaments.value.length ? selectedTournamentId.value : null)
 
   // Турниры одной лиги для страницы Tournaments
   const leagueTournaments = ref([])
@@ -42,13 +46,21 @@ export const useTournamentStore = defineStore('tournament', () => {
     return bestByTier(active.length ? active : list)
   }
 
+  // Страницу могут открыть, пока список ещё грузится: второй вызов ждёт идущую загрузку, а не запускает новую
+  let tournamentsRequest = null
+
   /**
    * Загрузить список турниров для селекторов и выбрать турнир по умолчанию
    */
-  async function fetchTournaments() {
+  function fetchTournaments() {
     // Список общий для всех страниц — второй раз не грузим
-    if (tournaments.value.length > 0) return
+    if (tournaments.value.length > 0) return Promise.resolve()
+    // После ошибки запрос сбрасывается, и следующий вызов грузит список заново
+    tournamentsRequest ??= loadTournaments().finally(() => { tournamentsRequest = null })
+    return tournamentsRequest
+  }
 
+  async function loadTournaments() {
     isTournamentsLoading.value = true
     try {
       // regulation_duration есть только в basic, teams_count/games_count — только в summary
@@ -71,8 +83,7 @@ export const useTournamentStore = defineStore('tournament', () => {
       })
 
       // Сохранённый турнир мог пропасть из списка
-      const exists = tournaments.value.some(t => t.id === selectedTournamentId.value)
-      if (!exists && tournaments.value.length > 0) {
+      if (!hasTournament(selectedTournamentId.value) && tournaments.value.length > 0) {
         selectedTournamentId.value = pickDefaultTournament(tournaments.value).id
       }
     } catch (error) {
@@ -82,14 +93,23 @@ export const useTournamentStore = defineStore('tournament', () => {
     }
   }
 
+  const hasTournament = (id) => tournaments.value.some(t => t.id === id)
+
   function setTournament(id) {
-    selectedTournamentId.value = id
+    // Пока список грузится, проверить id не по чему — это сделает загрузка. Если список уже есть,
+    // турнир из старой ссылки мог быть удалён: тогда выбираем турнир по умолчанию, а не грузим данные по пустому месту
+    selectedTournamentId.value = tournaments.value.length && !hasTournament(id)
+      ? pickDefaultTournament(tournaments.value).id
+      : id
   }
+
+  const startLeagueRequest = latestOnly()
 
   /**
    * Загрузить турниры со статистикой (для Tournaments View)
    */
   async function fetchTournamentsData() {
+    const isLatest = startLeagueRequest()
     isLoading.value = true
     try {
       const params = {}
@@ -97,11 +117,15 @@ export const useTournamentStore = defineStore('tournament', () => {
         params.league_id = selectedLeague.value
       }
       const response = await api.getTournamentsSummary(params)
+      if (!isLatest()) return
       leagueTournaments.value = response.data
     } catch (error) {
+      if (!isLatest()) return
       console.error('Failed to fetch tournaments summary:', error)
+      // Иначе при смене лиги остались бы турниры предыдущей
+      leagueTournaments.value = []
     } finally {
-      isLoading.value = false
+      if (isLatest()) isLoading.value = false
     }
   }
 
@@ -120,6 +144,7 @@ export const useTournamentStore = defineStore('tournament', () => {
     tournaments,
     isTournamentsLoading,
     selectedTournamentId,
+    readyTournamentId,
     selectorGroups,
     fetchTournaments,
     setTournament,

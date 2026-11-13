@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../../api/index'
+import { latestOnly } from '../../utils/latestOnly'
 
 const props = defineProps({
   tournamentId: {
@@ -21,17 +22,24 @@ const viewStats = (id) => {
   })
 }
 
+const startRequest = latestOnly()
+
 const fetchGames = async () => {
+  const isLatest = startRequest()
   isLoading.value = true
   try {
-    const response = await api.getGamesByTournament(props.tournamentId, { 
+    const response = await api.getGamesByTournament(props.tournamentId, {
       per_page: 5 // Limit to 5 for dashboard
     })
+    if (!isLatest()) return
     games.value = response.data
   } catch (error) {
+    if (!isLatest()) return
     console.error('Failed to fetch games:', error)
+    // Иначе при смене турнира остались бы матчи предыдущего
+    games.value = []
   } finally {
-    isLoading.value = false
+    if (isLatest()) isLoading.value = false
   }
 }
 

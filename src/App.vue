@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { RouterView } from 'vue-router'
 import SideNavBar from './components/layout/SideNavBar.vue'
 import TopAppBar from './components/layout/TopAppBar.vue'
+import RateLimitToast from './components/layout/RateLimitToast.vue'
 
 const headerCollapsed = ref(false)
 
@@ -30,11 +31,12 @@ const onScroll = (e) => {
         <RouterView />
       </main>
     </div>
+
+    <RateLimitToast />
   </div>
 </template>
 
 <style>
-/* Мы убираем старые стили, так как теперь используем Tailwind из index.html */
 body {
   margin: 0;
   overflow: hidden;

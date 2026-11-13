@@ -3,6 +3,7 @@ import { ref, computed, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../../api/index'
 import { APP_VERSION } from '../../config'
+import { latestOnly } from '../../utils/latestOnly'
 
 const props = defineProps({ collapsed: Boolean })
 
@@ -15,11 +16,15 @@ const searchResults = ref([])
 const isSearching = ref(false)
 const showResults = ref(false)
 let debounceTimeout = null
+const startSearch = latestOnly()
 
 const performSearch = async () => {
+  // Запускаем отсчёт и для коротких запросов: результаты по уже стёртому тексту не должны всплыть
+  const isLatest = startSearch()
   if (searchQuery.value.length < 2) {
     searchResults.value = []
     showResults.value = false
+    isSearching.value = false
     return
   }
 
@@ -27,23 +32,21 @@ const performSearch = async () => {
   showResults.value = true
   try {
     const response = await api.searchGames(searchQuery.value, 5)
+    if (!isLatest()) return
     searchResults.value = response.data
   } catch (error) {
+    if (!isLatest()) return
     console.error('Search failed:', error)
     searchResults.value = []
   } finally {
-    isSearching.value = false
+    if (isLatest()) isSearching.value = false
   }
 }
 
 watch(searchQuery, (newVal) => {
   if (debounceTimeout) clearTimeout(debounceTimeout)
 
-  if (!newVal) {
-    searchResults.value = []
-    showResults.value = false
-    return
-  }
+  if (newVal.length < 2) return performSearch()
 
   debounceTimeout = setTimeout(() => {
     performSearch()

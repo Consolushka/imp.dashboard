@@ -8,16 +8,28 @@ import PrimarySelector from '../components/ui/forms/PrimarySelector.vue'
 import SecondarySelector from '../components/ui/forms/SecondarySelector.vue'
 import SegmentedControl from '../components/ui/forms/SegmentedControl.vue'
 import RangeSlider from '../components/ui/forms/RangeSlider.vue'
+import ToggleSwitch from '../components/ui/forms/ToggleSwitch.vue'
+import { latestOnly } from '../utils/latestOnly'
 
 const tournamentStore = useTournamentStore()
 const metricStore = useMetricStore()
 const route = useRoute()
 const router = useRouter()
 
-const avgMinutesRange = ref(route.query.avgMins ? Number(route.query.avgMins) : 20)
+// Ссылка с ?tournament= важнее ранее выбранного турнира, иначе команда из ссылки окажется в чужом турнире.
+// Мусор в адресе (?tournament=abc) пропускаем
+const linkedTournament = Number(route.query.tournament)
+if (linkedTournament) tournamentStore.setTournament(linkedTournament)
+
+// API принимает avg_minutes целым от 1 до 48: значение из старой или правленой руками ссылки иначе дало бы 422
+const avgMinutesRange = ref(
+  route.query.avgMins ? Math.min(48, Math.max(1, Math.round(Number(route.query.avgMins)) || 20)) : 20
+)
 const performanceOrder = ref(route.query.order || 'desc') // API expects 'asc' or 'desc'
 const resultsLimit = ref(route.query.limit ? Number(route.query.limit) : 10)
-const selectedTeam = ref(route.query.team || 'all')
+// id команд в списке — числа, а из адреса приходит строка: без приведения селектор не найдёт команду.
+// Мусор в адресе (?team=abc) даёт NaN — тогда показываем все команды
+const selectedTeam = ref(Number(route.query.team) || 'all')
 const gameMinMinutes = ref(route.query.minMins ? Number(route.query.minMins) : 20)
 const minGames = ref(route.query.minGames ? Number(route.query.minGames) : 1)
 
@@ -41,6 +53,10 @@ const limitOptions = [
 
 const teamOptions = computed(() => {
   const options = [{ label: 'ALL TEAMS', value: 'all' }]
+  // Пока команды грузятся, у команды из ссылки нет названия — иначе селектор покажет голый id
+  if (!teams.value.length && selectedTeam.value !== 'all') {
+    options.push({ label: 'LOADING...', value: selectedTeam.value })
+  }
   teams.value.forEach(team => {
     options.push({ label: team.name, value: team.id })
   })
@@ -64,26 +80,37 @@ const minGamesOptions = [
 
 const totalPages = computed(() => Math.ceil(totalPlayers.value / resultsLimit.value))
 
+const startTeamsRequest = latestOnly()
+const startLeaderboardRequest = latestOnly()
+
 const fetchTeams = async () => {
-  if (!tournamentStore.selectedTournamentId) return
+  const tournamentId = tournamentStore.readyTournamentId
+  if (!tournamentId) return
+  const isLatest = startTeamsRequest()
   try {
-    const response = await api.getTeamsByTournament(tournamentStore.selectedTournamentId)
+    const response = await api.getTeamsByTournament(tournamentId)
+    if (!isLatest()) return
     teams.value = response.data
+    // Команда из ссылки могла остаться от другого или удалённого турнира: с ней таблица была бы пустой
+    if (selectedTeam.value !== 'all' && !teams.value.some(t => t.id === selectedTeam.value)) {
+      selectedTeam.value = 'all'
+    }
   } catch (error) {
+    if (!isLatest()) return
     console.error('Failed to fetch teams:', error)
     teams.value = []
   }
 }
 
 const fetchLeaderboardData = async () => {
-  if (!tournamentStore.selectedTournamentId) {
-    return
-  }
-  
+  const tournamentId = tournamentStore.readyTournamentId
+  if (!tournamentId) return
+
+  const isLatest = startLeaderboardRequest()
   isLoading.value = true
   try {
     const response = await api.getLeaderboard({
-      tournament_id: tournamentStore.selectedTournamentId,
+      tournament_id: tournamentId,
       per: 'fullGame',
       limit: resultsLimit.value,
       page: currentPage.value,
@@ -94,12 +121,17 @@ const fetchLeaderboardData = async () => {
       min_games: minGames.value,
       use_reliability: metricStore.globalReliabilityOn
     })
+    if (!isLatest()) return
     players.value = response.data
     totalPlayers.value = response.meta?.total || response.data.length
   } catch (error) {
+    if (!isLatest()) return
     console.error('Failed to fetch leaderboard:', error)
+    // Иначе под новыми фильтрами осталась бы таблица, посчитанная по старым
+    players.value = []
+    totalPlayers.value = 0
   } finally {
-    isLoading.value = false
+    if (isLatest()) isLoading.value = false
   }
 }
 
@@ -112,43 +144,54 @@ const reloadFromFirstPage = () => {
   }
 }
 
-onMounted(async () => {
-  await tournamentStore.fetchTournaments()
-  
-  fetchTeams()
-  fetchLeaderboardData()
+// Если список турниров не загрузился, таблицу грузить не с чем — сначала повторяем его,
+// таблицу после загрузки запросят наблюдатели
+const refresh = () => {
+  if (tournamentStore.readyTournamentId) fetchLeaderboardData()
+  else tournamentStore.fetchTournaments()
+}
+
+// Команда другого турнира в фильтре бессмысленна. Сбрасываем только по выбору пользователя:
+// пока догружается список, стор сам подставляет турнир, и команда из ссылки должна уцелеть
+const selectTournament = (id) => {
+  // Селектор сообщает и о повторном выборе того же турнира — это не смена
+  if (id === tournamentStore.selectedTournamentId) return
+  selectedTeam.value = 'all'
+  tournamentStore.setTournament(id)
+}
+
+onMounted(() => {
+  tournamentStore.fetchTournaments()
 })
 
-watch(
-  [avgMinutesRange, performanceOrder, resultsLimit, selectedTeam, gameMinMinutes, minGames],
-  ([avgMins, order, limit, team, minMins, mGames]) => {
-    router.replace({
-      query: {
-        ...route.query,
-        avgMins: avgMins === 20 ? undefined : avgMins,
-        order: order === 'desc' ? undefined : order,
-        limit: limit === 10 ? undefined : limit,
-        team: team === 'all' ? undefined : team,
-        minMins: minMins === 20 ? undefined : minMins,
-        minGames: mGames === 1 ? undefined : mGames
-      }
-    })
+const filters = [avgMinutesRange, performanceOrder, resultsLimit, selectedTeam, gameMinMinutes, minGames]
 
-    reloadFromFirstPage()
-  },
-  { deep: true }
-)
+// Турнир пишем в адрес тем же наблюдателем, что и фильтры: смена турнира сбрасывает команду, и две замены
+// адреса подряд прочитали бы ещё старый адрес — вторая затёрла бы первую
+watch([...filters, () => tournamentStore.selectedTournamentId], ([avgMins, order, limit, team, minMins, mGames, tournament]) => {
+  router.replace({
+    query: {
+      ...route.query,
+      tournament: tournament || undefined,
+      avgMins: avgMins === 20 ? undefined : avgMins,
+      order: order === 'desc' ? undefined : order,
+      limit: limit === 10 ? undefined : limit,
+      team: team === 'all' ? undefined : team,
+      minMins: minMins === 20 ? undefined : minMins,
+      minGames: mGames === 1 ? undefined : mGames
+    }
+  })
+}, { immediate: true })
 
-watch(
-  () => tournamentStore.selectedTournamentId,
-  () => {
-    fetchTeams()
-  }
-)
+// Загрузку запускают только наблюдатели: сразу, если список турниров уже загружен другой страницей,
+// иначе — когда он загрузится
+watch(() => tournamentStore.readyTournamentId, fetchTeams, { immediate: true })
 
+// Один наблюдатель на всё, что меняет таблицу: турнир и сброшенная вместе с ним команда дают одну загрузку
 watch(
-  [() => tournamentStore.selectedTournamentId, () => metricStore.globalReliabilityOn],
-  reloadFromFirstPage
+  [...filters, () => tournamentStore.readyTournamentId, () => metricStore.globalReliabilityOn],
+  reloadFromFirstPage,
+  { immediate: true }
 )
 
 watch(currentPage, fetchLeaderboardData)
@@ -157,20 +200,26 @@ watch(currentPage, fetchLeaderboardData)
 <template>
   <main class="max-w-[1280px] mx-auto p-lg lg:p-xl space-y-xl text-primary">
     <!-- Header Section -->
-    <header class="border-b-4 border-black pb-lg flex flex-col md:flex-row md:items-end justify-between gap-md">
+    <header class="border-b-4 border-black pb-lg flex flex-col lg:flex-row lg:items-end justify-between gap-md">
       <div>
         <h1 class="font-h1 text-h1 uppercase tracking-tighter">IMP LEADERBOARD</h1>
       </div>
-      <!-- Large Primary Filter -->
-      <div class="w-full md:w-80">
-        <PrimarySelector 
-          v-model="tournamentStore.selectedTournamentId" 
+      <!-- В строку с заголовком встаём только с lg: на меньшей ширине боковая панель оставляет мало места и селектор с тумблером уезжали за край -->
+      <div class="w-full lg:w-80 flex flex-col gap-md">
+        <!-- Large Primary Filter -->
+        <PrimarySelector
+          :model-value="tournamentStore.selectedTournamentId"
+          @update:model-value="selectTournament"
           :options="tournamentStore.tournaments"
           :groups="tournamentStore.selectorGroups"
           value-key="id"
           label-key="name"
           label="SELECT TOURNAMENT"
         />
+        <div class="flex flex-row items-center justify-between gap-3 bg-surface-white border-2 border-border-dark p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+          <span class="font-label-caps text-label-caps uppercase text-primary text-xs">GLOBAL RELIABILITY MODE</span>
+          <ToggleSwitch v-model="metricStore.globalReliabilityOn" label="GLOBAL RELIABILITY MODE" />
+        </div>
       </div>
     </header>
 
@@ -180,8 +229,8 @@ watch(currentPage, fetchLeaderboardData)
       <div class="space-y-md">
         <RangeSlider 
           v-model="avgMinutesRange" 
-          :min="0" 
-          :max="48" 
+          :min="1"
+          :max="48"
           label="Avg Minutes Range"
         />
         <SecondarySelector 
@@ -317,7 +366,7 @@ watch(currentPage, fetchLeaderboardData)
 
   <!-- Refresh FAB -->
   <button 
-    @click="fetchLeaderboardData"
+    @click="refresh"
     class="fixed bottom-24 right-8 w-16 h-16 bg-black text-white border-4 border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-30"
   >
     <span class="material-symbols-outlined text-3xl">refresh</span>

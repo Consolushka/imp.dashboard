@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { api } from '../../api/index'
 import { useMetricStore } from '../../store/metricStore'
 import { useTournamentStore } from '../../store/tournamentStore'
+import { latestOnly } from '../../utils/latestOnly'
 
 const props = defineProps({
   tournamentId: {
@@ -18,7 +19,10 @@ const tournamentStore = useTournamentStore()
 const leaders = ref([])
 const isLoading = ref(true)
 
+const startRequest = latestOnly()
+
 const fetchLeaders = async () => {
+  const isLatest = startRequest()
   isLoading.value = true
   try {
     // Находим текущий турнир в сторе, чтобы получить его параметры (teams_count, regulation_duration и т.д.)
@@ -46,11 +50,15 @@ const fetchLeaders = async () => {
     }
 
     const response = await api.getLeaderboard(params)
+    if (!isLatest()) return
     leaders.value = response.data
   } catch (error) {
+    if (!isLatest()) return
     console.error('Failed to fetch season leaders:', error)
+    // Иначе при смене турнира остались бы лидеры предыдущего
+    leaders.value = []
   } finally {
-    isLoading.value = false
+    if (isLatest()) isLoading.value = false
   }
 }
 
