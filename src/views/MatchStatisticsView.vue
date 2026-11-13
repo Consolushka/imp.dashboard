@@ -134,7 +134,7 @@ watch([selectedTab, isLocalReliability], ([newTab, newReliability]) => {
         <p class="font-label-caps text-label-caps text-neutral-medium uppercase flex-1 min-w-0 truncate">{{ matchData.subtitle }}</p>
         <div class="flex items-center gap-md shrink-0">
           <span class="font-label-caps text-label-caps uppercase whitespace-nowrap">Reliability</span>
-          <ToggleSwitch v-model="isLocalReliability" />
+          <ToggleSwitch v-model="isLocalReliability" label="Reliability" />
         </div>
       </div>
     </header>

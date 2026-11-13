@@ -3,6 +3,11 @@ const props = defineProps({
   modelValue: {
     type: Boolean,
     default: false
+  },
+  // Название переключателя для скринридера: сама кнопка текста не содержит
+  label: {
+    type: String,
+    default: undefined
   }
 })
 
@@ -15,6 +20,9 @@ const toggle = () => {
 
 <template>
   <button
+    role="switch"
+    :aria-checked="modelValue"
+    :aria-label="label"
     @click="toggle"
     class="w-12 h-6 border-2 border-primary relative flex items-center p-[2px] transition-colors focus:outline-none cursor-pointer"
     :class="modelValue ? 'bg-electric-orange' : 'bg-surface-container'"

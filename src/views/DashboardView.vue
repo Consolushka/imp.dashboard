@@ -63,7 +63,7 @@ onMounted(() => {
         <!-- Reliability Toggle -->
         <div class="flex flex-row items-center justify-between gap-3 bg-surface-white border-2 border-border-dark p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] w-full sm:w-auto">
           <span class="font-label-caps text-label-caps uppercase text-primary text-xs">GLOBAL RELIABILITY MODE</span>
-          <ToggleSwitch v-model="metricStore.globalReliabilityOn" />
+          <ToggleSwitch v-model="metricStore.globalReliabilityOn" label="GLOBAL RELIABILITY MODE" />
         </div>
       </div>
     </div>
